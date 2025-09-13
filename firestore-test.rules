@@ -1,0 +1,22 @@
+rules_version = '2';
+
+// TEST MODE RULES - DEVELOPMENT ONLY
+// These rules allow open access for testing and development
+// NEVER use these rules in production!
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read/write access to all documents for development
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+
+// To use these rules:
+// 1. Copy this content
+// 2. Go to Firebase Console > Firestore Database > Rules
+// 3. Replace the current rules with this content
+// 4. Click "Publish"
+// 
+// Remember to switch back to production rules (firestore.rules) before going live!

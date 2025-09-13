@@ -1,0 +1,351 @@
+const admin = require('firebase-admin');
+const functions = require('firebase-functions');
+const { generateEmbeddings, findRelevantServices } = require('./embeddingService');
+
+/**
+ * EMERGENCY FIX: Strict Intent Analysis System - Only exact keyword matches, no flexibility
+ * This prevents wrong service recommendations by enforcing exact intent-to-service mapping
+ */
+class StrictIntentAnalyzer {
+  constructor() {
+    // STRICT keyword-to-service mapping - NO FLEXIBILITY ALLOWED
+    this.strictIntentMapping = {
+      // Birth-related exact keywords
+      'birth certificate': { service: 'Birth Certificate', id: 1, link: '/apply/1' },
+      'baby born': { service: 'Birth Certificate', id: 1, link: '/apply/1' },
+      'newborn certificate': { service: 'Birth Certificate', id: 1, link: '/apply/1' },
+      'child birth': { service: 'Birth Certificate', id: 1, link: '/apply/1' },
+      'birth registration': { service: 'Birth Certificate', id: 1, link: '/apply/1' },
+      
+      // Death-related exact keywords
+      'death certificate': { service: 'Death Certificate', id: 2, link: '/apply/2' },
+      'death registration': { service: 'Death Certificate', id: 2, link: '/apply/2' },
+      'someone died': { service: 'Death Certificate', id: 2, link: '/apply/2' },
+      'passed away': { service: 'Death Certificate', id: 2, link: '/apply/2' },
+      'funeral certificate': { service: 'Death Certificate', id: 2, link: '/apply/2' },
+      
+      // Marriage-related exact keywords  
+      'marriage certificate': { service: 'Marriage Registration Certificate', id: 3, link: '/apply/3' },
+      'marriage registration': { service: 'Marriage Registration Certificate', id: 3, link: '/apply/3' },
+      'getting married': { service: 'Marriage Registration Certificate', id: 3, link: '/apply/3' },
+      'wedding certificate': { service: 'Marriage Registration Certificate', id: 3, link: '/apply/3' },
+      'marriage license': { service: 'Marriage Registration Certificate', id: 3, link: '/apply/3' },
+      
+      // Property tax exact keywords
+      'property tax': { service: 'Property Tax Payment', id: 4, link: '/apply/4' },
+      'property tax payment': { service: 'Property Tax Payment', id: 4, link: '/apply/4' },
+      'house tax': { service: 'Property Tax Payment', id: 4, link: '/apply/4' },
+      'property tax assessment': { service: 'Property Tax Assessment', id: 5, link: '/apply/5' },
+      
+      // Water-related exact keywords
+      'water tax': { service: 'Water Tax Payment', id: 6, link: '/apply/6' },
+      'water connection': { service: 'Water Connection', id: 15, link: '/apply/15' },
+      'new water connection': { service: 'Water Connection', id: 15, link: '/apply/15' },
+      'water supply': { service: 'Water Connection', id: 15, link: '/apply/15' },
+      
+      // Business-related exact keywords
+      'trade license': { service: 'Trade License', id: 7, link: '/apply/7' },
+      'business license': { service: 'Trade License', id: 7, link: '/apply/7' },
+      'shop license': { service: 'Trade License', id: 7, link: '/apply/7' },
+      'commercial license': { service: 'Trade License', id: 7, link: '/apply/7' },
+      
+      // Building-related exact keywords
+      'building permission': { service: 'Building Permission', id: 8, link: '/apply/8' },
+      'construction permission': { service: 'Building Permission', id: 8, link: '/apply/8' },
+      'building permit': { service: 'Building Permission', id: 8, link: '/apply/8' },
+      
+      // Certificate exact keywords
+      'income certificate': { service: 'Income Certificate', id: 9, link: '/apply/9' },
+      'caste certificate': { service: 'Caste Certificate', id: 10, link: '/apply/10' },
+      'domicile certificate': { service: 'Domicile Certificate', id: 11, link: '/apply/11' },
+      'bpl certificate': { service: 'BPL Certificate', id: 12, link: '/apply/12' },
+      'health certificate': { service: 'Health Certificate', id: 13, link: '/apply/13' },
+      'vaccination certificate': { service: 'Vaccination Certificate', id: 14, link: '/apply/14' },
+      
+      // Utility exact keywords
+      'drainage connection': { service: 'Drainage Connection', id: 16, link: '/apply/16' },
+      'street light': { service: 'Street Light Installation', id: 17, link: '/apply/17' },
+      'street light installation': { service: 'Street Light Installation', id: 17, link: '/apply/17' },
+      
+      // Agriculture exact keywords
+      'agricultural subsidy': { service: 'Agricultural Subsidy', id: 18, link: '/apply/18' },
+      'crop insurance': { service: 'Crop Insurance', id: 19, link: '/apply/19' },
+      'farming subsidy': { service: 'Agricultural Subsidy', id: 18, link: '/apply/18' },
+      
+      // Education exact keywords
+      'school transfer': { service: 'School Transfer Certificate', id: 20, link: '/apply/20' },
+      'scholarship': { service: 'Scholarship Application', id: 21, link: '/apply/21' },
+      'scholarship application': { service: 'Scholarship Application', id: 21, link: '/apply/21' }
+    };
+    
+    // Clarifying questions for partial matches
+    this.clarifyingQuestions = {
+      'birth': "Do you need a **Birth Certificate** for a newborn?",
+      'death': "Do you need a **Death Certificate** for someone who passed away?", 
+      'marriage': "Do you need a **Marriage Certificate** for your wedding registration?",
+      'water': "Do you need a **Water Connection** or **Water Tax Payment**?",
+      'property': "Do you need **Property Tax Payment** or **Building Permission**?",
+      'business': "Do you need a **Trade License** for your business?",
+      'certificate': "Which certificate do you need? Income, Caste, Domicile, BPL, Health, or Vaccination?",
+      'license': "Do you need a **Trade License** for business or **Building Permission** for construction?"
+    };
+  }
+
+  /**
+   * EMERGENCY FIX: Strict keyword matching only - no fuzzy matching allowed
+   */
+  analyzeIntent(query) {
+    const lowerQuery = query.toLowerCase().trim();
+    
+    // Step 1: Check for exact phrase matches first (highest priority)
+    for (const [keyPhrase, serviceInfo] of Object.entries(this.strictIntentMapping)) {
+      if (lowerQuery.includes(keyPhrase)) {
+        console.log(`EXACT MATCH FOUND: "${keyPhrase}" -> ${serviceInfo.service}`);
+        return {
+          type: 'exact_match',
+          service: serviceInfo.service,
+          id: serviceInfo.id,
+          link: serviceInfo.link,
+          confidence: 1.0,
+          matched_keyword: keyPhrase
+        };
+      }
+    }
+    
+    // Step 2: Check for partial matches that need clarification
+    for (const [partialKeyword, clarifyingQuestion] of Object.entries(this.clarifyingQuestions)) {
+      if (lowerQuery.includes(partialKeyword)) {
+        console.log(`PARTIAL MATCH FOUND: "${partialKeyword}" - needs clarification`);
+        return {
+          type: 'needs_clarification',
+          partial_keyword: partialKeyword,
+          clarifying_question: clarifyingQuestion,
+          confidence: 0.5
+        };
+      }
+    }
+    
+    // Step 3: No match found - ask for clarification
+    console.log('NO MATCH FOUND - asking for clarification');
+    return {
+      type: 'no_match',
+      confidence: 0.0
+    };
+  }
+
+  /**
+   * EMERGENCY FIX: Generate response only for exact matches - no fallbacks to RAG
+   */
+  generateStrictResponse(intent, services) {
+    if (intent.type === 'exact_match') {
+      // Find the service in Firestore data
+      const matchedService = services.find(service => 
+        service.service_name === intent.service ||
+        service.name === intent.service
+      );
+      
+      if (matchedService) {
+        return {
+          service_name: matchedService.service_name || matchedService.name,
+          description: matchedService.description,
+          documents_required: matchedService.documents_required || matchedService.required_documents,
+          eligibility: matchedService.eligibility,
+          processing_time: matchedService.processing_time,
+          fee: matchedService.fee,
+          category: matchedService.category,
+          application_link: intent.link,
+          contextual_message: `Perfect! I found exactly what you need: **${intent.service}**`,
+          intent_detected: 'exact_match',
+          confidence: 1.0,
+          matched_keyword: intent.matched_keyword
+        };
+      }
+      
+      // If service not found in Firestore, return basic info
+      return {
+        service_name: intent.service,
+        description: `${intent.service} application service`,
+        application_link: intent.link,
+        contextual_message: `I found the service you need: **${intent.service}**`,
+        intent_detected: 'exact_match',
+        confidence: 1.0,
+        matched_keyword: intent.matched_keyword
+      };
+    }
+    
+    if (intent.type === 'needs_clarification') {
+      return {
+        error: true,
+        message: intent.clarifying_question,
+        type: 'clarification_needed',
+        partial_keyword: intent.partial_keyword
+      };
+    }
+    
+    // No match found
+    return {
+      error: true,
+      message: "I can only help with specific Gram Panchayat services. Please be more specific about what you need. For example, say 'birth certificate', 'death certificate', 'marriage certificate', 'trade license', 'water connection', etc.",
+      type: 'no_match'
+    };
+  }
+}
+
+/**
+ * EMERGENCY FIX: Strict response generator - NO RAG fallbacks allowed
+ */
+async function generateStrictResponse(query, services) {
+  const intentAnalyzer = new StrictIntentAnalyzer();
+  
+  // Step 1: Analyze user intent with strict keyword matching
+  const intent = intentAnalyzer.analyzeIntent(query);
+  console.log('STRICT Intent analysis:', intent);
+
+  // Step 2: Generate response ONLY for exact matches or ask clarifying questions
+  const response = intentAnalyzer.generateStrictResponse(intent, services);
+  
+  console.log('STRICT Response generated:', response);
+  return response;
+}
+
+/**
+ * Quality validation - ensures response relevance
+ */
+function validateResponseRelevance(query, response, intent) {
+  // Check if the recommended service actually addresses the user's need
+  const queryLower = query.toLowerCase();
+  const serviceLower = response.service_name ? response.service_name.toLowerCase() : '';
+  
+  // Basic relevance checks
+  const relevanceChecks = [
+    // Marriage queries should get marriage-related services
+    queryLower.includes('marriage') && !serviceLower.includes('marriage') ? false : true,
+    // Birth queries should get birth-related services
+    queryLower.includes('birth') && !serviceLower.includes('birth') ? false : true,
+    // Death queries should get death-related services  
+    queryLower.includes('death') && !serviceLower.includes('death') ? false : true,
+    // Business queries should get business-related services
+    (queryLower.includes('business') || queryLower.includes('trade')) && 
+    !(serviceLower.includes('trade') || serviceLower.includes('business') || serviceLower.includes('license')) ? false : true
+  ];
+
+  const isRelevant = relevanceChecks.every(check => check === true);
+  
+  if (!isRelevant) {
+    console.log('Quality check failed - response not relevant to query');
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Main enhanced RAG function with intelligent intent analysis
+ */
+exports.intelligentRagRecommendation = async (req, res) => {
+  try {
+    const { query } = req.body;
+    
+    if (!query || query.trim().length === 0) {
+      return res.status(400).json({
+        error: true,
+        message: 'Please tell me what service you need. For example: "I need a birth certificate" or "I\'m getting married, what do I need?"'
+      });
+    }
+
+    const cleanQuery = query.trim();
+    console.log('Processing intelligent RAG query:', cleanQuery);
+
+    // Get services from Firestore
+    const db = admin.firestore();
+    const servicesCollection = db.collection('services');
+    const snapshot = await servicesCollection.get();
+    
+    const services = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      services.push(data);  // Accept all services, not just ones with embeddings
+    });
+
+    if (services.length === 0) {
+      return res.status(500).json({
+        error: true,
+        message: 'Service database is not available right now. Please try again later.'
+      });
+    }
+
+    // EMERGENCY FIX: Skip embedding generation and go directly to strict response
+    // const queryEmbedding = await generateEmbeddings(cleanQuery);
+    // const relevantServices = findRelevantServices(queryEmbedding, services, 5, 0.15);
+
+    // EMERGENCY FIX: Generate strict response - no RAG similarity used
+    const response = await generateStrictResponse(cleanQuery, services);
+    const relevantServices = []; // Empty array since we're not using embeddings
+
+    // EMERGENCY FIX: No quality validation needed - strict matching ensures correctness
+
+    // Log query for analytics
+    await db.collection('chatbot_queries').add({
+      query: cleanQuery,
+      recommended_service: response.service_name || null,
+      intent_detected: response.intent_detected || null,
+      confidence: response.confidence || 0,
+      method: 'intelligent_rag',
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      relevant_services_count: relevantServices.length
+    });
+
+    // Return response
+    if (response.error) {
+      res.json({
+        success: false,
+        error: true,
+        message: response.message,
+        query: cleanQuery,
+        suggestions: [
+          "I need a birth certificate",
+          "I'm getting married, what documents do I need?",
+          "How do I start a business?",
+          "I need water connection for my house"
+        ]
+      });
+    } else {
+      res.json({
+        success: true,
+        query: cleanQuery,
+        recommendation: {
+          ...response,
+          // Use the application link from strict intent mapping
+          application_link: response.application_link
+        },
+        confidence: response.confidence,
+        intent: response.intent_detected,
+        method: 'intelligent_rag'
+      });
+    }
+
+  } catch (error) {
+    console.error('Intelligent RAG error:', error);
+    
+    // Log error
+    try {
+      await admin.firestore().collection('chatbot_errors').add({
+        query: req.body.query,
+        error: error.message,
+        method: 'intelligent_rag',
+        timestamp: admin.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (logError) {
+      console.error('Failed to log error:', logError);
+    }
+    
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: 'I\'m having trouble right now. Please try asking about a specific service like "birth certificate" or "trade license".',
+      fallback: true
+    });
+  }
+};
+
+module.exports = { intelligentRagRecommendation: exports.intelligentRagRecommendation };

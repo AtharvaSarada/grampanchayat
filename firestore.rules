@@ -1,0 +1,128 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Users collection
+    match /users/{userId} {
+      // Users can read and update their own profile
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      // Only admins and officers can create users or read other users
+      allow create: if request.auth != null;
+      // Staff and officers can read user profiles for application processing
+      allow read: if request.auth != null && 
+        (getUserRole(request.auth.uid) == 'staff' || 
+         getUserRole(request.auth.uid) == 'officer' ||
+         getUserRole(request.auth.uid) == 'admin');
+    }
+    
+    // Services collection
+    match /services/{serviceId} {
+      // Anyone can read services (public information)
+      allow read: if true;
+      // Only officers and admins can create, update, delete services
+      allow create, update, delete: if request.auth != null && 
+        (getUserRole(request.auth.uid) == 'officer' || 
+         getUserRole(request.auth.uid) == 'admin');
+    }
+    
+    // Applications collection
+    match /applications/{applicationId} {
+      // Users can read their own applications
+      allow read: if request.auth != null && 
+        (resource.data.applicantId == request.auth.uid ||
+         getUserRole(request.auth.uid) == 'staff' ||
+         getUserRole(request.auth.uid) == 'officer' ||
+         getUserRole(request.auth.uid) == 'admin');
+      
+      // Users can create applications
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.applicantId;
+      
+      // Only staff, officers, and admins can update applications
+      allow update: if request.auth != null && 
+        (getUserRole(request.auth.uid) == 'staff' ||
+         getUserRole(request.auth.uid) == 'officer' ||
+         getUserRole(request.auth.uid) == 'admin');
+      
+      // Only officers and admins can delete applications
+      allow delete: if request.auth != null && 
+        (getUserRole(request.auth.uid) == 'officer' ||
+         getUserRole(request.auth.uid) == 'admin');
+    }
+    
+    // Staff collection
+    match /staff/{staffId} {
+      // Staff can read their own profile
+      allow read: if request.auth != null && request.auth.uid == staffId;
+      // Only officers and admins can manage staff
+      allow create, update, delete: if request.auth != null && 
+        (getUserRole(request.auth.uid) == 'officer' ||
+         getUserRole(request.auth.uid) == 'admin');
+    }
+    
+    // Officers collection
+    match /officers/{officerId} {
+      // Officers can read their own profile
+      allow read: if request.auth != null && request.auth.uid == officerId;
+      // Only admins can manage officers
+      allow create, update, delete: if request.auth != null && 
+        getUserRole(request.auth.uid) == 'admin';
+    }
+    
+    // Audit logs collection
+    match /auditLogs/{logId} {
+      // No direct read/write access to audit logs from client
+      // These are managed server-side only
+      allow read, write: if false;
+    }
+    
+    // Notifications collection
+    match /notifications/{notificationId} {
+      // Users can read their own notifications
+      allow read: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+      
+      // Users can mark their notifications as read
+      allow update: if request.auth != null && 
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys() == ['isRead', 'updatedAt'].toSet();
+      
+      // System can create notifications (server-side only)
+      allow create: if false; // Handled server-side
+      
+      // Users can delete their own notifications
+      allow delete: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Helper function to get user role
+    function getUserRole(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data.role;
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && getUserRole(request.auth.uid) == 'admin';
+    }
+    
+    // Helper function to check if user is officer
+    function isOfficer() {
+      return request.auth != null && getUserRole(request.auth.uid) == 'officer';
+    }
+    
+    // Helper function to check if user is staff
+    function isStaff() {
+      return request.auth != null && getUserRole(request.auth.uid) == 'staff';
+    }
+    
+    // Helper function to check if user has administrative privileges
+    function isAdminOrOfficer() {
+      return isAdmin() || isOfficer();
+    }
+    
+    // Helper function to check if user can process applications
+    function canProcessApplications() {
+      return isStaff() || isOfficer() || isAdmin();
+    }
+  }
+}

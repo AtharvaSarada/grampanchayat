@@ -1,0 +1,184 @@
+const functions = require('firebase-functions');
+
+// Use a simple TF-IDF approach as fallback for embeddings
+const EMBEDDINGS_API_URL = 'https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2';
+
+/**
+ * Generate embeddings using Hugging Face sentence-transformers
+ * @param {string|string[]} texts - Text or array of texts to embed
+ * @param {number} retries - Number of retry attempts
+ * @returns {Promise<number[]|number[][]>} - Embedding vector(s)
+ */
+async function generateEmbeddings(texts, retries = 3) {
+  const hfToken = process.env.HUGGINGFACE_TOKEN || functions.config().huggingface?.token;
+  
+  if (!hfToken) {
+    throw new Error('Hugging Face API token not configured');
+  }
+
+  const isArray = Array.isArray(texts);
+  const textArray = isArray ? texts : [texts];
+  const results = [];
+  
+  // Process each text individually to avoid API issues
+  for (const text of textArray) {
+    let embedding = null;
+    
+    for (let i = 0; i < retries; i++) {
+      try {
+        const fetch = (await import('node-fetch')).default;
+        
+        const response = await fetch(EMBEDDINGS_API_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${hfToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            inputs: text,
+            options: {
+              wait_for_model: true
+            }
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        const result = await response.json();
+        
+        // DistilBERT returns feature vectors - we'll use the mean pooling of the last layer
+        if (Array.isArray(result) && result.length > 0) {
+          // Take mean of all token embeddings as sentence embedding
+          const tokenEmbeddings = result[0]; // First (and likely only) sequence
+          if (Array.isArray(tokenEmbeddings) && tokenEmbeddings.length > 0) {
+            // Calculate mean pooling
+            const embeddingDim = tokenEmbeddings[0].length;
+            const meanEmbedding = new Array(embeddingDim).fill(0);
+            
+            for (const tokenEmb of tokenEmbeddings) {
+              for (let j = 0; j < embeddingDim; j++) {
+                meanEmbedding[j] += tokenEmb[j];
+              }
+            }
+            
+            // Normalize by number of tokens
+            for (let j = 0; j < embeddingDim; j++) {
+              meanEmbedding[j] /= tokenEmbeddings.length;
+            }
+            
+            embedding = meanEmbedding;
+            break;
+          }
+        }
+        
+        throw new Error('Unexpected response format from embeddings API');
+
+      } catch (error) {
+        console.error(`Embeddings generation attempt ${i + 1} for text "${text.substring(0, 50)}..." failed:`, error.message);
+        
+        if (i === retries - 1) {
+          throw error;
+        }
+        
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+      }
+    }
+    
+    if (!embedding) {
+      throw new Error(`Failed to generate embedding for text: ${text.substring(0, 50)}...`);
+    }
+    
+    results.push(embedding);
+    
+    // Add small delay between requests
+    if (textArray.length > 1) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+  
+  return isArray ? results : results[0];
+}
+
+/**
+ * Calculate cosine similarity between two vectors
+ * @param {number[]} a - First vector
+ * @param {number[]} b - Second vector
+ * @returns {number} - Cosine similarity score (0-1)
+ */
+function cosineSimilarity(a, b) {
+  if (a.length !== b.length) {
+    throw new Error('Vectors must have the same length');
+  }
+
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+
+  for (let i = 0; i < a.length; i++) {
+    dotProduct += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+
+  normA = Math.sqrt(normA);
+  normB = Math.sqrt(normB);
+
+  if (normA === 0 || normB === 0) {
+    return 0;
+  }
+
+  return dotProduct / (normA * normB);
+}
+
+/**
+ * Create searchable text for embedding generation
+ * @param {Object} service - Service object
+ * @returns {string} - Combined text for embedding
+ */
+function createSearchableText(service) {
+  const searchFields = [
+    service.service_name,
+    service.description,
+    service.category,
+    service.documents_required?.join(' '),
+    service.eligibility
+  ];
+
+  return searchFields
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+}
+
+/**
+ * Find most relevant services using cosine similarity
+ * @param {number[]} queryEmbedding - Query embedding vector
+ * @param {Object[]} services - Array of services with embeddings
+ * @param {number} topK - Number of top results to return
+ * @param {number} threshold - Minimum similarity threshold
+ * @returns {Object[]} - Sorted array of relevant services with similarity scores
+ */
+function findRelevantServices(queryEmbedding, services, topK = 3, threshold = 0.3) {
+  const results = services
+    .filter(service => service.embedding && Array.isArray(service.embedding))
+    .map(service => ({
+      ...service,
+      similarity: cosineSimilarity(queryEmbedding, service.embedding)
+    }))
+    .filter(result => result.similarity >= threshold)
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, topK);
+
+  return results;
+}
+
+module.exports = {
+  generateEmbeddings,
+  cosineSimilarity,
+  createSearchableText,
+  findRelevantServices
+};

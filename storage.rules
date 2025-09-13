@@ -1,0 +1,68 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Application documents
+    match /applications/{applicationId}/{fileName} {
+      // Users can upload documents for their own applications
+      allow read, write: if request.auth != null && 
+        (isApplicationOwner(applicationId) || canProcessApplications());
+      
+      // Validate file types and size
+      allow write: if request.resource.size < 10 * 1024 * 1024 && // 10MB limit
+        request.resource.contentType.matches('.*/(pdf|jpg|jpeg|png|doc|docx)');
+    }
+    
+    // Profile pictures
+    match /profiles/{userId}/{fileName} {
+      // Users can upload their own profile pictures
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Validate image files only and size limit
+      allow write: if request.resource.size < 2 * 1024 * 1024 && // 2MB limit
+        request.resource.contentType.matches('image/.*');
+    }
+    
+    // Service documents and images
+    match /services/{serviceId}/{fileName} {
+      // Anyone can read service documents (public)
+      allow read: if true;
+      
+      // Only officers and admins can upload service documents
+      allow write: if request.auth != null && canManageServices();
+      
+      // Validate file types and size
+      allow write: if request.resource.size < 5 * 1024 * 1024 && // 5MB limit
+        request.resource.contentType.matches('.*/(pdf|jpg|jpeg|png|doc|docx)');
+    }
+    
+    // Temporary uploads (for processing)
+    match /temp/{userId}/{fileName} {
+      // Users can upload to their temp folder
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Auto-delete after 24 hours (handled by cloud function)
+      // Size limit for temporary files
+      allow write: if request.resource.size < 20 * 1024 * 1024; // 20MB limit
+    }
+    
+    // Helper functions
+    function isApplicationOwner(applicationId) {
+      // This would need to be implemented with a Firestore lookup
+      // For now, we'll allow server-side validation
+      return true;
+    }
+    
+    function canProcessApplications() {
+      // This would need to check user role from Firestore
+      // For now, allowing authenticated users (to be validated server-side)
+      return request.auth != null;
+    }
+    
+    function canManageServices() {
+      // This would need to check if user is officer/admin
+      // For now, allowing authenticated users (to be validated server-side)
+      return request.auth != null;
+    }
+  }
+}

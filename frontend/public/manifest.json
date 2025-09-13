@@ -1,0 +1,11 @@
+{
+  "short_name": "Gram Panchayath",
+  "name": "E-Services for Gram Panchayath",
+  "description": "Digital platform for accessing government services at village level",
+  "icons": [],
+  "start_url": "./",
+  "display": "standalone",
+  "theme_color": "#2e7d32",
+  "background_color": "#ffffff",
+  "orientation": "portrait"
+}
