@@ -22,19 +22,30 @@ export const handleFormSubmission = async (submissionData) => {
     // Show loading toast
     const loadingToast = toast.loading('Submitting your application...');
 
-    let documentUrls = [];
+    let documentUrls = {};
     
     // Upload documents if any
     if (documents && documents.length > 0) {
       toast.loading('Uploading documents...', { id: loadingToast });
       
-      const uploadPromises = documents.map((file, index) => {
-        const storagePath = generateStoragePath(serviceType, currentUser.uid, file.name);
-        return uploadMultipleFiles([file], `applications/${serviceType}/${currentUser.uid}`);
+      const uploadPromises = documents.map(async (doc) => {
+        const storagePath = `applications/${serviceType}/${currentUser.uid}/${Date.now()}_${doc.file.name}`;
+        const uploadResult = await uploadMultipleFiles([doc.file], storagePath);
+        return {
+          type: doc.type,
+          name: doc.name,
+          url: uploadResult[0] // Get the first URL from the result
+        };
       });
       
       const uploadResults = await Promise.all(uploadPromises);
-      documentUrls = uploadResults.flat();
+      // Convert to object with document type as key
+      uploadResults.forEach(result => {
+        documentUrls[result.type] = {
+          name: result.name,
+          url: result.url
+        };
+      });
     }
 
     // Prepare application data

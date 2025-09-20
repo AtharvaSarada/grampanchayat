@@ -145,11 +145,24 @@ export const getUserStatistics = async (userId) => {
 
   try {
     const applicationsCollection = collection(db, 'applications');
-    const userQuery = query(
+    // Try both field names to support different data structures
+    const userQuery1 = query(
+      applicationsCollection,
+      where('userId', '==', userId)
+    );
+    const userQuery2 = query(
       applicationsCollection,
       where('user_id', '==', userId)
     );
-    const snapshot = await getDocs(userQuery);
+    
+    const [snapshot1, snapshot2] = await Promise.all([
+      getDocs(userQuery1),
+      getDocs(userQuery2)
+    ]);
+    
+    // Combine results from both queries
+    const allDocs = [...snapshot1.docs, ...snapshot2.docs];
+    const snapshot = { docs: allDocs, empty: allDocs.length === 0 };
     
     if (snapshot.empty) {
       return {
@@ -215,13 +228,26 @@ export const getRecentApplications = async (userId, limitCount = 5) => {
 
   try {
     const applicationsCollection = collection(db, 'applications');
-    const recentQuery = query(
-      applicationsCollection,
-      where('user_id', '==', userId),
-      orderBy('submitted_at', 'desc'),
-      limit(limitCount)
-    );
-    const snapshot = await getDocs(recentQuery);
+    // Try both field names to support different data structures
+    let snapshot;
+    try {
+      const recentQuery = query(
+        applicationsCollection,
+        where('userId', '==', userId),
+        orderBy('createdAt', 'desc'),
+        limit(limitCount)
+      );
+      snapshot = await getDocs(recentQuery);
+    } catch (error) {
+      // Fallback to user_id and submitted_at
+      const recentQuery = query(
+        applicationsCollection,
+        where('user_id', '==', userId),
+        orderBy('submitted_at', 'desc'),
+        limit(limitCount)
+      );
+      snapshot = await getDocs(recentQuery);
+    }
     
     if (snapshot.empty) {
       return [];
@@ -231,8 +257,10 @@ export const getRecentApplications = async (userId, limitCount = 5) => {
     snapshot.forEach((doc) => {
       const data = doc.data();
       
-      // Calculate estimated completion (submitted_at + 10 days as default)
-      const submittedDate = data.submitted_at?.toDate() || new Date();
+      // Calculate estimated completion (handle both date formats)
+      const submittedDate = data.submittedAt ? new Date(data.submittedAt) : 
+                           data.submitted_at?.toDate ? data.submitted_at.toDate() : 
+                           data.createdAt ? new Date(data.createdAt) : new Date();
       const estimatedCompletion = new Date(submittedDate.getTime() + 10 * 24 * 60 * 60 * 1000);
       
       applications.push({
@@ -319,9 +347,10 @@ export const subscribeToUserStatistics = (userId, callback) => {
   }
 
   const applicationsCollection = collection(db, 'applications');
+  // Use userId first (for new applications), fallback handled in getUserStatistics
   const userQuery = query(
     applicationsCollection,
-    where('user_id', '==', userId)
+    where('userId', '==', userId)
   );
   
   // Listen to user's applications changes

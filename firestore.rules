@@ -30,13 +30,15 @@ service cloud.firestore {
       // Users can read their own applications
       allow read: if request.auth != null && 
         (resource.data.applicantId == request.auth.uid ||
+         resource.data.userId == request.auth.uid ||
          getUserRole(request.auth.uid) == 'staff' ||
          getUserRole(request.auth.uid) == 'officer' ||
          getUserRole(request.auth.uid) == 'admin');
       
-      // Users can create applications
+      // Users can create applications (support both field names)
       allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.applicantId;
+        (request.auth.uid == request.resource.data.applicantId ||
+         request.auth.uid == request.resource.data.userId);
       
       // Only staff, officers, and admins can update applications
       allow update: if request.auth != null && 

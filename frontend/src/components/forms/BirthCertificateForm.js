@@ -20,7 +20,8 @@ import {
   ListItemText,
   Stepper,
   Step,
-  StepLabel
+  StepLabel,
+  CircularProgress
 } from '@mui/material';
 import {
   Person,
@@ -32,10 +33,12 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import { handleFormSubmission } from '../../services/formSubmissionService';
 
 const BirthCertificateForm = () => {
   const { currentUser } = useAuth();
   const [activeStep, setActiveStep] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     // Child Details
     childFirstName: '',
@@ -143,25 +146,111 @@ const BirthCertificateForm = () => {
   };
 
   const handleSubmit = async () => {
+    if (!currentUser) {
+      toast.error('Please log in to submit an application.');
+      return;
+    }
+
+    setSubmitting(true);
     try {
-      // Here you would typically send the form data to your backend
-      const applicationData = {
+      // Prepare documents array from uploaded files
+      const documentFiles = [];
+      Object.entries(documents).forEach(([key, file]) => {
+        if (file) {
+          documentFiles.push({
+            name: file.name,
+            type: key,
+            file: file
+          });
+        }
+      });
+
+      // Create submission data
+      const submissionData = {
         serviceType: 'birth_certificate',
-        applicantId: currentUser?.uid,
-        formData,
-        documents,
-        submittedAt: new Date().toISOString(),
-        status: 'submitted'
+        formData: {
+          // Child Details
+          childName: `${formData.childFirstName} ${formData.childLastName}`,
+          childFirstName: formData.childFirstName,
+          childLastName: formData.childLastName,
+          dateOfBirth: formData.dateOfBirth,
+          timeOfBirth: formData.timeOfBirth,
+          placeOfBirth: formData.placeOfBirth,
+          gender: formData.gender,
+          weight: formData.weight,
+          
+          // Parent Details
+          fatherName: `${formData.fatherFirstName} ${formData.fatherLastName}`,
+          fatherFirstName: formData.fatherFirstName,
+          fatherLastName: formData.fatherLastName,
+          fatherAge: formData.fatherAge,
+          fatherEducation: formData.fatherEducation,
+          fatherOccupation: formData.fatherOccupation,
+          
+          motherName: `${formData.motherFirstName} ${formData.motherLastName}`,
+          motherFirstName: formData.motherFirstName,
+          motherLastName: formData.motherLastName,
+          motherAge: formData.motherAge,
+          motherEducation: formData.motherEducation,
+          motherOccupation: formData.motherOccupation,
+          
+          // Address Details
+          permanentAddress: formData.permanentAddress,
+          city: formData.city,
+          district: formData.district,
+          state: formData.state,
+          pincode: formData.pincode,
+          
+          // Hospital Details
+          hospitalName: formData.hospitalName,
+          hospitalAddress: formData.hospitalAddress,
+          doctorName: formData.doctorName,
+          
+          // Additional Information
+          registrationDelay: formData.registrationDelay,
+          reasonForDelay: formData.reasonForDelay,
+          informantName: formData.informantName,
+          informantRelation: formData.informantRelation,
+          informantAddress: formData.informantAddress
+        },
+        documents: documentFiles
       };
 
-      // Simulate API call
-      console.log('Submitting birth certificate application:', applicationData);
+      // Submit using the form submission service
+      const result = await handleFormSubmission(submissionData);
       
-      toast.success('Birth certificate application submitted successfully!');
-      // You might want to redirect to a confirmation page or applications list
+      if (result.success) {
+        // Reset form on success
+        setFormData({
+          childFirstName: '', childLastName: '', dateOfBirth: '', timeOfBirth: '', 
+          placeOfBirth: '', gender: '', weight: '',
+          fatherFirstName: '', fatherLastName: '', fatherAge: '', fatherEducation: '',
+          fatherOccupation: '', fatherNationality: '',
+          motherFirstName: '', motherLastName: '', motherAge: '', motherEducation: '',
+          motherOccupation: '', motherNationality: '',
+          permanentAddress: '', city: '', district: '', state: '', pincode: '',
+          hospitalName: '', hospitalAddress: '', doctorName: '', attendantType: '',
+          registrationDelay: 'Within 21 days', reasonForDelay: '', 
+          informantName: '', informantRelation: '', informantAddress: ''
+        });
+        setDocuments({ birthProofHospital: null, parentsIdProof: null, addressProof: null, marriageCertificate: null });
+        setActiveStep(0);
+        
+        // Show success message with reference number
+        toast.success(`Application submitted successfully! Reference: ${result.referenceNumber}`, {
+          duration: 6000
+        });
+        
+        // Optional: Redirect to applications page after a delay
+        setTimeout(() => {
+          // window.location.href = '/user/applications';
+        }, 3000);
+      }
     } catch (error) {
       console.error('Submission error:', error);
-      toast.error('Failed to submit application. Please try again.');
+      toast.error(`Failed to submit application: ${error.message}`);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -691,8 +780,10 @@ const BirthCertificateForm = () => {
               variant="contained"
               color="primary"
               size="large"
+              disabled={submitting}
+              startIcon={submitting ? <CircularProgress size={20} /> : null}
             >
-              Submit Application
+              {submitting ? 'Submitting...' : 'Submit Application'}
             </Button>
           ) : (
             <Button
