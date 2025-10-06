@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import ChakraSpinner from '../../components/common/ChakraSpinner';
 import {
   Container,
   Typography,
   Box,
   Paper,
   Alert,
-  CircularProgress,
   Button,
   Dialog,
   DialogTitle,
@@ -73,11 +73,18 @@ const ApplicationForm = () => {
     }
   }, [currentUser, loading, serviceId, navigate]);
 
-  const handleFormSubmit = async (formData) => {
+  const handleFormSubmit = async (submissionData) => {
     setSubmitting(true);
     
     try {
-      const result = await handleFormSubmission(formData);
+      // Destructure the incoming data to handle it explicitly
+      const { formData, documents, serviceType } = submissionData;
+
+      const result = await handleFormSubmission(
+        formData, 
+        documents, 
+        serviceType
+      );
       
       if (result.success) {
         setSubmissionResult(result);
@@ -168,7 +175,7 @@ const ApplicationForm = () => {
     return (
       <Container maxWidth="lg">
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-          <CircularProgress />
+          <ChakraSpinner size="40px" />
         </Box>
       </Container>
     );

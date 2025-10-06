@@ -11,12 +11,12 @@ import {
   CardContent,
   Button,
   Chip,
-  CircularProgress,
   Alert,
   Divider,
   Avatar,
   Badge
 } from '@mui/material';
+import ChakraSpinner from '../common/ChakraSpinner';
 import {
   Chat as ChatIcon,
   Send as SendIcon,
@@ -516,7 +516,7 @@ const GeminiProChatbot = () => {
                 </Avatar>
                 <Paper elevation={2} sx={{ p: 2, bgcolor: 'grey.50' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <CircularProgress size={16} sx={{ mr: 1 }} />
+                    <ChakraSpinner size="20px" />
                     <Typography variant="body2">Gemini Pro is thinking...</Typography>
                   </Box>
                 </Paper>

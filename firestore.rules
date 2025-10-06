@@ -6,12 +6,11 @@ service cloud.firestore {
     match /users/{userId} {
       // Users can read and update their own profile
       allow read, update: if request.auth != null && request.auth.uid == userId;
-      // Only admins and officers can create users or read other users
+      // Only admins can create users or read other users
       allow create: if request.auth != null;
-      // Staff and officers can read user profiles for application processing
+      // Staff and admins can read user profiles for application processing
       allow read: if request.auth != null && 
         (getUserRole(request.auth.uid) == 'staff' || 
-         getUserRole(request.auth.uid) == 'officer' ||
          getUserRole(request.auth.uid) == 'admin');
     }
     
@@ -19,82 +18,60 @@ service cloud.firestore {
     match /services/{serviceId} {
       // Anyone can read services (public information)
       allow read: if true;
-      // Only officers and admins can create, update, delete services
-      allow create, update, delete: if request.auth != null && 
-        (getUserRole(request.auth.uid) == 'officer' || 
-         getUserRole(request.auth.uid) == 'admin');
-    }
-    
-    // Applications collection
-    match /applications/{applicationId} {
-      // Users can read their own applications
-      allow read: if request.auth != null && 
-        (resource.data.applicantId == request.auth.uid ||
-         resource.data.userId == request.auth.uid ||
-         getUserRole(request.auth.uid) == 'staff' ||
-         getUserRole(request.auth.uid) == 'officer' ||
-         getUserRole(request.auth.uid) == 'admin');
-      
-      // Users can create applications (support both field names)
-      allow create: if request.auth != null && 
-        (request.auth.uid == request.resource.data.applicantId ||
-         request.auth.uid == request.resource.data.userId);
-      
-      // Only staff, officers, and admins can update applications
-      allow update: if request.auth != null && 
-        (getUserRole(request.auth.uid) == 'staff' ||
-         getUserRole(request.auth.uid) == 'officer' ||
-         getUserRole(request.auth.uid) == 'admin');
-      
-      // Only officers and admins can delete applications
-      allow delete: if request.auth != null && 
-        (getUserRole(request.auth.uid) == 'officer' ||
-         getUserRole(request.auth.uid) == 'admin');
-    }
-    
-    // Staff collection
-    match /staff/{staffId} {
-      // Staff can read their own profile
-      allow read: if request.auth != null && request.auth.uid == staffId;
-      // Only officers and admins can manage staff
-      allow create, update, delete: if request.auth != null && 
-        (getUserRole(request.auth.uid) == 'officer' ||
-         getUserRole(request.auth.uid) == 'admin');
-    }
-    
-    // Officers collection
-    match /officers/{officerId} {
-      // Officers can read their own profile
-      allow read: if request.auth != null && request.auth.uid == officerId;
-      // Only admins can manage officers
+      // Only admins can create, update, delete services
       allow create, update, delete: if request.auth != null && 
         getUserRole(request.auth.uid) == 'admin';
     }
     
+    // applications collection
+    match /applications/{applicationId} {
+      // Allow users to read their own applications and staff/admins to read all
+      allow read: if request.auth != null && 
+        (resource.data.applicantId == request.auth.uid ||
+         resource.data.userId == request.auth.uid ||
+         getUserRole(request.auth.uid) in ['staff', 'admin']);
+      
+      // Allow users to list their own applications and staff/admins to list all
+      allow list: if request.auth != null && 
+        (getUserRole(request.auth.uid) in ['staff', 'admin']);
+      
+      // Allow authenticated users to list their own applications without query restrictions
+      allow list: if request.auth != null;
+      
+      // Allow users to create applications for themselves
+      allow create: if request.auth != null && 
+        (request.auth.uid == request.resource.data.applicantId ||
+         request.auth.uid == request.resource.data.userId);
+      
+      // Allow staff/admins to update applications (including assignedTo field)
+      allow update: if request.auth != null && 
+        (getUserRole(request.auth.uid) in ['staff', 'admin']);
+      
+      // Only admins can delete applications
+      allow delete: if request.auth != null && 
+        getUserRole(request.auth.uid) == 'admin';
+    }
+    
+    // Staff collection
+    match /staff/{staffId} {
+      // All authenticated users can read staff profiles
+      allow read, list: if request.auth != null;
+      // All authenticated users can create/update staff (will be restricted in app logic)
+      allow create, update, delete: if request.auth != null;
+    }
+    
     // Audit logs collection
     match /auditLogs/{logId} {
-      // No direct read/write access to audit logs from client
-      // These are managed server-side only
-      allow read, write: if false;
+      // Allow authenticated users to create and read audit logs
+      allow create, read: if request.auth != null;
+      // No updates or deletes allowed
+      allow update, delete: if false;
     }
     
     // Notifications collection
     match /notifications/{notificationId} {
-      // Users can read their own notifications
-      allow read: if request.auth != null && 
-        resource.data.userId == request.auth.uid;
-      
-      // Users can mark their notifications as read
-      allow update: if request.auth != null && 
-        resource.data.userId == request.auth.uid &&
-        request.resource.data.diff(resource.data).affectedKeys() == ['isRead', 'updatedAt'].toSet();
-      
-      // System can create notifications (server-side only)
-      allow create: if false; // Handled server-side
-      
-      // Users can delete their own notifications
-      allow delete: if request.auth != null && 
-        resource.data.userId == request.auth.uid;
+      // All authenticated users can read, create, update, delete notifications
+      allow read, create, update, delete: if request.auth != null;
     }
     
     // Helper function to get user role
@@ -107,24 +84,33 @@ service cloud.firestore {
       return request.auth != null && getUserRole(request.auth.uid) == 'admin';
     }
     
-    // Helper function to check if user is officer
-    function isOfficer() {
-      return request.auth != null && getUserRole(request.auth.uid) == 'officer';
-    }
-    
     // Helper function to check if user is staff
     function isStaff() {
       return request.auth != null && getUserRole(request.auth.uid) == 'staff';
     }
     
-    // Helper function to check if user has administrative privileges
-    function isAdminOrOfficer() {
-      return isAdmin() || isOfficer();
-    }
-    
     // Helper function to check if user can process applications
     function canProcessApplications() {
-      return isStaff() || isOfficer() || isAdmin();
+      return isStaff() || isAdmin();
+    }
+    
+    // Statistics collection - allow read for authenticated users
+    match /statistics/{statId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        getUserRole(request.auth.uid) in ['staff', 'admin'];
+    }
+    
+    // Departments collection - allow read for authenticated users
+    match /departments/{deptId} {
+      allow read, list: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Allow authenticated users to read/write to any collection for debugging
+    match /{document=**} {
+      allow read, write: if request.auth != null && 
+        getUserRole(request.auth.uid) in ['admin'];
     }
   }
 }

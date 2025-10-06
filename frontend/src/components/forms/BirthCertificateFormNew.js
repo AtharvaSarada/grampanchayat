@@ -27,9 +27,20 @@ import {
 } from '@mui/icons-material';
 import FileUpload from './FileUpload';
 import { SERVICE_TYPES } from '../../services/applicationService';
+import { useAuth } from '../../context/AuthContext';
+import { handleFormSubmission } from '../../services/formSubmissionService';
+import toast from 'react-hot-toast';
 
 const BirthCertificateForm = ({ onSubmit, onCancel, loading = false }) => {
+  const { currentUser } = useAuth();
   const [activeStep, setActiveStep] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [documents, setDocuments] = useState({
+    birthProofHospital: null,
+    parentsIdProof: null,
+    addressProof: null,
+    marriageCertificate: null
+  });
   const [formData, setFormData] = useState({
     // Child Information
     childName: '',
@@ -189,21 +200,98 @@ const BirthCertificateForm = ({ onSubmit, onCancel, loading = false }) => {
     setActiveStep(prev => prev - 1);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!validateStep(4)) {
+  const handleSubmit = async () => {
+    if (!currentUser) {
+      toast.error('Please log in to submit an application.');
       return;
     }
 
+    setSubmitting(true);
     try {
-      await onSubmit({
-        formData,
-        serviceType: SERVICE_TYPES.BIRTH_CERTIFICATE,
-        documents: formData.supportingDocuments
-      });
+      // CORRECTED: Prepare a simple array of the raw File objects
+      const documentFiles = Object.values(documents).filter(file => file !== null);
+
+      // Create submission data with the corrected documents array
+      const submissionData = {
+        serviceType: 'birth_certificate',
+        formData: {
+          // Child Details
+          childName: `${formData.childFirstName} ${formData.childLastName}`,
+          childFirstName: formData.childFirstName,
+          childLastName: formData.childLastName,
+          dateOfBirth: formData.dateOfBirth,
+          timeOfBirth: formData.timeOfBirth,
+          placeOfBirth: formData.placeOfBirth,
+          gender: formData.gender,
+          weight: formData.weight,
+          
+          // Parent Details
+          fatherName: `${formData.fatherFirstName} ${formData.fatherLastName}`,
+          fatherFirstName: formData.fatherFirstName,
+          fatherLastName: formData.fatherLastName,
+          fatherAge: formData.fatherAge,
+          fatherEducation: formData.fatherEducation,
+          fatherOccupation: formData.fatherOccupation,
+          
+          motherName: `${formData.motherFirstName} ${formData.motherLastName}`,
+          motherFirstName: formData.motherFirstName,
+          motherLastName: formData.motherLastName,
+          motherAge: formData.motherAge,
+          motherEducation: formData.motherEducation,
+          motherOccupation: formData.motherOccupation,
+          
+          // Address Details
+          permanentAddress: formData.permanentAddress,
+          city: formData.city,
+          district: formData.district,
+          state: formData.state,
+          pincode: formData.pincode,
+          
+          // Hospital Details
+          hospitalName: formData.hospitalName,
+          hospitalAddress: formData.hospitalAddress,
+          doctorName: formData.doctorName,
+          
+          // Additional Information
+          registrationDelay: formData.registrationDelay,
+          reasonForDelay: formData.reasonForDelay,
+          informantName: formData.informantName,
+          informantRelation: formData.informantRelation,
+          informantAddress: formData.informantAddress
+        },
+        documents: documentFiles
+      };
+
+      // Submit using the form submission service
+      const result = await handleFormSubmission(submissionData);
+      
+      if (result.success) {
+        // Reset form on success
+        setFormData({
+          childFirstName: '', childLastName: '', dateOfBirth: '', timeOfBirth: '', 
+          placeOfBirth: '', gender: '', weight: '',
+          fatherFirstName: '', fatherLastName: '', fatherAge: '', fatherEducation: '',
+          fatherOccupation: '', fatherNationality: '',
+          motherFirstName: '', motherLastName: '', motherAge: '', motherEducation: '',
+          motherOccupation: '', motherNationality: '',
+          permanentAddress: '', city: '', district: '', state: '', pincode: '',
+          hospitalName: '', hospitalAddress: '', doctorName: '', attendantType: '',
+          registrationDelay: 'Within 21 days', reasonForDelay: '', 
+          informantName: '', informantRelation: '', informantAddress: ''
+        });
+        setDocuments({ birthProofHospital: null, parentsIdProof: null, addressProof: null, marriageCertificate: null });
+        setActiveStep(0);
+        
+        toast.success(`Application submitted successfully! Reference: ${result.referenceNumber}`, {
+          duration: 6000
+        });
+        
+      }
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error('Submission error:', error);
+      toast.error(`Failed to submit application: ${error.message}`);
+    } finally {
+      setSubmitting(false);
     }
   };
 

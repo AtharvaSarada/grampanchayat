@@ -1,19 +1,9 @@
-﻿import React from 'react';
-import { Container, Typography, Box } from '@mui/material';
+import React from 'react';
+import StaffDashboard from './StaffDashboard';
 
 const StaffApplications = () => {
-  return (
-    <Container maxWidth="lg">
-      <Box sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          StaffApplications
-        </Typography>
-        <Typography variant="body1">
-          This is the StaffApplications component. Implementation coming soon.
-        </Typography>
-      </Box>
-    </Container>
-  );
+  // Simply render the StaffDashboard which has all the application management functionality
+  return <StaffDashboard />;
 };
 
 export default StaffApplications;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -21,7 +21,7 @@ import {
   Stepper,
   Step,
   StepLabel,
-  CircularProgress
+  Chip,
 } from '@mui/material';
 import {
   Person,
@@ -29,17 +29,32 @@ import {
   CalendarToday,
   Upload,
   CheckCircle,
-  Info
+  Info,
+  Save,
+  Delete
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
+import MultiStepForm from './MultiStepForm';
+import ChakraSpinner from '../common/ChakraSpinner';
 import toast from 'react-hot-toast';
 import { handleFormSubmission } from '../../services/formSubmissionService';
+import { useFormDraft } from '../../hooks/useFormDraft';
 
 const BirthCertificateForm = () => {
   const { currentUser } = useAuth();
   const [activeStep, setActiveStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
+  
+  // Use auto-save draft hook
+  const {
+    formData,
+    setFormData,
+    lastSaved,
+    isSaving,
+    clearDraft,
+    saveDraft,
+    hasDraft
+  } = useFormDraft('birth-certificate', {
     // Child Details
     childFirstName: '',
     childLastName: '',
@@ -55,7 +70,7 @@ const BirthCertificateForm = () => {
     fatherAge: '',
     fatherEducation: '',
     fatherOccupation: '',
-    fatherNationality: '', // [REQUIRES USER SELECTION] - Remove default assumption
+    fatherNationality: '',
     
     // Mother's Details
     motherFirstName: '',
@@ -63,7 +78,7 @@ const BirthCertificateForm = () => {
     motherAge: '',
     motherEducation: '',
     motherOccupation: '',
-    motherNationality: '', // [REQUIRES USER SELECTION] - Remove default assumption
+    motherNationality: '',
     
     // Address Details
     permanentAddress: '',
@@ -76,7 +91,7 @@ const BirthCertificateForm = () => {
     hospitalName: '',
     hospitalAddress: '',
     doctorName: '',
-    attendantType: '', // [REQUIRES USER SELECTION] - Remove default assumption
+    attendantType: '',
     
     // Additional Information
     registrationDelay: 'Within 21 days',
@@ -84,7 +99,7 @@ const BirthCertificateForm = () => {
     informantName: '',
     informantRelation: '',
     informantAddress: ''
-  });
+  }, 1000); // Auto-save after 1 second of inactivity
 
   const [documents, setDocuments] = useState({
     birthProofHospital: null,
@@ -168,6 +183,7 @@ const BirthCertificateForm = () => {
       // Create submission data
       const submissionData = {
         serviceType: 'birth_certificate',
+        currentUser: currentUser, // Pass the current user
         formData: {
           // Child Details
           childName: `${formData.childFirstName} ${formData.childLastName}`,
@@ -220,6 +236,9 @@ const BirthCertificateForm = () => {
       const result = await handleFormSubmission(submissionData);
       
       if (result.success) {
+        // Clear draft after successful submission
+        clearDraft();
+        
         // Reset form on success
         setFormData({
           childFirstName: '', childLastName: '', dateOfBirth: '', timeOfBirth: '', 
@@ -513,7 +532,11 @@ const BirthCertificateForm = () => {
           label="PIN Code"
           name="pincode"
           value={formData.pincode}
-          onChange={handleInputChange}
+          onChange={(e) => {
+            const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+            setFormData(prev => ({ ...prev, pincode: value }));
+          }}
+          inputProps={{ maxLength: 6, inputMode: 'numeric', pattern: '[0-9]*' }}
         />
       </Grid>
 
@@ -751,6 +774,40 @@ const BirthCertificateForm = () => {
           Birth Certificate Application
         </Typography>
         
+        {/* Draft Status Indicator */}
+        {lastSaved && (
+          <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Chip
+              icon={<Save />}
+              label={`Auto-saved ${new Date(lastSaved).toLocaleTimeString()}`}
+              color="success"
+              size="small"
+              variant="outlined"
+            />
+            <Button
+              size="small"
+              startIcon={<Delete />}
+              onClick={clearDraft}
+              color="error"
+              variant="text"
+            >
+              Clear Draft
+            </Button>
+          </Box>
+        )}
+        
+        {isSaving && (
+          <Box sx={{ mb: 2 }}>
+            <Chip
+              icon={<ChakraSpinner size="16px" />}
+              label="Saving draft..."
+              color="info"
+              size="small"
+              variant="outlined"
+            />
+          </Box>
+        )}
+        
         <Box sx={{ mb: 4 }}>
           <Stepper activeStep={activeStep} alternativeLabel>
             {steps.map((label) => (
@@ -781,7 +838,7 @@ const BirthCertificateForm = () => {
               color="primary"
               size="large"
               disabled={submitting}
-              startIcon={submitting ? <CircularProgress size={20} /> : null}
+              startIcon={submitting ? <ChakraSpinner size="20px" /> : null}
             >
               {submitting ? 'Submitting...' : 'Submit Application'}
             </Button>

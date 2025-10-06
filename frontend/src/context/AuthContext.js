@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { auth } from '../services/firebase';
+import { auth, db } from '../services/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { loginSuccess, logout as logoutAction, loginStart } from '../store/slices/authSlice';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import { logLogin, logLogout } from '../services/auditService';
+import { notifyWelcomeNewUser } from '../services/notificationService';
 
 const AuthContext = createContext({});
 
@@ -38,17 +41,63 @@ export const AuthProvider = ({ children }) => {
           // Get Firebase ID token
           const token = await firebaseUser.getIdToken();
           
-          // For now, use basic Firebase user data since backend profile system needs to be set up properly
-          const basicUserData = {
+          // Fetch user data from Firestore to get role and other profile info
+          let userData = {
             uid: firebaseUser.uid,
             email: firebaseUser.email,
             displayName: firebaseUser.displayName || 'User',
             role: 'user' // Default role
           };
+
+          try {
+            const userDocRef = doc(db, 'users', firebaseUser.uid);
+            const userDocSnap = await getDoc(userDocRef);
+            
+            if (userDocSnap.exists()) {
+              const firestoreData = userDocSnap.data();
+              userData = {
+                ...userData,
+                name: firestoreData.name || userData.displayName,
+                role: firestoreData.role || 'user',
+                phone: firestoreData.phone || '',
+                ...firestoreData
+              };
+            } else {
+              // Create user document if it doesn't exist
+              const newUserData = {
+                name: userData.displayName,
+                email: userData.email,
+                role: 'user',
+                phone: '',
+                createdAt: new Date(),
+                updatedAt: new Date()
+              };
+              
+              await setDoc(userDocRef, newUserData);
+              userData = { ...userData, ...newUserData };
+              
+              // Send welcome notification for new users
+              try {
+                await notifyWelcomeNewUser(userData.uid, userData.displayName);
+              } catch (notificationError) {
+                console.error('Error sending welcome notification:', notificationError);
+              }
+            }
+          } catch (firestoreError) {
+            console.error('Error fetching user data from Firestore:', firestoreError);
+            toast.error('Error loading user profile');
+          }
           
-          setCurrentUser(basicUserData);
-          dispatch(loginSuccess({ user: basicUserData, token }));
+          setCurrentUser(userData);
+          dispatch(loginSuccess({ user: userData, token }));
           localStorage.setItem('authToken', token);
+          
+          // Log successful login
+          try {
+            await logLogin(userData, null, navigator.userAgent);
+          } catch (auditError) {
+            console.error('Error logging login audit:', auditError);
+          }
         } else {
           setCurrentUser(null);
           dispatch(logoutAction());
@@ -70,6 +119,15 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
+      // Log logout before signing out
+      if (currentUser) {
+        try {
+          await logLogout(currentUser, null, navigator.userAgent);
+        } catch (auditError) {
+          console.error('Error logging logout audit:', auditError);
+        }
+      }
+      
       await signOut(auth);
       setCurrentUser(null);
       dispatch(logoutAction());
@@ -81,10 +139,46 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refreshUserData = async () => {
+    if (!auth.currentUser) return;
+    
+    try {
+      const userDocRef = doc(db, 'users', auth.currentUser.uid);
+      const userDocSnap = await getDoc(userDocRef);
+      
+      if (userDocSnap.exists()) {
+        const firestoreData = userDocSnap.data();
+        const updatedUserData = {
+          uid: auth.currentUser.uid,
+          email: auth.currentUser.email,
+          displayName: auth.currentUser.displayName || 'User',
+          name: firestoreData.name || auth.currentUser.displayName,
+          role: firestoreData.role || 'user',
+          phone: firestoreData.phone || '',
+          ...firestoreData
+        };
+        
+        setCurrentUser(updatedUserData);
+        
+        // Get fresh token and update Redux store
+        const token = await auth.currentUser.getIdToken(true); // Force refresh
+        dispatch(loginSuccess({ user: updatedUserData, token }));
+        localStorage.setItem('authToken', token);
+        
+        toast.success('Profile updated successfully');
+        return updatedUserData;
+      }
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+      toast.error('Error refreshing profile');
+    }
+  };
+
   const value = {
     currentUser,
     loading,
     logout,
+    refreshUserData,
   };
 
   return (

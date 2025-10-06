@@ -70,16 +70,19 @@ export const submitApplication = async (applicationData, userId, serviceType) =>
     const application = {
       id: applicationId,
       userId,
+      applicantId: userId, // Add applicantId for Firestore rules compatibility
       serviceType,
       status: APPLICATION_STATUS.PENDING,
       applicationData,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
+      submittedAt: serverTimestamp(),
       statusHistory: [
         {
           status: APPLICATION_STATUS.PENDING,
-          timestamp: serverTimestamp(),
-          remarks: 'Application submitted'
+          timestamp: new Date().toISOString(), // Use ISO string instead of serverTimestamp in array
+          remarks: 'Application submitted',
+          updatedBy: userId
         }
       ]
     };

@@ -38,13 +38,15 @@ import {
   Assignment,
   History,
   Settings,
-  Verified
+  Verified,
+  Refresh
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { updatePassword } from 'firebase/auth';
 import { auth, db } from '../../services/firebase';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
+import MyApplications from './MyApplications';
 
 const UserProfile = () => {
   console.log('🔄 RENDER: UserProfile component rendered at', Date.now());
@@ -62,7 +64,7 @@ const UserProfile = () => {
     }
   });
   
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, refreshUserData } = useAuth();
   
   // Track Firebase auth state changes
   useLayoutEffect(() => {
@@ -727,23 +729,57 @@ const UserProfile = () => {
               <Typography variant="h6" color="text.secondary">
                 {profileData.email}
               </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Role: 
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    bgcolor: currentUser?.role === 'admin' ? 'error.light' : 
+                           currentUser?.role === 'staff' ? 'warning.light' : 
+                           currentUser?.role === 'officer' ? 'info.light' : 'grey.300',
+                    color: 'white',
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 1,
+                    fontWeight: 'bold',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  {currentUser?.role || 'user'}
+                </Typography>
+              </Box>
               <Typography variant="body2" color="text.secondary">
-                Member since {new Date(currentUser?.metadata?.creationTime).toLocaleDateString()}
+                Member since {currentUser?.metadata?.creationTime ? 
+                  new Date(currentUser.metadata.creationTime).toLocaleDateString() : 
+                  'Recently joined'}
               </Typography>
             </Grid>
             <Grid item>
-              <Button
-                variant={isEditing ? "contained" : "outlined"}
-                startIcon={isEditing ? <Save /> : <Edit />}
-                onClick={isEditing ? handleSaveProfile : () => setIsEditing(true)}
-              >
-                {isEditing ? 'Save Changes' : 'Edit Profile'}
-              </Button>
-              {isEditing && (
-                <IconButton onClick={() => setIsEditing(false)} sx={{ ml: 1 }}>
-                  <Cancel />
-                </IconButton>
-              )}
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  variant={isEditing ? "contained" : "outlined"}
+                  startIcon={isEditing ? <Save /> : <Edit />}
+                  onClick={isEditing ? handleSaveProfile : () => setIsEditing(true)}
+                >
+                  {isEditing ? 'Save Changes' : 'Edit Profile'}
+                </Button>
+                {isEditing && (
+                  <IconButton onClick={() => setIsEditing(false)}>
+                    <Cancel />
+                  </IconButton>
+                )}
+                <Button
+                  variant="outlined"
+                  startIcon={<Refresh />}
+                  onClick={refreshUserData}
+                  color="secondary"
+                  size="small"
+                >
+                  Refresh Role
+                </Button>
+              </Box>
             </Grid>
           </Grid>
         </Paper>
@@ -770,69 +806,7 @@ const UserProfile = () => {
           
           {/* Applications Tab */}
           <TabPanel key="applications-tab" value={activeTab} index={1}>
-            <Typography variant="h6" gutterBottom color="primary">
-              My Applications
-            </Typography>
-            {userApplications.length > 0 ? (
-              <Grid container spacing={2}>
-                {userApplications.map((app) => (
-                  <Grid item xs={12} key={app.id}>
-                    <Card>
-                      <CardContent>
-                        <Grid container alignItems="center" spacing={2}>
-                          <Grid item xs={12} sm={3}>
-                            <Typography variant="h6">{app.serviceName}</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              ID: {app.id}
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={12} sm={2}>
-                            <Box
-                              sx={{
-                                px: 2,
-                                py: 1,
-                                borderRadius: 1,
-                                bgcolor: `${getStatusColor(app.status)}.light`,
-                                color: `${getStatusColor(app.status)}.dark`,
-                                textAlign: 'center',
-                                fontWeight: 'bold'
-                              }}
-                            >
-                              {app.status}
-                            </Box>
-                          </Grid>
-                          <Grid item xs={12} sm={3}>
-                            <Typography variant="body2" color="text.secondary">
-                              Submitted: {app.submittedDate}
-                            </Typography>
-                            {app.expectedCompletion && (
-                              <Typography variant="body2" color="text.secondary">
-                                Expected: {app.expectedCompletion}
-                              </Typography>
-                            )}
-                          </Grid>
-                          <Grid item xs={12} sm={4}>
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                              <Button size="small" variant="outlined">
-                                View Details
-                              </Button>
-                              <Button size="small" variant="outlined">
-                                Track Status
-                              </Button>
-                            </Box>
-                          </Grid>
-                        </Grid>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            ) : (
-              <Alert severity="info">
-                You haven't submitted any applications yet. 
-                <Button href="/services" sx={{ ml: 1 }}>Browse Services</Button>
-              </Alert>
-            )}
+            <MyApplications />
           </TabPanel>
           
           {/* Security Tab */}

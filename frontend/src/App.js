@@ -16,11 +16,17 @@ import Footer from './components/layout/Footer';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import GeminiProChatbot from './components/chatbot/GeminiProChatbot';
+import RoleBasedDashboard from './components/dashboard/RoleBasedDashboard';
+
+// Test utilities
+import { testUserAuth, testStoragePermissions } from './utils/testAuth';
+import { fixUserRole } from './utils/fixUserRole';
 
 // Pages
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ServicesPage from './pages/services/ServicesPage';
 import ServiceDetailsPage from './pages/services/ServiceDetailsPage';
 
@@ -31,6 +37,7 @@ import UserProfile from './pages/user/UserProfile';
 
 // Application Forms
 import ApplicationForm from './pages/applications/ApplicationForm';
+import ServiceFormRouter from './components/forms/ServiceFormRouter';
 
 // Staff Pages
 import StaffDashboard from './pages/staff/StaffDashboard';
@@ -144,6 +151,17 @@ const theme = createTheme({
 });
 
 function App() {
+  // Make test functions available globally for debugging
+  React.useEffect(() => {
+    window.testUserAuth = testUserAuth;
+    window.testStoragePermissions = testStoragePermissions;
+    window.fixUserRole = fixUserRole;
+    console.log('🔧 Debug functions available:');
+    console.log('  - testUserAuth() - Test authentication and permissions');
+    console.log('  - testStoragePermissions() - Test file upload permissions');
+    console.log('  - fixUserRole("admin") - Set current user as admin');
+  }, []);
+
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
@@ -160,23 +178,31 @@ function App() {
                     <Route path="/" element={<HomePage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/services" element={<ServicesPage />} />
                     <Route path="/services/:serviceId" element={<ServiceDetailsPage />} />
                     
-                    {/* Protected User Routes */}
+                    {/* Smart Dashboard Route - Redirects based on role */}
                     <Route path="/dashboard" element={
+                      <ProtectedRoute roles={['user', 'staff', 'officer', 'admin']}>
+                        <RoleBasedDashboard />
+                      </ProtectedRoute>
+                    } />
+                    
+                    {/* Specific Dashboard Routes */}
+                    <Route path="/user/dashboard" element={
                       <ProtectedRoute roles={['user']}>
                         <UserDashboard />
                       </ProtectedRoute>
                     } />
                     <Route path="/my-applications" element={
-                      <ProtectedRoute roles={['user']}>
+                      <ProtectedRoute roles={['user', 'admin', 'staff', 'officer']}>
                         <MyApplications />
                       </ProtectedRoute>
                     } />
                     <Route path="/apply/:serviceId" element={
-                      <ProtectedRoute roles={['user']}>
-                        <ApplicationForm />
+                      <ProtectedRoute roles={['user', 'staff', 'officer', 'admin']}>
+                        <ServiceFormRouter />
                       </ProtectedRoute>
                     } />
                     <Route path="/profile" element={

@@ -1,28 +1,38 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
 import { Navigate, useLocation } from 'react-router-dom';
-import { CircularProgress, Box } from '@mui/material';
+import { Box } from '@mui/material';
+import ChakraSpinner from '../common/ChakraSpinner';
+import { useAuth } from '../../context/AuthContext';
 
 const ProtectedRoute = ({ children, roles = [] }) => {
-  const { isAuthenticated, user, loading } = useSelector(state => state.auth);
+  const { currentUser, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-        <CircularProgress />
+        <ChakraSpinner size="40px" />
       </Box>
     );
   }
 
-  if (!isAuthenticated) {
+  if (!currentUser) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Check if user role is allowed
-  if (roles.length > 0 && user && !roles.includes(user.role)) {
+  if (roles.length > 0 && currentUser && !roles.includes(currentUser.role)) {
+    console.log('🚫 PROTECTED ROUTE: Access denied');
+    console.log('   Current user role:', currentUser.role);
+    console.log('   Allowed roles:', roles);
+    console.log('   Path:', location.pathname);
     return <Navigate to="/unauthorized" replace />;
   }
+
+  console.log('✅ PROTECTED ROUTE: Access granted');
+  console.log('   Current user role:', currentUser.role);
+  console.log('   Allowed roles:', roles);
+  console.log('   Path:', location.pathname);
 
   return children;
 };

@@ -23,7 +23,6 @@ import {
   ListItemText,
   ListItemIcon,
   Divider,
-  CircularProgress,
   TextField,
   InputAdornment
 } from '@mui/material';
@@ -40,15 +39,14 @@ import {
   AttachFile
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
-import { 
-  getUserApplications, 
-  getServiceDisplayName, 
-  APPLICATION_STATUS 
-} from '../../services/applicationService';
+import { getUserApplications, APPLICATION_STATUS } from '../../services/realWorldApplicationService';
+import ChakraSpinner from '../../components/common/ChakraSpinner';
 import toast from 'react-hot-toast';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 const MyApplications = () => {
   const { currentUser } = useAuth();
+  const { t } = useLanguage();
   const [applications, setApplications] = useState([]);
   const [filteredApplications, setFilteredApplications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,13 +56,41 @@ const MyApplications = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const statusTabs = [
-    { label: 'All', value: 'all' },
-    { label: 'Pending', value: APPLICATION_STATUS.PENDING },
-    { label: 'Under Review', value: APPLICATION_STATUS.UNDER_REVIEW },
-    { label: 'Approved', value: APPLICATION_STATUS.APPROVED },
+    { label: t('applications.all'), value: 'all' },
+    { label: t('applications.submitted'), value: APPLICATION_STATUS.SUBMITTED },
+    { label: t('applications.underReview'), value: APPLICATION_STATUS.UNDER_REVIEW },
+    { label: t('applications.approved'), value: APPLICATION_STATUS.APPROVED },
     { label: 'Rejected', value: APPLICATION_STATUS.REJECTED },
     { label: 'Completed', value: APPLICATION_STATUS.COMPLETED }
   ];
+
+  const getServiceDisplayName = (serviceType) => {
+    const displayNames = {
+      'birth-certificate': 'Birth Certificate',
+      'death-certificate': 'Death Certificate',
+      'marriage-certificate': 'Marriage Certificate',
+      'income-certificate': 'Income Certificate',
+      'caste-certificate': 'Caste Certificate',
+      'domicile-certificate': 'Domicile Certificate',
+      'bpl-certificate': 'BPL Certificate',
+      'agricultural-subsidy': 'Agricultural Subsidy',
+      'crop-insurance': 'Crop Insurance',
+      'building-permission': 'Building Permission',
+      'trade-license': 'Trade License',
+      'water-connection': 'Water Connection',
+      'drainage-connection': 'Drainage Connection',
+      'property-tax-payment': 'Property Tax Payment',
+      'property-tax-assessment': 'Property Tax Assessment',
+      'vaccination-certificate': 'Vaccination Certificate',
+      'health-certificate': 'Health Certificate',
+      'school-transfer-certificate': 'School Transfer Certificate',
+      'scholarship': 'Scholarship Application',
+      'water-tax-payment': 'Water Tax Payment',
+      'street-light-installation': 'Street Light Installation'
+    };
+    
+    return displayNames[serviceType] || serviceType.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
 
   useEffect(() => {
     if (currentUser) {
@@ -79,7 +105,9 @@ const MyApplications = () => {
   const loadApplications = async () => {
     try {
       setLoading(true);
+      console.log('Loading applications for user:', currentUser.uid);
       const userApps = await getUserApplications(currentUser.uid);
+      console.log('Applications loaded:', userApps.length, userApps);
       setApplications(userApps);
     } catch (error) {
       console.error('Error loading applications:', error);
@@ -310,7 +338,11 @@ const MyApplications = () => {
               
               <Paper variant="outlined" sx={{ p: 2, maxHeight: 300, overflow: 'auto' }}>
                 {Object.entries(selectedApplication.applicationData || {}).map(([key, value]) => {
-                  if (key === 'supportingDocuments' || key === 'documentUrls') return null;
+                  // Skip objects and arrays that shouldn't be displayed
+                  if (key === 'supportingDocuments' || key === 'documentUrls' || key === 'applicantInfo' || key === 'submissionDetails') return null;
+                  
+                  // Skip if value is an object or array
+                  if (typeof value === 'object' && value !== null) return null;
                   
                   return (
                     <Box key={key} sx={{ mb: 1 }}>
@@ -335,30 +367,42 @@ const MyApplications = () => {
                 </Typography>
                 
                 <List dense>
-                  {selectedApplication.applicationData.documentUrls.map((url, index) => (
-                    <ListItem key={index}>
-                      <ListItemIcon>
-                        <AttachFile />
-                      </ListItemIcon>
-                      <ListItemText 
-                        primary={`Document ${index + 1}`}
-                        secondary={
-                          <Button 
-                            size="small" 
-                            onClick={() => window.open(url, '_blank')}
-                          >
-                            View Document
-                          </Button>
-                        }
-                      />
-                    </ListItem>
-                  ))}
+                  {(() => {
+                    const docs = selectedApplication.applicationData.documentUrls;
+                    // Convert object to array if needed
+                    const docsArray = Array.isArray(docs) 
+                      ? docs 
+                      : Object.entries(docs).map(([type, doc]) => ({
+                          type,
+                          name: doc.name || type,
+                          url: doc.url || doc
+                        }));
+                    
+                    return docsArray.map((doc, index) => (
+                      <ListItem key={index}>
+                        <ListItemIcon>
+                          <AttachFile />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary={doc.name || doc.type || `Document ${index + 1}`}
+                          secondary={
+                            <Button 
+                              size="small" 
+                              onClick={() => window.open(doc.url || doc, '_blank')}
+                            >
+                              View Document
+                            </Button>
+                          }
+                        />
+                      </ListItem>
+                    ));
+                  })()}
                 </List>
               </Grid>
             )}
 
             {/* Status History */}
-            {selectedApplication.statusHistory && (
+            {selectedApplication.statusHistory && selectedApplication.statusHistory.length > 0 && (
               <Grid item xs={12}>
                 <Typography variant="h6" gutterBottom color="primary">
                   <History sx={{ mr: 1, verticalAlign: 'middle' }} />
@@ -476,7 +520,7 @@ const MyApplications = () => {
         {/* Applications Grid */}
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress />
+            <ChakraSpinner size="40px" />
           </Box>
         ) : filteredApplications.length > 0 ? (
           <Grid container spacing={3}>

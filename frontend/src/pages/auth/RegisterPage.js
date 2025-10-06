@@ -8,7 +8,6 @@ import {
   Button,
   Link,
   Alert,
-  CircularProgress,
   InputAdornment,
   IconButton,
   Grid
@@ -22,7 +21,8 @@ import {
   VisibilityOff,
   Business
 } from '@mui/icons-material';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import ChakraSpinner from '../../components/common/ChakraSpinner';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, db } from '../../services/firebase';
 import { doc, setDoc } from 'firebase/firestore';
@@ -58,12 +58,31 @@ const RegisterPage = () => {
       setError('Please fill in all required fields');
       return false;
     }
+
+    // Validate names (alphabetic only)
+    if (!/^[a-zA-Z\s]+$/.test(formData.firstName) || !/^[a-zA-Z\s]+$/.test(formData.lastName)) {
+      setError('Names should contain only alphabetic characters');
+      return false;
+    }
+
+    // Validate email format
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+
+    // Validate phone number (exactly 10 digits)
+    if (formData.phoneNumber && !/^\d{10}$/.test(formData.phoneNumber)) {
+      setError('Invalid phone number - must be exactly 10 digits');
+      return false;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return false;
     }
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long');
       return false;
     }
     return true;
@@ -111,17 +130,19 @@ const RegisterPage = () => {
       
       // Store user profile data in Firebase Firestore
       const profileData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phoneNumber: formData.phoneNumber,
-        email: formData.email,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        name: `${formData.firstName.trim()} ${formData.lastName.trim()}`, // For backward compatibility
+        phoneNumber: formData.phoneNumber.trim(),
+        phone: formData.phoneNumber.trim(), // For consistency with admin form
+        email: formData.email.trim().toLowerCase(),
         address: '',
         city: '',
         state: '',
         pincode: '',
         occupation: '',
         dateOfBirth: '',
-        role: 'citizen',
+        role: 'user', // Changed from 'citizen' to 'user' for consistency
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -336,7 +357,7 @@ const RegisterPage = () => {
             >
               {loading ? (
                 <>
-                  <CircularProgress size={20} sx={{ mr: 2 }} />
+                  <ChakraSpinner size="20px" />
                   Creating Account...
                 </>
               ) : (

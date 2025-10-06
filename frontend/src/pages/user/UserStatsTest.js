@@ -1,1 +1,322 @@
-import React, { useState, useEffect } from 'react';\nimport {\n  Container,\n  Typography,\n  Box,\n  Grid,\n  Card,\n  CardContent,\n  Button,\n  Paper,\n  List,\n  ListItem,\n  ListItemText,\n  Chip,\n  Divider,\n  Alert,\n  TextField,\n  Skeleton,\n  CircularProgress\n} from '@mui/material';\nimport {\n  Assignment,\n  Schedule,\n  CheckCircle,\n  AttachMoney,\n  Person,\n  Refresh,\n  TrendingUp\n} from '@mui/icons-material';\nimport { subscribeToUserStatistics, getRecentApplications } from '../../services/statisticsService';\n\nconst UserStatsTest = () => {\n  const [testUserId, setTestUserId] = useState('test-user-123');\n  const [userStats, setUserStats] = useState({\n    totalApplications: 0,\n    pendingApplications: 0,\n    completedApplications: 0,\n    totalAmountPaid: 0\n  });\n  const [recentApplications, setRecentApplications] = useState([]);\n  const [loading, setLoading] = useState(false);\n  const [error, setError] = useState('');\n  \n  const loadUserData = () => {\n    if (!testUserId.trim()) {\n      setError('Please enter a user ID');\n      return;\n    }\n    \n    setLoading(true);\n    setError('');\n    \n    // Subscribe to real-time user statistics\n    const unsubscribeStats = subscribeToUserStatistics(testUserId, (stats) => {\n      setUserStats(stats);\n      setLoading(false);\n    });\n    \n    // Load recent applications\n    const loadRecentApplications = async () => {\n      try {\n        const applications = await getRecentApplications(testUserId, 5);\n        setRecentApplications(applications);\n      } catch (error) {\n        console.error('Error loading recent applications:', error);\n        setError('Failed to load recent applications');\n      }\n    };\n    \n    loadRecentApplications();\n    \n    // Return cleanup function\n    return () => {\n      if (unsubscribeStats) unsubscribeStats();\n    };\n  };\n  \n  const handleTestUser1 = () => {\n    setTestUserId('test-user-123');\n  };\n  \n  const handleTestUser2 = () => {\n    setTestUserId('test-user-456');\n  };\n  \n  const handleNewUser = () => {\n    setTestUserId('nonexistent-user');\n  };\n  \n  return (\n    <Container maxWidth=\"lg\">\n      <Box sx={{ mt: 4, mb: 4 }}>\n        {/* Header */}\n        <Paper elevation={2} sx={{ p: 3, mb: 4, background: 'linear-gradient(135deg, #f3e5f5 0%, #e1bee7 50%)' }}>\n          <Typography variant=\"h4\" component=\"h1\" gutterBottom>\n            User Statistics Test Dashboard\n          </Typography>\n          <Typography variant=\"body1\" color=\"text.secondary\">\n            Test the user-specific statistics functionality with real Firebase data.\n          </Typography>\n        </Paper>\n        \n        {/* Test Controls */}\n        <Card sx={{ mb: 4 }}>\n          <CardContent>\n            <Typography variant=\"h6\" gutterBottom>\n              Test User Selection\n            </Typography>\n            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>\n              <Button\n                variant=\"outlined\"\n                onClick={handleTestUser1}\n                startIcon={<Person />}\n              >\n                Test User 1 (has data)\n              </Button>\n              <Button\n                variant=\"outlined\"\n                onClick={handleTestUser2}\n                startIcon={<Person />}\n              >\n                Test User 2 (limited data)\n              </Button>\n              <Button\n                variant=\"outlined\"\n                onClick={handleNewUser}\n                startIcon={<Person />}\n              >\n                New User (no data)\n              </Button>\n            </Box>\n            \n            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>\n              <TextField\n                label=\"User ID\"\n                value={testUserId}\n                onChange={(e) => setTestUserId(e.target.value)}\n                size=\"small\"\n                fullWidth\n                sx={{ maxWidth: 300 }}\n              />\n              <Button\n                variant=\"contained\"\n                onClick={loadUserData}\n                startIcon={loading ? <CircularProgress size={20} /> : <Refresh />}\n                disabled={loading}\n              >\n                Load Data\n              </Button>\n            </Box>\n            \n            {error && (\n              <Alert severity=\"error\" sx={{ mt: 2 }}>\n                {error}\n              </Alert>\n            )}\n          </CardContent>\n        </Card>\n        \n        {/* Statistics Cards */}\n        <Grid container spacing={3} sx={{ mb: 4 }}>\n          <Grid item xs={12} sm={6} md={3}>\n            <Card>\n              <CardContent sx={{ textAlign: 'center' }}>\n                <Assignment color=\"primary\" sx={{ fontSize: 40, mb: 1 }} />\n                {loading ? (\n                  <Skeleton variant=\"text\" width={60} height={48} sx={{ mx: 'auto' }} />\n                ) : (\n                  <Typography variant=\"h4\" component=\"div\" gutterBottom>\n                    {userStats.totalApplications}\n                  </Typography>\n                )}\n                <Typography color=\"text.secondary\">\n                  Total Applications\n                </Typography>\n              </CardContent>\n            </Card>\n          </Grid>\n          <Grid item xs={12} sm={6} md={3}>\n            <Card>\n              <CardContent sx={{ textAlign: 'center' }}>\n                <Schedule color=\"warning\" sx={{ fontSize: 40, mb: 1 }} />\n                {loading ? (\n                  <Skeleton variant=\"text\" width={60} height={48} sx={{ mx: 'auto' }} />\n                ) : (\n                  <Typography variant=\"h4\" component=\"div\" gutterBottom>\n                    {userStats.pendingApplications}\n                  </Typography>\n                )}\n                <Typography color=\"text.secondary\">\n                  Pending Applications\n                </Typography>\n              </CardContent>\n            </Card>\n          </Grid>\n          <Grid item xs={12} sm={6} md={3}>\n            <Card>\n              <CardContent sx={{ textAlign: 'center' }}>\n                <CheckCircle color=\"success\" sx={{ fontSize: 40, mb: 1 }} />\n                {loading ? (\n                  <Skeleton variant=\"text\" width={60} height={48} sx={{ mx: 'auto' }} />\n                ) : (\n                  <Typography variant=\"h4\" component=\"div\" gutterBottom>\n                    {userStats.completedApplications}\n                  </Typography>\n                )}\n                <Typography color=\"text.secondary\">\n                  Completed Applications\n                </Typography>\n              </CardContent>\n            </Card>\n          </Grid>\n          <Grid item xs={12} sm={6} md={3}>\n            <Card>\n              <CardContent sx={{ textAlign: 'center' }}>\n                <AttachMoney color=\"info\" sx={{ fontSize: 40, mb: 1 }} />\n                {loading ? (\n                  <Skeleton variant=\"text\" width={80} height={48} sx={{ mx: 'auto' }} />\n                ) : (\n                  <Typography variant=\"h4\" component=\"div\" gutterBottom>\n                    ₹{userStats.totalAmountPaid.toLocaleString()}\n                  </Typography>\n                )}\n                <Typography color=\"text.secondary\">\n                  Total Amount Paid\n                </Typography>\n              </CardContent>\n            </Card>\n          </Grid>\n        </Grid>\n        \n        {/* Recent Applications */}\n        <Card>\n          <CardContent>\n            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>\n              <TrendingUp color=\"primary\" sx={{ mr: 1 }} />\n              <Typography variant=\"h6\" component=\"h2\">\n                Recent Applications\n              </Typography>\n            </Box>\n            <List>\n              {loading ? (\n                // Loading state\n                Array.from({ length: 3 }).map((_, index) => (\n                  <React.Fragment key={index}>\n                    <ListItem>\n                      <ListItemText\n                        primary={<Skeleton variant=\"text\" width=\"60%\" />}\n                        secondary={\n                          <Box>\n                            <Skeleton variant=\"text\" width=\"40%\" />\n                            <Skeleton variant=\"text\" width=\"45%\" />\n                          </Box>\n                        }\n                      />\n                    </ListItem>\n                    {index < 2 && <Divider />}\n                  </React.Fragment>\n                ))\n              ) : recentApplications.length > 0 ? (\n                // Real applications data\n                recentApplications.map((app, index) => (\n                  <React.Fragment key={app.id}>\n                    <ListItem>\n                      <ListItemText\n                        primary={app.serviceName}\n                        secondary={\n                          <Box>\n                            <Typography variant=\"caption\" display=\"block\">\n                              Applied on: {new Date(app.applicationDate).toLocaleDateString()}\n                            </Typography>\n                            <Typography variant=\"caption\" display=\"block\">\n                              Expected: {new Date(app.estimatedCompletion).toLocaleDateString()}\n                            </Typography>\n                          </Box>\n                        }\n                      />\n                      <Chip\n                        label={app.status}\n                        color={app.statusColor}\n                        size=\"small\"\n                        variant=\"outlined\"\n                      />\n                    </ListItem>\n                    {index < recentApplications.length - 1 && <Divider />}\n                  </React.Fragment>\n                ))\n              ) : (\n                // Empty state\n                <ListItem>\n                  <ListItemText\n                    primary=\"No applications found\"\n                    secondary={`User '${testUserId}' has no applications in the system.`}\n                    sx={{ textAlign: 'center', py: 4 }}\n                  />\n                </ListItem>\n              )}\n            </List>\n          </CardContent>\n        </Card>\n        \n        {/* Instructions */}\n        <Alert severity=\"info\" sx={{ mt: 3 }}>\n          <Typography variant=\"subtitle2\" gutterBottom>\n            Test Instructions:\n          </Typography>\n          <Typography variant=\"body2\">\n            • <strong>test-user-123</strong>: Has 4 applications (2 completed, 2 pending, ₹850 total)\n            <br />\n            • <strong>test-user-456</strong>: Has 1 application (1 pending, ₹25 total)\n            <br />\n            • <strong>nonexistent-user</strong>: Has no applications (all zeros)\n            <br />\n            • The data updates in real-time when you change users or new applications are added.\n          </Typography>\n        </Alert>\n      </Box>\n    </Container>\n  );\n};\n\nexport default UserStatsTest;
+import React, { useState, useEffect } from 'react';
+import {
+  Container,
+  Typography,
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  Button,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
+  Chip,
+  Divider,
+  Alert,
+  TextField,
+  Skeleton,
+} from '@mui/material';
+import {
+  Assignment,
+  Schedule,
+  CheckCircle,
+  AttachMoney,
+  Person,
+  Refresh,
+  TrendingUp
+} from '@mui/icons-material';
+import { subscribeToUserStatistics, getRecentApplications } from '../../services/statisticsService';
+import ChakraSpinner from '../../components/common/ChakraSpinner';
+
+const UserStatsTest = () => {
+  const [testUserId, setTestUserId] = useState('test-user-123');
+  const [userStats, setUserStats] = useState({
+    totalApplications: 0,
+    pendingApplications: 0,
+    completedApplications: 0,
+    totalAmountPaid: 0
+  });
+  const [recentApplications, setRecentApplications] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const loadUserData = () => {
+    if (!testUserId.trim()) {
+      setError('Please enter a user ID');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    // Subscribe to real-time user statistics
+    const unsubscribeStats = subscribeToUserStatistics(testUserId, (stats) => {
+      setUserStats(stats);
+      setLoading(false);
+    });
+
+    // Load recent applications
+    const loadRecentApplications = async () => {
+      try {
+        const applications = await getRecentApplications(testUserId, 5);
+        setRecentApplications(applications);
+      } catch (error) {
+        console.error('Error loading recent applications:', error);
+        setError('Failed to load recent applications');
+      }
+    };
+
+    loadRecentApplications();
+
+    // Return cleanup function
+    return () => {
+      if (unsubscribeStats) unsubscribeStats();
+    };
+  };
+
+  const handleTestUser1 = () => {
+    setTestUserId('test-user-123');
+  };
+
+  const handleTestUser2 = () => {
+    setTestUserId('test-user-456');
+  };
+
+  const handleNewUser = () => {
+    setTestUserId('nonexistent-user');
+  };
+
+  return (
+    <Container maxWidth="lg">
+      <Box sx={{ mt: 4, mb: 4 }}>
+        {/* Header */}
+        <Paper elevation={2} sx={{ p: 3, mb: 4, background: 'linear-gradient(135deg, #f3e5f5 0%, #e1bee7 50%)' }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            User Statistics Test Dashboard
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Test the user-specific statistics functionality with real Firebase data.
+          </Typography>
+        </Paper>
+
+        {/* Test Controls */}
+        <Card sx={{ mb: 4 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Test User Selection
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+              <Button
+                variant="outlined"
+                onClick={handleTestUser1}
+                startIcon={<Person />}
+              >
+                Test User 1 (has data)
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={handleTestUser2}
+                startIcon={<Person />}
+              >
+                Test User 2 (limited data)
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={handleNewUser}
+                startIcon={<Person />}
+              >
+                New User (no data)
+              </Button>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
+              <TextField
+                label="User ID"
+                value={testUserId}
+                onChange={(e) => setTestUserId(e.target.value)}
+                size="small"
+                fullWidth
+                sx={{ maxWidth: 300 }}
+              />
+              <Button
+                variant="contained"
+                onClick={loadUserData}
+                startIcon={loading ? <ChakraSpinner size="20px" /> : <Refresh />}
+                disabled={loading}
+              >
+                Load Data
+              </Button>
+            </Box>
+
+            {error && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {error}
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Statistics Cards */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Assignment color="primary" sx={{ fontSize: 40, mb: 1 }} />
+                {loading ? (
+                  <Skeleton variant="text" width={60} height={48} sx={{ mx: 'auto' }} />
+                ) : (
+                  <Typography variant="h4" component="div" gutterBottom>
+                    {userStats.totalApplications}
+                  </Typography>
+                )}
+                <Typography color="text.secondary">
+                  Total Applications
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Schedule color="warning" sx={{ fontSize: 40, mb: 1 }} />
+                {loading ? (
+                  <Skeleton variant="text" width={60} height={48} sx={{ mx: 'auto' }} />
+                ) : (
+                  <Typography variant="h4" component="div" gutterBottom>
+                    {userStats.pendingApplications}
+                  </Typography>
+                )}
+                <Typography color="text.secondary">
+                  Pending Applications
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent sx={{ textAlign: 'center' }}>
+                <CheckCircle color="success" sx={{ fontSize: 40, mb: 1 }} />
+                {loading ? (
+                  <Skeleton variant="text" width={60} height={48} sx={{ mx: 'auto' }} />
+                ) : (
+                  <Typography variant="h4" component="div" gutterBottom>
+                    {userStats.completedApplications}
+                  </Typography>
+                )}
+                <Typography color="text.secondary">
+                  Completed Applications
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent sx={{ textAlign: 'center' }}>
+                <AttachMoney color="info" sx={{ fontSize: 40, mb: 1 }} />
+                {loading ? (
+                  <Skeleton variant="text" width={80} height={48} sx={{ mx: 'auto' }} />
+                ) : (
+                  <Typography variant="h4" component="div" gutterBottom>
+                    ₹{userStats.totalAmountPaid.toLocaleString()}
+                  </Typography>
+                )}
+                <Typography color="text.secondary">
+                  Total Amount Paid
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+        {/* Recent Applications */}
+        <Card>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <TrendingUp color="primary" sx={{ mr: 1 }} />
+              <Typography variant="h6" component="h2">
+                Recent Applications
+              </Typography>
+            </Box>
+            <List>
+              {loading ? (
+                // Loading state
+                Array.from({ length: 3 }).map((_, index) => (
+                  <React.Fragment key={index}>
+                    <ListItem>
+                      <ListItemText
+                        primary={<Skeleton variant="text" width="60%" />}
+                        secondary={
+                          <Box>
+                            <Skeleton variant="text" width="40%" />
+                            <Skeleton variant="text" width="45%" />
+                          </Box>
+                        }
+                      />
+                    </ListItem>
+                    {index < 2 && <Divider />}
+                  </React.Fragment>
+                ))
+              ) : recentApplications.length > 0 ? (
+                // Real applications data
+                recentApplications.map((app, index) => (
+                  <React.Fragment key={app.id}>
+                    <ListItem>
+                      <ListItemText
+                        primary={app.serviceName}
+                        secondary={
+                          <Box>
+                            <Typography variant="caption" display="block">
+                              Applied on: {new Date(app.applicationDate).toLocaleDateString()}
+                            </Typography>
+                            <Typography variant="caption" display="block">
+                              Expected: {new Date(app.estimatedCompletion).toLocaleDateString()}
+                            </Typography>
+                          </Box>
+                        }
+                      />
+                      <Chip
+                        label={app.status}
+                        color={app.statusColor}
+                        size="small"
+                        variant="outlined"
+                      />
+                    </ListItem>
+                    {index < recentApplications.length - 1 && <Divider />}
+                  </React.Fragment>
+                ))
+              ) : (
+                // Empty state
+                <ListItem>
+                  <ListItemText
+                    primary="No applications found"
+                    secondary={`User '${testUserId}' has no applications in the system.`}
+                    sx={{ textAlign: 'center', py: 4 }}
+                  />
+                </ListItem>
+              )}
+            </List>
+          </CardContent>
+        </Card>
+
+        {/* Instructions */}
+        <Alert severity="info" sx={{ mt: 3 }}>
+          <Typography variant="subtitle2" gutterBottom>
+            Test Instructions:
+          </Typography>
+          <Typography variant="body2">
+            • <strong>test-user-123</strong>: Has 4 applications (2 completed, 2 pending, ₹850 total)
+            <br />
+            • <strong>test-user-456</strong>: Has 1 application (1 pending, ₹25 total)
+            <br />
+            • <strong>nonexistent-user</strong>: Has no applications (all zeros)
+            <br />
+            • The data updates in real-time when you change users or new applications are added.
+          </Typography>
+        </Alert>
+      </Box>
+    </Container>
+  );
+};
+
+export default UserStatsTest;

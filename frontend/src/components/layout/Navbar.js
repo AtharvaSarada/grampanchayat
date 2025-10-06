@@ -13,16 +13,23 @@ import {
   AccountCircle, 
   Home, 
   Business,
-  ExitToApp
+  ExitToApp,
+  Dashboard,
+  AdminPanelSettings,
+  Work
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSelector } from 'react-redux';
+import NotificationSystem from '../notifications/NotificationSystem';
+import LanguageToggle from '../LanguageToggle';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
   const { isAuthenticated } = useSelector(state => state.auth);
+  const { t } = useLanguage();
   const [anchorEl, setAnchorEl] = React.useState(null);
 
   const handleMenu = (event) => {
@@ -51,21 +58,22 @@ const Navbar = () => {
         </IconButton>
         
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          E-Services for Gram Panchayath
+          {t('home.title')}
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Button color="inherit" onClick={() => navigate('/')}>
             <Home sx={{ mr: 1 }} />
-            Home
+            {t('nav.home')}
           </Button>
           
           <Button color="inherit" onClick={() => navigate('/services')}>
-            Services
+            {t('nav.services')}
           </Button>
 
           {isAuthenticated ? (
             <>
+              <LanguageToggle variant="icon" />
               <IconButton
                 size="large"
                 aria-label="account of current user"
@@ -91,25 +99,62 @@ const Navbar = () => {
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
               >
-                <MenuItem onClick={() => { navigate('/dashboard'); handleClose(); }}>
-                  Dashboard
-                </MenuItem>
+                {/* Role-based Dashboard Navigation */}
+                {currentUser?.role === 'admin' || currentUser?.role === 'officer' ? (
+                  <MenuItem onClick={() => { navigate('/admin/dashboard'); handleClose(); }}>
+                    <AdminPanelSettings sx={{ mr: 1 }} />
+                    {t('dashboard.admin.title')}
+                  </MenuItem>
+                ) : currentUser?.role === 'staff' ? (
+                  <MenuItem onClick={() => { navigate('/staff/dashboard'); handleClose(); }}>
+                    <Work sx={{ mr: 1 }} />
+                    {t('dashboard.staff.title')}
+                  </MenuItem>
+                ) : (
+                  <MenuItem onClick={() => { navigate('/user/dashboard'); handleClose(); }}>
+                    <Dashboard sx={{ mr: 1 }} />
+                    {t('nav.dashboard')}
+                  </MenuItem>
+                )}
+                
+                {/* Additional Admin/Staff Menu Items */}
+                {(currentUser?.role === 'admin' || currentUser?.role === 'officer') && (
+                  <>
+                    <MenuItem onClick={() => { navigate('/admin/users'); handleClose(); }}>
+                      {t('dashboard.admin.users')}
+                    </MenuItem>
+                    <MenuItem onClick={() => { navigate('/admin/services'); handleClose(); }}>
+                      {t('dashboard.admin.services')}
+                    </MenuItem>
+                    <MenuItem onClick={() => { navigate('/admin/applications'); handleClose(); }}>
+                      {t('dashboard.admin.applications')}
+                    </MenuItem>
+                  </>
+                )}
+                
+                {currentUser?.role === 'staff' && (
+                  <MenuItem onClick={() => { navigate('/staff/applications'); handleClose(); }}>
+                    {t('nav.myApplications')}
+                  </MenuItem>
+                )}
+                
+                {/* Common Menu Items */}
                 <MenuItem onClick={() => { navigate('/profile'); handleClose(); }}>
-                  Profile
+                  {t('nav.profile')}
                 </MenuItem>
                 <MenuItem onClick={handleLogout}>
                   <ExitToApp sx={{ mr: 1 }} />
-                  Logout
+                  {t('nav.logout')}
                 </MenuItem>
               </Menu>
             </>
           ) : (
             <>
               <Button color="inherit" onClick={() => navigate('/login')}>
-                Login
+                {t('nav.login')}
               </Button>
               <Button color="inherit" onClick={() => navigate('/register')}>
-                Register
+                {t('nav.register')}
               </Button>
             </>
           )}

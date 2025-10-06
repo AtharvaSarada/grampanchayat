@@ -9,13 +9,22 @@ import { storage } from './firebase';
  */
 export const uploadFile = async (file, path) => {
   try {
+    console.log('Uploading file:', { fileName: file.name, path, fileSize: file.size, fileType: file.type });
     const storageRef = ref(storage, path);
     const snapshot = await uploadBytes(storageRef, file);
     const downloadURL = await getDownloadURL(snapshot.ref);
+    console.log('File uploaded successfully:', { path, downloadURL });
     return downloadURL;
   } catch (error) {
-    console.error('Error uploading file:', error);
-    throw new Error(`Failed to upload file: ${error.message}`);
+    console.error('Error uploading file:', { 
+      fileName: file.name, 
+      path, 
+      error: error.message, 
+      errorCode: error.code,
+      fileSize: file.size,
+      fileType: file.type 
+    });
+    throw new Error(`Failed to upload file '${file.name}': ${error.message}`);
   }
 };
 
@@ -27,6 +36,10 @@ export const uploadFile = async (file, path) => {
  */
 export const uploadMultipleFiles = async (files, basePath) => {
   try {
+    if (!Array.isArray(files)) {
+      files = [files]; // Convert single file to array
+    }
+    
     const uploadPromises = files.map((file, index) => {
       const fileName = `${Date.now()}_${index}_${file.name}`;
       const filePath = `${basePath}/${fileName}`;

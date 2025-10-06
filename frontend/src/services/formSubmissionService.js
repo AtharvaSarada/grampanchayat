@@ -1,22 +1,38 @@
 import { submitApplication, generateApplicationReference } from './applicationService';
 import { uploadMultipleFiles, generateStoragePath } from './storage';
-import { useAuth } from '../context/AuthContext';
+import { auth } from './firebase';
 import toast from 'react-hot-toast';
 
 /**
  * Handle form submission with file uploads and data persistence
- * @param {Object} submissionData - Contains formData, serviceType, and documents
+ * @param {Object} submissionData - Contains formData, serviceType, documents, and currentUser
  * @returns {Promise<Object>} Submission result with application ID
  */
 export const handleFormSubmission = async (submissionData) => {
-  const { formData, serviceType, documents } = submissionData;
+  const { formData, serviceType, documents, currentUser } = submissionData;
   
   try {
-    // Get current user (this should be passed as parameter in real implementation)
-    const currentUser = JSON.parse(localStorage.getItem('currentUser')); // Temporary solution
-    
-    if (!currentUser) {
+    // Verify authentication
+    if (!currentUser || !currentUser.uid) {
       throw new Error('User must be authenticated to submit application');
+    }
+
+    // Double-check with Firebase Auth
+    if (!auth.currentUser || auth.currentUser.uid !== currentUser.uid) {
+      throw new Error('Authentication session expired. Please login again.');
+    }
+
+    // Verify Firebase Auth token is valid
+    try {
+      const token = await auth.currentUser.getIdToken(true); // Force refresh token
+      console.log('Authentication verified:', { 
+        uid: auth.currentUser.uid, 
+        email: auth.currentUser.email,
+        tokenLength: token.length 
+      });
+    } catch (tokenError) {
+      console.error('Token verification failed:', tokenError);
+      throw new Error('Authentication token expired. Please login again.');
     }
 
     // Show loading toast
@@ -28,8 +44,12 @@ export const handleFormSubmission = async (submissionData) => {
     if (documents && documents.length > 0) {
       toast.loading('Uploading documents...', { id: loadingToast });
       
+      // Generate a temporary application ID for document storage
+      const tempApplicationId = `${serviceType}_${currentUser.uid}_${Date.now()}`;
+      
       const uploadPromises = documents.map(async (doc) => {
-        const storagePath = `applications/${serviceType}/${currentUser.uid}/${Date.now()}_${doc.file.name}`;
+        // Use the legacy path structure that we know works
+        const storagePath = `applications/${serviceType}/${currentUser.uid}`;
         const uploadResult = await uploadMultipleFiles([doc.file], storagePath);
         return {
           type: doc.type,

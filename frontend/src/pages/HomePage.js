@@ -33,10 +33,12 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { subscribeToStatistics } from '../services/statisticsService';
+import { useLanguage } from '../i18n/LanguageProvider';
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useSelector(state => state.auth);
+  const { t } = useLanguage();
 
   // Stats state with safe defaults
   const [stats, setStats] = useState({
@@ -62,79 +64,79 @@ const HomePage = () => {
   const featuredServices = [
     {
       id: 1,
-      title: 'Birth Certificate',
-      description: 'Apply for birth certificate registration and issuance',
-      category: 'Civil Registration',
+      title: t('services.birthCertificate'),
+      description: t('services.birthCertificateDesc'),
+      category: t('services.civilRegistration'),
       icon: <Assignment color="primary" />,
-      processingTime: '7-10 days',
+      processingTime: '7-10 ' + t('home.days'),
       fee: '₹50'
     },
     {
       id: 2,
-      title: 'Property Tax Payment',
-      description: 'Pay property tax online and get instant receipt',
-      category: 'Revenue',
+      title: t('services.propertyTaxPayment'),
+      description: t('services.propertyTaxPaymentDesc'),
+      category: t('services.revenueServices'),
       icon: <AccountBalance color="primary" />,
-      processingTime: 'Instant',
-      fee: 'As per assessment'
+      processingTime: t('services.instant'),
+      fee: t('services.asPerAssessment')
     },
     {
       id: 3,
-      title: 'Trade License',
-      description: 'Apply for new trade license or renewal',
-      category: 'Business',
+      title: t('services.tradeLicense'),
+      description: t('services.tradeLicenseDesc'),
+      category: t('services.businessServices'),
       icon: <Business color="primary" />,
-      processingTime: '15-30 days',
+      processingTime: '15-30 ' + t('home.days'),
       fee: '₹500-2000'
     },
     {
       id: 4,
-      title: 'Water Connection',
-      description: 'New water connection or transfer of connection',
-      category: 'Infrastructure',
+      title: t('services.waterConnection'),
+      description: t('services.waterConnectionDesc'),
+      category: t('services.infrastructure'),
       icon: <Home color="primary" />,
-      processingTime: '10-15 days',
+      processingTime: '10-15 ' + t('home.days'),
       fee: '₹1000'
     },
     {
       id: 5,
-      title: 'Health Certificate',
-      description: 'Medical fitness certificate for various purposes',
-      category: 'Health',
+      title: t('services.healthCertificate'),
+      description: t('services.healthCertificateDesc'),
+      category: t('services.healthServices'),
       icon: <LocalHospital color="primary" />,
-      processingTime: '3-5 days',
+      processingTime: '3-5 ' + t('home.days'),
       fee: '₹100'
     },
     {
       id: 6,
-      title: 'Income Certificate',
-      description: 'Income certificate for education and other benefits',
-      category: 'Social Welfare',
+      title: t('services.incomeCertificate'),
+      description: t('services.incomeCertificateDesc'),
+      category: t('services.socialWelfare'),
       icon: <Receipt color="primary" />,
-      processingTime: '7-15 days',
+      processingTime: '7-15 ' + t('home.days'),
       fee: '₹30'
     }
   ];
 
   // Service categories with accurate counts from servicesData.js
   const serviceCategories = [
-    { name: 'Civil Registration', count: 3, icon: <Assignment /> }, // Birth, Death, Marriage Certificate
-    { name: 'Revenue Services', count: 3, icon: <AccountBalance /> }, // Property Tax Payment, Assessment, Water Tax
-    { name: 'Business Services', count: 2, icon: <Business /> }, // Trade License, Building Permission
-    { name: 'Social Welfare', count: 4, icon: <People /> }, // Income, Caste, Domicile, BPL Certificate
-    { name: 'Health Services', count: 2, icon: <LocalHospital /> }, // Health Certificate, Vaccination Certificate
-    { name: 'Infrastructure', count: 3, icon: <Home /> }, // Water Connection, Drainage Connection, Street Light
-    { name: 'Agriculture', count: 2, icon: <Receipt /> }, // Agricultural Subsidy, Crop Insurance
-    { name: 'Education', count: 2, icon: <School /> } // School Transfer Certificate, Scholarship Application
+    { name: t('services.civilRegistration'), count: 3, icon: <Assignment /> }, // Birth, Death, Marriage Certificate
+    { name: t('services.revenueServices'), count: 3, icon: <AccountBalance /> }, // Property Tax Payment, Assessment, Water Tax
+    { name: t('services.businessServices'), count: 2, icon: <Business /> }, // Trade License, Building Permission
+    { name: t('services.socialWelfare'), count: 4, icon: <People /> }, // Income, Caste, Domicile, BPL Certificate
+    { name: t('services.healthServices'), count: 2, icon: <LocalHospital /> }, // Health Certificate, Vaccination Certificate
+    { name: t('services.infrastructure'), count: 3, icon: <Home /> }, // Water Connection, Drainage Connection, Street Light
+    { name: t('services.welfare'), count: 2, icon: <Receipt /> }, // Agricultural Subsidy, Crop Insurance
+    { name: t('services.certificates'), count: 2, icon: <School /> } // School Transfer Certificate, Scholarship Application
   ];
 
   const quickLinks = [
-    'Track Application Status',
-    'Download Forms',
-    'Pay Fees Online',
-    'Contact Information',
-    'Grievance Portal',
-    'RTI Applications'
+    { key: 'trackApplicationStatus', label: t('home.trackApplicationStatus') },
+    { key: 'downloadForms', label: t('home.downloadForms') },
+    { key: 'payFeesOnline', label: t('home.payFeesOnline') },
+    { key: 'contactInformation', label: t('home.contactInformation') },
+    { key: 'grievancePortal', label: t('home.grievancePortal') },
+    { key: 'rtiApplications', label: t('home.rtiApplications') }
   ];
 
   return (
@@ -152,11 +154,10 @@ const HomePage = () => {
           <Grid container spacing={4} alignItems="center">
             <Grid item xs={12} md={8}>
               <Typography variant="h2" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: 'white' }}>
-                E-Services for Gram Panchayath
+                {t('home.title')}
               </Typography>
               <Typography variant="h5" sx={{ mb: 3, opacity: 0.9 }}>
-                Digital governance at your fingertips. Access government services online, 
-                track applications, and connect with your local administration.
+                {t('home.subtitle')}. {t('home.description')}
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <Button
@@ -166,7 +167,7 @@ const HomePage = () => {
                   onClick={() => navigate('/services')}
                   sx={{ px: 4, py: 1.5 }}
                 >
-                  Browse Services
+                  {t('home.getStarted')}
                 </Button>
                 {!isAuthenticated && (
                   <Button
@@ -176,7 +177,7 @@ const HomePage = () => {
                     onClick={() => navigate('/register')}
                     sx={{ px: 4, py: 1.5, borderColor: 'white', color: 'white' }}
                   >
-                    Get Started
+                    {t('common.submit')}
                   </Button>
                 )}
               </Box>
@@ -192,25 +193,25 @@ const HomePage = () => {
                 }}
               >
                 <Typography variant="h6" gutterBottom color="inherit">
-                  Quick Statistics
+                  {t('home.quickStatistics')}
                   <Typography variant="caption" display="block" sx={{ opacity: 0.7 }}>
-                    Real-time from Firestore
+                    {t('home.realTimeFromFirestore')}
                   </Typography>
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2">Total Services</Typography>
+                  <Typography variant="body2">{t('home.totalServices')}</Typography>
                   <Typography variant="body2" fontWeight="bold">{stats.totalServices}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2">Applications Processed</Typography>
+                  <Typography variant="body2">{t('home.applicationsProcessed')}</Typography>
                   <Typography variant="body2" fontWeight="bold">
-                    {stats.applicationsProcessed} {stats.applicationsProcessed === 1 ? 'Application' : 'Applications'}
+                    {stats.applicationsProcessed} {t('home.applications')}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2">Average Processing Time</Typography>
+                  <Typography variant="body2">{t('services.processingTime')}</Typography>
                   <Typography variant="body2" fontWeight="bold">
-                    {stats.averageProcessingTime} {stats.averageProcessingTime === 1 ? 'day' : 'days'}
+                    {stats.averageProcessingTime} {t('home.days')}
                   </Typography>
                 </Box>
               </Paper>
@@ -223,7 +224,7 @@ const HomePage = () => {
         {/* Service Categories */}
         <Box sx={{ mb: 6 }}>
           <Typography variant="h4" component="h2" gutterBottom align="center">
-            Service Categories
+            {t('services.serviceCategories')}
           </Typography>
           <Grid container spacing={3} sx={{ mt: 2 }}>
             {serviceCategories.map((category, index) => (
@@ -247,7 +248,7 @@ const HomePage = () => {
                       {category.name}
                     </Typography>
                     <Chip 
-                      label={`${category.count} Services`} 
+                      label={`${category.count} ${t('services.servicesCount')}`} 
                       color="primary" 
                       variant="outlined"
                       size="small"
@@ -262,10 +263,10 @@ const HomePage = () => {
         {/* Featured Services */}
         <Box sx={{ mb: 6 }}>
           <Typography variant="h4" component="h2" gutterBottom align="center">
-            Popular Services
+            {t('home.popularServices')}
           </Typography>
           <Typography variant="body1" align="center" sx={{ mb: 4, color: 'text.secondary' }}>
-            Most requested services by citizens
+            {t('home.mostRequested')}
           </Typography>
           <Grid container spacing={3}>
             {featuredServices.map((service) => (
@@ -300,7 +301,7 @@ const HomePage = () => {
                     </Typography>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                       <Typography variant="caption" color="text.secondary">
-                        Processing Time:
+                        {t('home.processingTimeLabel')}
                       </Typography>
                       <Typography variant="caption" fontWeight="bold">
                         {service.processingTime}
@@ -308,7 +309,7 @@ const HomePage = () => {
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Typography variant="caption" color="text.secondary">
-                        Fee:
+                        {t('home.feeLabel')}
                       </Typography>
                       <Typography variant="caption" fontWeight="bold">
                         {service.fee}
@@ -320,7 +321,7 @@ const HomePage = () => {
                       size="small"
                       onClick={() => navigate(`/services/${service.id}`)}
                     >
-                      View Details
+                      {t('services.viewDetails')}
                     </Button>
                     {isAuthenticated && (
                       <Button
@@ -328,7 +329,7 @@ const HomePage = () => {
                         variant="contained"
                         onClick={() => navigate(`/apply/${service.id}`)}
                       >
-                        Apply Now
+                        {t('services.applyNow')}
                       </Button>
                     )}
                   </CardActions>
@@ -344,7 +345,7 @@ const HomePage = () => {
             <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
               <Typography variant="h5" gutterBottom color="primary">
                 <Security sx={{ mr: 1, verticalAlign: 'middle' }} />
-                How It Works
+                {t('home.howItWorks')}
               </Typography>
               <List>
                 <ListItem>
@@ -352,8 +353,8 @@ const HomePage = () => {
                     <CheckCircle color="success" />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Register Your Account"
-                    secondary="Create your citizen account with valid documents"
+                    primary={t('home.step1Title')}
+                    secondary={t('home.step1Desc')}
                   />
                 </ListItem>
                 <ListItem>
@@ -361,8 +362,8 @@ const HomePage = () => {
                     <CheckCircle color="success" />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Choose a Service"
-                    secondary="Browse and select the government service you need"
+                    primary={t('home.step2Title')}
+                    secondary={t('home.step2Desc')}
                   />
                 </ListItem>
                 <ListItem>
@@ -370,8 +371,8 @@ const HomePage = () => {
                     <CheckCircle color="success" />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Fill Application"
-                    secondary="Complete the online form with required information"
+                    primary={t('home.step3Title')}
+                    secondary={t('home.step3Desc')}
                   />
                 </ListItem>
                 <ListItem>
@@ -379,8 +380,8 @@ const HomePage = () => {
                     <CheckCircle color="success" />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Track & Receive"
-                    secondary="Monitor your application status and receive updates"
+                    primary={t('home.step4Title')}
+                    secondary={t('home.step4Desc')}
                   />
                 </ListItem>
               </List>
@@ -390,7 +391,7 @@ const HomePage = () => {
           <Grid item xs={12} md={6}>
             <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
               <Typography variant="h5" gutterBottom color="primary">
-                Quick Links
+                {t('home.quickLinks')}
               </Typography>
               <List>
                 {quickLinks.map((link, index) => (
@@ -399,11 +400,48 @@ const HomePage = () => {
                       button 
                       onClick={() => {
                         // Navigate based on link
-                        if (link === 'Track Application Status') navigate('/my-applications');
-                        // Add more navigation logic as needed
+                        switch (link.key) {
+                          case 'trackApplicationStatus':
+                            if (isAuthenticated) {
+                              navigate('/my-applications');
+                            } else {
+                              navigate('/login');
+                            }
+                            break;
+                          case 'downloadForms':
+                            navigate('/services');
+                            break;
+                          case 'payFeesOnline':
+                            if (isAuthenticated) {
+                              navigate('/dashboard');
+                            } else {
+                              navigate('/login');
+                            }
+                            break;
+                          case 'contactInformation':
+                            // Scroll to footer or show contact modal
+                            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                            break;
+                          case 'grievancePortal':
+                            if (isAuthenticated) {
+                              navigate('/dashboard');
+                            } else {
+                              navigate('/login');
+                            }
+                            break;
+                          case 'rtiApplications':
+                            if (isAuthenticated) {
+                              navigate('/services');
+                            } else {
+                              navigate('/login');
+                            }
+                            break;
+                          default:
+                            navigate('/services');
+                        }
                       }}
                     >
-                      <ListItemText primary={link} />
+                      <ListItemText primary={link.label} />
                     </ListItem>
                     {index < quickLinks.length - 1 && <Divider />}
                   </React.Fragment>

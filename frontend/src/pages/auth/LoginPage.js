@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -9,7 +9,6 @@ import {
   Link,
   Alert,
   Divider,
-  CircularProgress,
   InputAdornment,
   IconButton
 } from '@mui/material';
@@ -20,17 +19,22 @@ import {
   VisibilityOff,
   Business
 } from '@mui/icons-material';
-import { useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
+import ChakraSpinner from '../../components/common/ChakraSpinner';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../services/firebase';
 import { useDispatch } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure } from '../../store/slices/authSlice';
+import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  const { currentUser, loading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -40,6 +44,27 @@ const LoginPage = () => {
   const [error, setError] = useState('');
 
   const from = location.state?.from?.pathname || '/dashboard';
+
+  // Redirect if user is already authenticated
+  useEffect(() => {
+    if (!authLoading && currentUser) {
+      // Redirect based on user role (officer is treated as admin)
+      const role = currentUser.role === 'officer' ? 'admin' : currentUser.role;
+      
+      switch (role) {
+        case 'admin':
+          navigate('/admin/dashboard', { replace: true });
+          break;
+        case 'staff':
+          navigate('/staff/dashboard', { replace: true });
+          break;
+        case 'user':
+        default:
+          navigate('/user/dashboard', { replace: true });
+          break;
+      }
+    }
+  }, [currentUser, authLoading, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -53,7 +78,7 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.email || !formData.password) {
-      setError('Please fill in all fields');
+      setError(t('auth.fillAllFields'));
       return;
     }
 
@@ -62,44 +87,36 @@ const LoginPage = () => {
     dispatch(loginStart());
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      const user = userCredential.user;
-      const token = await user.getIdToken();
+      // Firebase Auth will handle the authentication
+      // AuthContext will automatically detect the auth state change
+      // and redirect to the appropriate dashboard
+      await signInWithEmailAndPassword(auth, formData.email, formData.password);
       
-      // Get user profile from backend would go here
-      // For now, we'll use basic Firebase user data
-      const userData = {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName || 'User',
-        role: 'user' // Default role, should be fetched from backend
-      };
-      
-      dispatch(loginSuccess({ user: userData, token }));
-      toast.success('Login successful!');
-      navigate(from, { replace: true });
+      toast.success(t('auth.loginSuccess'));
+      // Don't navigate here - let AuthContext handle the redirect
+      // The AuthContext will detect the auth state change and redirect appropriately
     } catch (error) {
       console.error('Login error:', error);
-      let errorMessage = 'Login failed. Please try again.';
+      let errorMessage = t('auth.loginFailed');
       
       switch (error.code) {
         case 'auth/user-not-found':
-          errorMessage = 'No account found with this email address.';
+          errorMessage = t('auth.userNotFound');
           break;
         case 'auth/wrong-password':
-          errorMessage = 'Incorrect password. Please try again.';
+          errorMessage = t('auth.wrongPassword');
           break;
         case 'auth/invalid-email':
-          errorMessage = 'Invalid email address format.';
+          errorMessage = t('auth.invalidEmail');
           break;
         case 'auth/user-disabled':
-          errorMessage = 'This account has been disabled.';
+          errorMessage = t('auth.userDisabled');
           break;
         case 'auth/too-many-requests':
-          errorMessage = 'Too many failed attempts. Please try again later.';
+          errorMessage = t('auth.tooManyRequests');
           break;
         default:
-          errorMessage = error.message || 'An unexpected error occurred.';
+          errorMessage = error.message || t('auth.unexpectedError');
       }
       
       setError(errorMessage);
@@ -109,6 +126,50 @@ const LoginPage = () => {
       setLoading(false);
     }
   };
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <Box sx={{ textAlign: 'center' }}>
+          <ChakraSpinner size="40px" />
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+            {t('auth.checkingAuth')}
+          </Typography>
+        </Box>
+      </Box>
+    );
+  }
+
+  // Don't render login form if user is already authenticated
+  if (currentUser) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <Box sx={{ textAlign: 'center' }}>
+          <ChakraSpinner size="40px" />
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+            {t('auth.redirecting')}
+          </Typography>
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -126,10 +187,10 @@ const LoginPage = () => {
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Business color="primary" sx={{ fontSize: 48, mb: 2 }} />
             <Typography variant="h4" component="h1" gutterBottom color="primary">
-              Welcome Back
+              {t('auth.welcomeBack')}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Sign in to access Gram Panchayat services
+              {t('auth.signInAccess')}
             </Typography>
           </Box>
 
@@ -147,7 +208,7 @@ const LoginPage = () => {
               required
               fullWidth
               id="email"
-              label="Email Address"
+              label={t('auth.email')}
               name="email"
               autoComplete="email"
               autoFocus
@@ -168,7 +229,7 @@ const LoginPage = () => {
               required
               fullWidth
               name="password"
-              label="Password"
+              label={t('auth.password')}
               type={showPassword ? 'text' : 'password'}
               id="password"
               autoComplete="current-password"
@@ -204,11 +265,11 @@ const LoginPage = () => {
             >
               {loading ? (
                 <>
-                  <CircularProgress size={20} sx={{ mr: 2 }} />
-                  Signing In...
+                  <ChakraSpinner size="20px" />
+                  {t('auth.signingIn')}
                 </>
               ) : (
-                'Sign In'
+                t('auth.signIn')
               )}
             </Button>
             
@@ -219,44 +280,31 @@ const LoginPage = () => {
                 variant="body2"
                 sx={{ textDecoration: 'none' }}
               >
-                Forgot password?
+                {t('auth.forgotPassword')}
               </Link>
             </Box>
           </Box>
 
           <Divider sx={{ my: 3 }}>
             <Typography variant="body2" color="text.secondary">
-              New to the platform?
+              {t('auth.newToPlatform')}
             </Typography>
           </Divider>
 
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              Don't have an account?
+              {t('auth.dontHaveAccount')}
             </Typography>
             <Button
               component={RouterLink}
               to="/register"
               variant="outlined"
-              fullWidth
               sx={{ mt: 1 }}
             >
-              Create Account
+              {t('auth.createAccountButton')}
             </Button>
           </Box>
 
-          {/* Demo Credentials */}
-          <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-            <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-              Demo Credentials:
-            </Typography>
-            <Typography variant="caption" color="text.secondary" display="block">
-              Email: citizen@demo.com | Password: demo123
-            </Typography>
-            <Typography variant="caption" color="text.secondary" display="block">
-              Staff: staff@demo.com | Admin: admin@demo.com
-            </Typography>
-          </Box>
         </Paper>
       </Container>
     </Box>

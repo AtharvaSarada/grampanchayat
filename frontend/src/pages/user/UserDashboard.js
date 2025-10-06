@@ -17,27 +17,38 @@ import {
   Divider,
   Alert,
   Skeleton,
-  CircularProgress
+  Tabs,
+  Tab
 } from '@mui/material';
 import {
   Assignment,
   AccountCircle,
   Notifications,
-  TrendingUp,
   Schedule,
   CheckCircle,
-  Warning,
   Info,
+  Warning,
   AttachMoney,
-  Description
+  Description,
+  Dashboard,
+  Build,
+  Folder,
+  History
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { subscribeToUserStatistics, getRecentApplications } from '../../services/statisticsService';
+import { subscribeToUserStatistics, getRecentApplications, getTotalServices } from '../../services/statisticsService';
+import DocumentManager from '../../components/documents/DocumentManager';
+import AppointmentScheduler from '../../components/appointments/AppointmentScheduler';
+import { useAuth } from '../../context/AuthContext';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useSelector(state => state.auth);
+  const { currentUser } = useAuth();
+  
+  // Tab state
+  const [activeTab, setActiveTab] = useState(0);
   
   // State for real-time user data
   const [userStats, setUserStats] = useState({
@@ -48,6 +59,7 @@ const UserDashboard = () => {
   });
   const [recentApplications, setRecentApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [totalServices, setTotalServices] = useState(0);
   const [notifications] = useState([
     {
       id: 1,
@@ -75,7 +87,7 @@ const UserDashboard = () => {
     // Subscribe to real-time user statistics
     const unsubscribeStats = subscribeToUserStatistics(user.uid, (stats) => {
       setUserStats(stats);
-      setLoading(false);
+      setLoading(false); // Set loading to false once user stats are loaded
     });
 
     // Load recent applications
@@ -87,8 +99,19 @@ const UserDashboard = () => {
         console.error('Error loading recent applications:', error);
       }
     };
+    
+    // Load total services count
+    const loadTotalServices = async () => {
+      try {
+        const count = await getTotalServices();
+        setTotalServices(count);
+      } catch (error) {
+        console.error('Error loading total services:', error);
+      }
+    };
 
     loadRecentApplications();
+    loadTotalServices(); // ADDED FUNCTION CALL
 
     return () => {
       if (unsubscribeStats) unsubscribeStats();
@@ -164,6 +187,24 @@ const UserDashboard = () => {
 
         {/* Quick Stats */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
+          {/* ADDED THIS NEW CARD */}
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Info color="primary" sx={{ fontSize: 40, mb: 1 }} />
+                {loading ? (
+                  <Skeleton variant="text" width={60} height={48} sx={{ mx: 'auto' }} />
+                ) : (
+                  <Typography variant="h4" component="div" gutterBottom>
+                    {totalServices}
+                  </Typography>
+                )}
+                <Typography color="text.secondary">
+                  Services Available
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent sx={{ textAlign: 'center' }}>
@@ -215,23 +256,8 @@ const UserDashboard = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent sx={{ textAlign: 'center' }}>
-                <AttachMoney color="info" sx={{ fontSize: 40, mb: 1 }} />
-                {loading ? (
-                  <Skeleton variant="text" width={80} height={48} sx={{ mx: 'auto' }} />
-                ) : (
-                  <Typography variant="h4" component="div" gutterBottom>
-                    ₹{userStats.totalAmountPaid.toLocaleString()}
-                  </Typography>
-                )}
-                <Typography color="text.secondary">
-                  Total Amount Paid
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+          {/* This card was removed to make space for the Services Available card. 
+              If you want 5 cards, you'd need to adjust the Grid layout (e.g., to use lg={2.4}) */}
         </Grid>
 
         <Grid container spacing={4}>
@@ -251,7 +277,7 @@ const UserDashboard = () => {
                   </Button>
                 </Box>
                 <List>
-                  {loading ? (
+                  {loading && recentApplications.length === 0 ? (
                     // Loading state
                     Array.from({ length: 3 }).map((_, index) => (
                       <React.Fragment key={index}>
@@ -261,12 +287,7 @@ const UserDashboard = () => {
                           </ListItemIcon>
                           <ListItemText
                             primary={<Skeleton variant="text" width="60%" />}
-                            secondary={
-                              <Box>
-                                <Skeleton variant="text" width="40%" />
-                                <Skeleton variant="text" width="45%" />
-                              </Box>
-                            }
+                            secondary={<Skeleton variant="text" width="40%" />}
                           />
                           <Skeleton variant="rounded" width={80} height={24} />
                         </ListItem>
@@ -283,16 +304,7 @@ const UserDashboard = () => {
                           </ListItemIcon>
                           <ListItemText
                             primary={app.serviceName}
-                            secondary={
-                              <Box>
-                                <Typography variant="caption" display="block">
-                                  Applied on: {new Date(app.applicationDate).toLocaleDateString()}
-                                </Typography>
-                                <Typography variant="caption" display="block">
-                                  Expected: {new Date(app.estimatedCompletion).toLocaleDateString()}
-                                </Typography>
-                              </Box>
-                            }
+                            secondary={`Applied on: ${new Date(app.applicationDate).toLocaleDateString()}`}
                           />
                           <Chip
                             label={app.status}
@@ -401,6 +413,129 @@ const UserDashboard = () => {
             </Card>
           </Grid>
         </Grid>
+
+        {/* Enhanced User Features Tabs */}
+        <Paper elevation={3} sx={{ mt: 4 }}>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
+              <Tab icon={<Dashboard />} label="Overview" />
+              <Tab icon={<Assignment />} label="My Applications" />
+              <Tab icon={<Folder />} label="Documents" />
+              <Tab icon={<Schedule />} label="Appointments" />
+              <Tab icon={<Build />} label="Services" />
+            </Tabs>
+          </Box>
+          
+          <Box sx={{ p: (activeTab === 2 || activeTab === 3) ? 0 : 3 }}>
+            {activeTab === 0 && (
+              <Box>
+                <Typography variant="h6" gutterBottom>Dashboard Overview</Typography>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={6}>
+                    <Card>
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom>Recent Activity</Typography>
+                        <List>
+                          {recentApplications.slice(0, 3).map((app, index) => (
+                            <ListItem key={index}>
+                              <ListItemIcon>
+                                <Assignment />
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={`Application #${app.id?.substring(0, 8)}`}
+                                secondary={`Status: ${app.status} - ${new Date(app.submittedAt).toLocaleDateString()}`}
+                              />
+                            </ListItem>
+                          ))}
+                        </List>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Card>
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom>Quick Actions</Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          <Button variant="outlined" onClick={() => navigate('/services')}>
+                            Browse Services
+                          </Button>
+                          <Button variant="outlined" onClick={() => navigate('/my-applications')}>
+                            View Applications
+                          </Button>
+                          <Button variant="outlined" onClick={() => navigate('/profile')}>
+                            Update Profile
+                          </Button>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
+            
+            {activeTab === 1 && (
+              <Box>
+                <Typography variant="h6" gutterBottom>My Applications</Typography>
+                {recentApplications.length === 0 ? (
+                  <Alert severity="info">
+                    No applications found. <Button onClick={() => navigate('/services')}>Apply for services</Button>
+                  </Alert>
+                ) : (
+                  <Grid container spacing={2}>
+                    {recentApplications.map((app, index) => (
+                      <Grid item xs={12} md={6} key={index}>
+                        <Card>
+                          <CardContent>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                              <Typography variant="subtitle1">
+                                Application #{app.id?.substring(0, 8)}
+                              </Typography>
+                              <Chip 
+                                label={app.status} 
+                                color={app.status === 'Approved' ? 'success' : app.status === 'Rejected' ? 'error' : 'warning'}
+                                size="small"
+                              />
+                            </Box>
+                            <Typography variant="body2" color="text.secondary">
+                              Service: {app.serviceId}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Submitted: {new Date(app.submittedAt).toLocaleDateString()}
+                            </Typography>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+                )}
+              </Box>
+            )}
+            
+            {activeTab === 2 && (
+              <DocumentManager userRole="user" />
+            )}
+            
+            {activeTab === 3 && (
+              <AppointmentScheduler userRole="user" />
+            )}
+            
+            {activeTab === 4 && (
+              <Box>
+                <Typography variant="h6" gutterBottom>Available Services</Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Browse and apply for government services online.
+                </Typography>
+                <Button 
+                  variant="contained" 
+                  onClick={() => navigate('/services')}
+                  sx={{ mt: 2 }}
+                >
+                  View All Services
+                </Button>
+              </Box>
+            )}
+          </Box>
+        </Paper>
       </Box>
     </Container>
   );

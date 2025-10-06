@@ -9,6 +9,7 @@ import {
   Timestamp
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { getAllServices } from '../data/servicesData';
 
 /**
  * Statistics Service for real-time Firestore data
@@ -20,9 +21,9 @@ import { db } from './firebase';
  */
 export const getTotalServices = async () => {
   try {
-    const servicesCollection = collection(db, 'services');
-    const snapshot = await getDocs(servicesCollection);
-    return snapshot.size;
+    // Get services from the actual services data instead of Firestore
+    const services = getAllServices();
+    return services.length;
   } catch (error) {
     console.error('Error fetching total services:', error);
     return 0;
@@ -385,19 +386,7 @@ export const subscribeToUserStatistics = (userId, callback) => {
 export const subscribeToStatistics = (callback) => {
   const unsubscribeFunctions = [];
   
-  // Listen to services collection changes
-  const servicesUnsubscribe = onSnapshot(
-    collection(db, 'services'),
-    () => {
-      // When services change, recalculate all statistics
-      getAllStatistics().then(callback);
-    },
-    (error) => {
-      console.error('Error in services listener:', error);
-    }
-  );
-  
-  // Listen to applications collection changes
+  // Listen to applications collection changes only (services are static)
   const applicationsUnsubscribe = onSnapshot(
     collection(db, 'applications'),
     () => {
@@ -406,10 +395,16 @@ export const subscribeToStatistics = (callback) => {
     },
     (error) => {
       console.error('Error in applications listener:', error);
+      // Provide fallback data on error
+      callback({
+        totalServices: getAllServices().length,
+        applicationsProcessed: 0,
+        averageProcessingTime: 0
+      });
     }
   );
   
-  unsubscribeFunctions.push(servicesUnsubscribe, applicationsUnsubscribe);
+  unsubscribeFunctions.push(applicationsUnsubscribe);
   
   // Initial data fetch
   getAllStatistics().then(callback);
