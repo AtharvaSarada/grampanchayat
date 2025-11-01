@@ -47,67 +47,527 @@ import { auth, db } from '../../services/firebase';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import MyApplications from './MyApplications';
+import { useLanguage } from '../../i18n/LanguageProvider';
+
+const translations = {
+  en: {
+    role: "Role:",
+    memberSince: "Member since",
+    recentlyJoined: "Recently joined",
+    saveChanges: "Save Changes",
+    editProfile: "Edit Profile",
+    refreshRole: "Refresh Role",
+    personalInfo: "Personal Info",
+    myApplications: "My Applications",
+    accountSecurity: "Account Security",
+    settings: "Settings",
+    firstName: "First Name",
+    lastName: "Last Name",
+    emailAddress: "Email Address",
+    emailNotChangeable: "Email cannot be changed. Contact support if needed.",
+    phoneNumber: "Phone Number",
+    address: "Address",
+    city: "City",
+    state: "State",
+    pinCode: "PIN Code",
+    occupation: "Occupation",
+    dateOfBirth: "Date of Birth",
+    passwordAndAuth: "Password & Authentication",
+    emailVerification: "Email Verification",
+    verified: "Verified",
+    notVerified: "Not verified - please check your email",
+    password: "Password",
+    lastUpdated: "Last updated: Recently",
+    changePassword: "Change Password",
+    accountSettings: "Account Settings",
+    dangerZone: "Danger Zone",
+    dangerZoneMsg: "These actions are permanent and cannot be undone.",
+    signOut: "Sign Out",
+    currentPassword: "Current Password",
+    newPassword: "New Password",
+    min6Chars: "Minimum 6 characters",
+    confirmNewPassword: "Confirm New Password",
+    cancel: "Cancel",
+    updatePassword: "Update Password",
+    profileUpdateSuccess: "Profile updated successfully!",
+    profileUpdateFailed: "Failed to update profile",
+    passwordsNoMatch: "New passwords do not match",
+    passwordTooShort: "Password must be at least 6 characters long",
+    passwordUpdateSuccess: "Password updated successfully!",
+    passwordUpdateFailed: "Failed to update password. Please try again.",
+    loadProfileFailed: "Failed to load profile data"
+  },
+  mr: {
+    role: "भूमिका:",
+    memberSince: "सदस्य झाल्याची तारीख",
+    recentlyJoined: "अलीकडेच सामील झाले",
+    saveChanges: "बदल जतन करा",
+    editProfile: "प्रोफाइल संपादित करा",
+    refreshRole: "भूमिका रिफ्रेश करा",
+    personalInfo: "वैयक्तिक माहिती",
+    myApplications: "माझे अर्ज",
+    accountSecurity: "खाते सुरक्षा",
+    settings: "सेटिंग्ज",
+    firstName: "पहिले नाव",
+    lastName: "आडनाव",
+    emailAddress: "ईमेल पत्ता",
+    emailNotChangeable: "ईमेल बदलता येणार नाही. गरज भासल्यास सपोर्टशी संपर्क साधा.",
+    phoneNumber: "फोन नंबर",
+    address: "पत्ता",
+    city: "शहर",
+    state: "राज्य",
+    pinCode: "पिन कोड",
+    occupation: "व्यवसाय",
+    dateOfBirth: "जन्मतारीख",
+    passwordAndAuth: "पासवर्ड आणि प्रमाणीकरण",
+    emailVerification: "ईमेल पडताळणी",
+    verified: "पडताळले",
+    notVerified: "पडताळलेले नाही - कृपया तुमचा ईमेल तपासा",
+    password: "पासवर्ड",
+    lastUpdated: "शेवटचे अपडेट: अलीकडेच",
+    changePassword: "पासवर्ड बदला",
+    accountSettings: "खाते सेटिंग्ज",
+    dangerZone: "धोकादायक क्षेत्र",
+    dangerZoneMsg: "या क्रिया कायमस्वरूपी आहेत आणि पूर्ववत केल्या जाऊ शकत नाहीत.",
+    signOut: "साइन आउट करा",
+    currentPassword: "सध्याचा पासवर्ड",
+    newPassword: "नवीन पासवर्ड",
+    min6Chars: "किमान ६ अक्षरे",
+    confirmNewPassword: "नवीन पासवर्डची पुष्टी करा",
+    cancel: "रद्द करा",
+    updatePassword: "पासवर्ड अपडेट करा",
+    profileUpdateSuccess: "प्रोफाइल यशस्वीरित्या अपडेट केले!",
+    profileUpdateFailed: "प्रोफाइल अपडेट करण्यात अयशस्वी",
+    passwordsNoMatch: "नवीन पासवर्ड जुळत नाहीत",
+    passwordTooShort: "पासवर्ड किमान ६ अक्षरे लांब असणे आवश्यक आहे",
+    passwordUpdateSuccess: "पासवर्ड यशस्वीरित्या अपडेट केला!",
+    passwordUpdateFailed: "पासवर्ड अपडेट करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
+    loadProfileFailed: "प्रोफाइल डेटा लोड करण्यात अयशस्वी"
+  }
+};
+
+// Move PersonalInfoForm outside to prevent recreation on every render
+const PersonalInfoForm = React.memo(({ profileData, isEditing, handleInputChange, t }) => {
+  return (
+    <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
+      <Grid item xs={12} sm={6}>
+        <Box sx={{ mb: { xs: 2, sm: 2.5 } }}>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ 
+              mb: 1,
+              fontWeight: 500,
+              fontSize: { xs: '0.875rem', sm: '0.875rem' }
+            }}
+          >
+            {t('firstName', 'First Name')}
+          </Typography>
+          <input
+            key="firstName"
+            id="input-firstName"
+            type="text"
+            value={profileData.firstName || ''}
+            onChange={handleInputChange('firstName')}
+            disabled={!isEditing}
+            style={{
+              width: '100%',
+              padding: '14px 16px',
+              border: isEditing ? '2px solid #1976d2' : '1px solid #e0e0e0',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontFamily: 'inherit',
+              backgroundColor: isEditing ? '#fff' : '#fafafa',
+              color: isEditing ? '#000' : '#666',
+              outline: 'none',
+              transition: 'all 0.2s ease-in-out',
+              boxShadow: isEditing ? '0 2px 4px rgba(25, 118, 210, 0.1)' : 'none'
+            }}
+          />
+        </Box>
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <Box sx={{ mb: { xs: 2, sm: 2.5 } }}>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ 
+              mb: 1,
+              fontWeight: 500,
+              fontSize: { xs: '0.875rem', sm: '0.875rem' }
+            }}
+          >
+            {t('lastName', 'Last Name')}
+          </Typography>
+          <input
+            key="lastName"
+            id="input-lastName"
+            type="text"
+            value={profileData.lastName || ''}
+            onChange={handleInputChange('lastName')}
+            disabled={!isEditing}
+            style={{
+              width: '100%',
+              padding: '14px 16px',
+              border: isEditing ? '2px solid #1976d2' : '1px solid #e0e0e0',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontFamily: 'inherit',
+              backgroundColor: isEditing ? '#fff' : '#fafafa',
+              color: isEditing ? '#000' : '#666',
+              outline: 'none',
+              transition: 'all 0.2s ease-in-out',
+              boxShadow: isEditing ? '0 2px 4px rgba(25, 118, 210, 0.1)' : 'none'
+            }}
+          />
+        </Box>
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <Box sx={{ mb: { xs: 2, sm: 2.5 } }}>
+          <TextField
+            fullWidth
+            label={t('emailAddress', 'Email Address')}
+            value={profileData.email || ''}
+            disabled
+            helperText={t('emailNotChangeable', 'Email cannot be changed. Contact support if needed.')}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+                '& fieldset': {
+                  borderColor: '#e0e0e0',
+                }
+              }
+            }}
+          />
+        </Box>
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <Box sx={{ mb: { xs: 2, sm: 2.5 } }}>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ 
+              mb: 1,
+              fontWeight: 500,
+              fontSize: { xs: '0.875rem', sm: '0.875rem' }
+            }}
+          >
+            {t('phoneNumber', 'Phone Number')}
+          </Typography>
+          <input
+            key="phoneNumber"
+            id="input-phoneNumber"
+            type="tel"
+            value={profileData.phoneNumber || ''}
+            onChange={handleInputChange('phoneNumber')}
+            disabled={!isEditing}
+            style={{
+              width: '100%',
+              padding: '14px 16px',
+              border: isEditing ? '2px solid #1976d2' : '1px solid #e0e0e0',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontFamily: 'inherit',
+              backgroundColor: isEditing ? '#fff' : '#fafafa',
+              color: isEditing ? '#000' : '#666',
+              outline: 'none',
+              transition: 'all 0.2s ease-in-out',
+              boxShadow: isEditing ? '0 2px 4px rgba(25, 118, 210, 0.1)' : 'none'
+            }}
+          />
+        </Box>
+      </Grid>
+      
+      <Grid item xs={12}>
+        <Box sx={{ mb: { xs: 2, sm: 2.5 } }}>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ 
+              mb: 1,
+              fontWeight: 500,
+              fontSize: { xs: '0.875rem', sm: '0.875rem' }
+            }}
+          >
+            {t('address', 'Address')}
+          </Typography>
+          <textarea
+            key="address"
+            id="input-address"
+            value={profileData.address || ''}
+            onChange={handleInputChange('address')}
+            disabled={!isEditing}
+            rows={4}
+            style={{
+              width: '100%',
+              padding: '14px 16px',
+              border: isEditing ? '2px solid #1976d2' : '1px solid #e0e0e0',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontFamily: 'inherit',
+              backgroundColor: isEditing ? '#fff' : '#fafafa',
+              color: isEditing ? '#000' : '#666',
+              outline: 'none',
+              transition: 'all 0.2s ease-in-out',
+              resize: 'vertical',
+              minHeight: '100px',
+              boxShadow: isEditing ? '0 2px 4px rgba(25, 118, 210, 0.1)' : 'none'
+            }}
+          />
+        </Box>
+      </Grid>
+      
+      <Grid item xs={12} sm={4}>
+        <Box sx={{ mb: { xs: 2, sm: 2.5 } }}>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ 
+              mb: 1,
+              fontWeight: 500,
+              fontSize: { xs: '0.875rem', sm: '0.875rem' }
+            }}
+          >
+            {t('city', 'City')}
+          </Typography>
+          <input
+            key="city"
+            id="input-city"
+            type="text"
+            value={profileData.city || ''}
+            onChange={handleInputChange('city')}
+            disabled={!isEditing}
+            style={{
+              width: '100%',
+              padding: '14px 16px',
+              border: isEditing ? '2px solid #1976d2' : '1px solid #e0e0e0',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontFamily: 'inherit',
+              backgroundColor: isEditing ? '#fff' : '#fafafa',
+              color: isEditing ? '#000' : '#666',
+              outline: 'none',
+              transition: 'all 0.2s ease-in-out',
+              boxShadow: isEditing ? '0 2px 4px rgba(25, 118, 210, 0.1)' : 'none'
+            }}
+          />
+        </Box>
+      </Grid>
+      
+      <Grid item xs={12} sm={4}>
+        <Box sx={{ mb: { xs: 2, sm: 2.5 } }}>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ 
+              mb: 1,
+              fontWeight: 500,
+              fontSize: { xs: '0.875rem', sm: '0.875rem' }
+            }}
+          >
+            {t('state', 'State')}
+          </Typography>
+          <input
+            key="state"
+            id="input-state"
+            type="text"
+            value={profileData.state || ''}
+            onChange={handleInputChange('state')}
+            disabled={!isEditing}
+            style={{
+              width: '100%',
+              padding: '14px 16px',
+              border: isEditing ? '2px solid #1976d2' : '1px solid #e0e0e0',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontFamily: 'inherit',
+              backgroundColor: isEditing ? '#fff' : '#fafafa',
+              color: isEditing ? '#000' : '#666',
+              outline: 'none',
+              transition: 'all 0.2s ease-in-out',
+              boxShadow: isEditing ? '0 2px 4px rgba(25, 118, 210, 0.1)' : 'none'
+            }}
+          />
+        </Box>
+      </Grid>
+      
+      <Grid item xs={12} sm={4}>
+        <Box sx={{ mb: { xs: 2, sm: 2.5 } }}>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ 
+              mb: 1,
+              fontWeight: 500,
+              fontSize: { xs: '0.875rem', sm: '0.875rem' }
+            }}
+          >
+            {t('pinCode', 'PIN Code')}
+          </Typography>
+          <input
+            key="pincode"
+            id="input-pincode"
+            type="text"
+            value={profileData.pincode || ''}
+            onChange={handleInputChange('pincode')}
+            disabled={!isEditing}
+            style={{
+              width: '100%',
+              padding: '14px 16px',
+              border: isEditing ? '2px solid #1976d2' : '1px solid #e0e0e0',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontFamily: 'inherit',
+              backgroundColor: isEditing ? '#fff' : '#fafafa',
+              color: isEditing ? '#000' : '#666',
+              outline: 'none',
+              transition: 'all 0.2s ease-in-out',
+              boxShadow: isEditing ? '0 2px 4px rgba(25, 118, 210, 0.1)' : 'none'
+            }}
+          />
+        </Box>
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <Box sx={{ mb: { xs: 2, sm: 2.5 } }}>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ 
+              mb: 1,
+              fontWeight: 500,
+              fontSize: { xs: '0.875rem', sm: '0.875rem' }
+            }}
+          >
+            {t('occupation', 'Occupation')}
+          </Typography>
+          <input
+            key="occupation"
+            id="input-occupation"
+            type="text"
+            value={profileData.occupation || ''}
+            onChange={handleInputChange('occupation')}
+            disabled={!isEditing}
+            style={{
+              width: '100%',
+              padding: '14px 16px',
+              border: isEditing ? '2px solid #1976d2' : '1px solid #e0e0e0',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontFamily: 'inherit',
+              backgroundColor: isEditing ? '#fff' : '#fafafa',
+              color: isEditing ? '#000' : '#666',
+              outline: 'none',
+              transition: 'all 0.2s ease-in-out',
+              boxShadow: isEditing ? '0 2px 4px rgba(25, 118, 210, 0.1)' : 'none'
+            }}
+          />
+        </Box>
+      </Grid>
+      
+      <Grid item xs={12} sm={6}>
+        <Box sx={{ mb: { xs: 2, sm: 2.5 } }}>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ 
+              mb: 1,
+              fontWeight: 500,
+              fontSize: { xs: '0.875rem', sm: '0.875rem' }
+            }}
+          >
+            {t('dateOfBirth', 'Date of Birth')}
+          </Typography>
+          <input
+            key="dateOfBirth"
+            id="input-dateOfBirth"
+            type="date"
+            value={profileData.dateOfBirth || ''}
+            onChange={handleInputChange('dateOfBirth')}
+            disabled={!isEditing}
+            style={{
+              width: '100%',
+              padding: '14px 16px',
+              border: isEditing ? '2px solid #1976d2' : '1px solid #e0e0e0',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontFamily: 'inherit',
+              backgroundColor: isEditing ? '#fff' : '#fafafa',
+              color: isEditing ? '#000' : '#666',
+              outline: 'none',
+              transition: 'all 0.2s ease-in-out',
+              boxShadow: isEditing ? '0 2px 4px rgba(25, 118, 210, 0.1)' : 'none'
+            }}
+          />
+        </Box>
+      </Grid>
+    </Grid>
+  );
+});
+
+PersonalInfoForm.displayName = 'PersonalInfoForm';
+
+// Move TabPanel outside to prevent recreation on every render
+const TabPanel = React.memo(({ children, value, index }) => {
+  return (
+    <Box 
+      role="tabpanel" 
+      sx={{ 
+        p: { xs: 2, sm: 3, md: 4 },
+        display: value === index ? 'block' : 'none',
+        minHeight: '400px'
+      }}
+      id={`tabpanel-${index}`}
+      aria-labelledby={`tab-${index}`}
+    >
+      {children}
+    </Box>
+  );
+});
+TabPanel.displayName = 'TabPanel';
+
+// Move getStatusColor outside to prevent recreation on every render
+const getStatusColor = (status) => {
+  switch (status.toLowerCase()) {
+    case 'completed': return 'success';
+    case 'under review': return 'warning';
+    case 'rejected': return 'error';
+    default: return 'info';
+  }
+};
 
 const UserProfile = () => {
-  console.log('🔄 RENDER: UserProfile component rendered at', Date.now());
-  const renderCount = useRef(0);
-  renderCount.current += 1;
-  console.log('📊 RENDER COUNT:', renderCount.current);
-  
-  // Detect React StrictMode
-  const strictModeRef = useRef(false);
-  useLayoutEffect(() => {
-    if (strictModeRef.current) {
-      console.log('⚠️ REACT STRICT MODE DETECTED - Double rendering enabled');
-    } else {
-      strictModeRef.current = true;
-    }
-  });
-  
   const { currentUser, logout, refreshUserData } = useAuth();
+  const { language, t: translate } = useLanguage();
+  const t = (key, fallback = '') => {
+    try {
+      // First try to get from local translations
+      const localTranslation = translations[language] && translations[language][key];
+      if (localTranslation && typeof localTranslation === 'string' && localTranslation.trim() !== '') {
+        return localTranslation;
+      }
+      
+      // If fallback is provided, use it directly
+      if (fallback && typeof fallback === 'string' && fallback.trim() !== '') {
+        return fallback;
+      }
+      
+      // Last resort: try global translation or return key
+      const globalTranslation = translate(key);
+      if (globalTranslation && typeof globalTranslation === 'string' && globalTranslation.trim() !== '' && globalTranslation !== key) {
+        return globalTranslation;
+      }
+      
+      return String(key);
+    } catch (error) {
+      console.warn(`Translation error for key: ${key}`, error);
+      return fallback || String(key);
+    }
+  };
   
-  // Track Firebase auth state changes
-  useLayoutEffect(() => {
-    console.log('🔥 FIREBASE AUTH STATE:', {
-      uid: currentUser?.uid || 'null',
-      email: currentUser?.email || 'null',
-      timestamp: Date.now()
-    });
-  }, [currentUser]);
-  
-  // Check for external DOM manipulation
-  useLayoutEffect(() => {
-    const checkExternalManipulation = () => {
-      const hasJQuery = typeof window.$ !== 'undefined';
-      const hasOtherLibs = {
-        jquery: hasJQuery,
-        lodash: typeof window._ !== 'undefined',
-        moment: typeof window.moment !== 'undefined'
-      };
-      console.log('🔍 EXTERNAL LIBRARIES:', hasOtherLibs);
-      
-      // Check for MutationObserver activity
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.target.tagName === 'INPUT' || mutation.target.closest('input')) {
-            console.log('⚠️ DOM MUTATION ON INPUT:', mutation);
-          }
-        });
-      });
-      
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['value', 'id', 'class']
-      });
-      
-      return () => observer.disconnect();
-    };
-    
-    const cleanup = checkExternalManipulation();
-    return cleanup;
-  }, []);
   const [activeTab, setActiveTab] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
@@ -134,13 +594,8 @@ const UserProfile = () => {
     confirmPassword: ''
   });
   
-  // [REQUIRES FIREBASE INTEGRATION] - Replace with real user application data
-  const [userApplications] = useState([
-    // [REQUIRES REAL DATA] - Connect to Firebase applications collection
-    // TODO: Query user's applications: db.collection('applications').where('userId', '==', currentUser.uid)
-  ]);
+  const [userApplications] = useState([]);
   
-  // Load user profile data from Firebase Firestore
   React.useEffect(() => {
     const loadUserProfile = async () => {
       if (currentUser) {
@@ -165,7 +620,6 @@ const UserProfile = () => {
             };
             setProfileData(newProfileData);
           } else {
-            // If no user document exists, create one with basic info
             const initialUserData = {
               firstName: currentUser?.displayName?.split(' ')[0] || '',
               lastName: currentUser?.displayName?.split(' ').slice(1).join(' ') || '',
@@ -196,8 +650,7 @@ const UserProfile = () => {
             });
           }
         } catch (error) {
-          console.error('Error loading user profile from Firestore:', error);
-          toast.error('Failed to load profile data');
+          toast.error(t('loadProfileFailed'));
         } finally {
           setIsLoading(false);
         }
@@ -207,53 +660,21 @@ const UserProfile = () => {
     if (currentUser?.uid && isLoading) {
       loadUserProfile();
     }
-  }, [currentUser?.uid, isLoading]); // Include isLoading in dependency array
+  }, [currentUser?.uid, isLoading, t]);
   
-  const handleTabChange = (event, newValue) => {
+  const handleTabChange = useCallback((event, newValue) => {
     setActiveTab(newValue);
-  };
+  }, []);
   
-  // Optimized input handler with stable reference and minimal re-renders
   const handleInputChange = useCallback((field) => {
     return (event) => {
       const value = event.target.value;
-      const activeElement = document.activeElement;
-      const elementId = activeElement?.id;
-      
-      console.log('🎯 INPUT CHANGE:', {
-        field,
-        value,
-        activeElementId: elementId || 'no-id',
-        activeElementTag: activeElement?.tagName,
-        timestamp: Date.now()
-      });
-      
-      // Use functional update to prevent unnecessary re-renders
       setProfileData(prev => {
         if (prev[field] === value) {
-          console.log('⚡ SKIPPING UPDATE - Same value');
-          return prev; // Don't update if value hasn't changed
+          return prev;
         }
-        
-        const newState = { ...prev, [field]: value };
-        console.log('💾 STATE UPDATE:', { field, oldValue: prev[field], newValue: value });
-        return newState;
+        return { ...prev, [field]: value };
       });
-      
-      // Restore focus after React's render cycle
-      if (elementId) {
-        requestAnimationFrame(() => {
-          const element = document.getElementById(elementId);
-          if (element && element !== document.activeElement) {
-            element.focus();
-            // Restore cursor position for text inputs
-            if (element.setSelectionRange && typeof element.selectionStart === 'number') {
-              const cursorPos = element.value.length;
-              element.setSelectionRange(cursorPos, cursorPos);
-            }
-          }
-        });
-      }
     };
   }, []);
   
@@ -267,506 +688,196 @@ const UserProfile = () => {
         };
         
         await updateDoc(userDocRef, updateData);
-        toast.success('Profile updated successfully!');
+        toast.success(t('profileUpdateSuccess'));
         setIsEditing(false);
       }
     } catch (error) {
-      console.error('Error saving profile to Firestore:', error);
-      toast.error('Failed to update profile');
+      toast.error(t('profileUpdateFailed'));
     }
   };
   
   const handlePasswordChange = async () => {
     try {
       if (passwordData.newPassword !== passwordData.confirmPassword) {
-        toast.error('New passwords do not match');
+        toast.error(t('passwordsNoMatch'));
         return;
       }
       
       if (passwordData.newPassword.length < 6) {
-        toast.error('Password must be at least 6 characters long');
+        toast.error(t('passwordTooShort'));
         return;
       }
       
       await updatePassword(auth.currentUser, passwordData.newPassword);
-      toast.success('Password updated successfully!');
+      toast.success(t('passwordUpdateSuccess'));
       setShowPasswordDialog(false);
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
-      toast.error('Failed to update password. Please try again.');
+      toast.error(t('passwordUpdateFailed'));
     }
   };
   
-  const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case 'completed': return 'success';
-      case 'under review': return 'warning';
-      case 'rejected': return 'error';
-      default: return 'info';
-    }
-  };
+
   
-  // Memoized TabPanel to prevent unnecessary re-renders and maintain DOM structure
-  const TabPanel = React.memo(({ children, value, index }) => {
-    console.log('📝 TAB PANEL RENDER:', { index, isActive: value === index, timestamp: Date.now() });
-    return (
-      <Box 
-        role="tabpanel" 
-        sx={{ 
-          py: 3,
-          display: value === index ? 'block' : 'none'
-        }}
-        id={`tabpanel-${index}`}
-        aria-labelledby={`tab-${index}`}
-      >
-        {children}
-      </Box>
-    );
-  }, (prevProps, nextProps) => {
-    // Custom comparison function to prevent unnecessary re-renders
-    const shouldNotRerender = 
-      prevProps.value === nextProps.value &&
-      prevProps.index === nextProps.index;
-    
-    console.log('🔄 TABPANEL MEMO CHECK:', {
-      index: prevProps.index,
-      prevValue: prevProps.value,
-      nextValue: nextProps.value,
-      shouldNotRerender,
-      timestamp: Date.now()
-    });
-    
-    return shouldNotRerender;
-  });
-  TabPanel.displayName = 'TabPanel';
+
   
-  // Memoized Personal Info Form to prevent re-renders
-  const PersonalInfoForm = React.memo(({ profileData, isEditing, handleInputChange }) => {
-    console.log('📄 PERSONAL INFO FORM RENDER:', { timestamp: Date.now(), isEditing });
-    
-    return (
-      <Grid container spacing={3}>
-        <Grid item xs={12} sm={6}>
-          <Box sx={{ mb: 1 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              First Name
-            </Typography>
-            <input
-              key="firstName"
-              id="input-firstName"
-              type="text"
-              value={profileData.firstName}
-              onChange={handleInputChange('firstName')}
-              disabled={!isEditing}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                border: isEditing ? '1px solid #c4c4c4' : '1px solid #e0e0e0',
-                borderRadius: '4px',
-                fontSize: '16px',
-                fontFamily: 'inherit',
-                backgroundColor: isEditing ? '#fff' : '#fafafa',
-                color: isEditing ? '#000' : '#666',
-                outline: 'none',
-                transition: 'border-color 0.2s'
-              }}
-              onFocus={(e) => {
-                console.log('🎯 FOCUS: firstName');
-                if (isEditing) e.target.style.borderColor = '#1976d2';
-              }}
-              onBlur={(e) => {
-                console.log('🔲 BLUR: firstName');
-                e.target.style.borderColor = '#c4c4c4';
-              }}
-            />
-          </Box>
-        </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <Box sx={{ mb: 1 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              Last Name
-            </Typography>
-            <input
-              key="lastName"
-              id="input-lastName"
-              type="text"
-              value={profileData.lastName}
-              onChange={handleInputChange('lastName')}
-              disabled={!isEditing}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                border: isEditing ? '1px solid #c4c4c4' : '1px solid #e0e0e0',
-                borderRadius: '4px',
-                fontSize: '16px',
-                fontFamily: 'inherit',
-                backgroundColor: isEditing ? '#fff' : '#fafafa',
-                color: isEditing ? '#000' : '#666',
-                outline: 'none',
-                transition: 'border-color 0.2s'
-              }}
-              onFocus={(e) => {
-                console.log('🎯 FOCUS: lastName');
-                if (isEditing) e.target.style.borderColor = '#1976d2';
-              }}
-              onBlur={(e) => {
-                console.log('🔲 BLUR: lastName');
-                e.target.style.borderColor = '#c4c4c4';
-              }}
-            />
-          </Box>
-        </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            label="Email Address"
-            value={profileData.email}
-            disabled
-            helperText="Email cannot be changed. Contact support if needed."
-          />
-        </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <Box sx={{ mb: 1 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              Phone Number
-            </Typography>
-            <input
-              key="phoneNumber"
-              id="input-phoneNumber"
-              type="tel"
-              value={profileData.phoneNumber}
-              onChange={handleInputChange('phoneNumber')}
-              disabled={!isEditing}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                border: isEditing ? '1px solid #c4c4c4' : '1px solid #e0e0e0',
-                borderRadius: '4px',
-                fontSize: '16px',
-                fontFamily: 'inherit',
-                backgroundColor: isEditing ? '#fff' : '#fafafa',
-                color: isEditing ? '#000' : '#666',
-                outline: 'none',
-                transition: 'border-color 0.2s'
-              }}
-              onFocus={(e) => {
-                console.log('🎯 FOCUS: phoneNumber');
-                if (isEditing) e.target.style.borderColor = '#1976d2';
-              }}
-              onBlur={(e) => {
-                console.log('🔲 BLUR: phoneNumber');
-                e.target.style.borderColor = '#c4c4c4';
-              }}
-            />
-          </Box>
-        </Grid>
-        
-        <Grid item xs={12}>
-          <Box sx={{ mb: 1 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              Address
-            </Typography>
-            <textarea
-              key="address"
-              id="input-address"
-              value={profileData.address}
-              onChange={handleInputChange('address')}
-              disabled={!isEditing}
-              rows={3}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                border: isEditing ? '1px solid #c4c4c4' : '1px solid #e0e0e0',
-                borderRadius: '4px',
-                fontSize: '16px',
-                fontFamily: 'inherit',
-                backgroundColor: isEditing ? '#fff' : '#fafafa',
-                color: isEditing ? '#000' : '#666',
-                outline: 'none',
-                transition: 'border-color 0.2s',
-                resize: 'vertical'
-              }}
-              onFocus={(e) => {
-                console.log('🎯 FOCUS: address');
-                if (isEditing) e.target.style.borderColor = '#1976d2';
-              }}
-              onBlur={(e) => {
-                console.log('🔲 BLUR: address');
-                e.target.style.borderColor = '#c4c4c4';
-              }}
-            />
-          </Box>
-        </Grid>
-        
-        <Grid item xs={12} sm={4}>
-          <Box sx={{ mb: 1 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              City
-            </Typography>
-            <input
-              key="city"
-              id="input-city"
-              type="text"
-              value={profileData.city}
-              onChange={handleInputChange('city')}
-              disabled={!isEditing}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                border: isEditing ? '1px solid #c4c4c4' : '1px solid #e0e0e0',
-                borderRadius: '4px',
-                fontSize: '16px',
-                fontFamily: 'inherit',
-                backgroundColor: isEditing ? '#fff' : '#fafafa',
-                color: isEditing ? '#000' : '#666',
-                outline: 'none',
-                transition: 'border-color 0.2s'
-              }}
-              onFocus={(e) => {
-                console.log('🎯 FOCUS: city');
-                if (isEditing) e.target.style.borderColor = '#1976d2';
-              }}
-              onBlur={(e) => {
-                console.log('🔲 BLUR: city');
-                e.target.style.borderColor = '#c4c4c4';
-              }}
-            />
-          </Box>
-        </Grid>
-        
-        <Grid item xs={12} sm={4}>
-          <Box sx={{ mb: 1 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              State
-            </Typography>
-            <input
-              key="state"
-              id="input-state"
-              type="text"
-              value={profileData.state}
-              onChange={handleInputChange('state')}
-              disabled={!isEditing}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                border: isEditing ? '1px solid #c4c4c4' : '1px solid #e0e0e0',
-                borderRadius: '4px',
-                fontSize: '16px',
-                fontFamily: 'inherit',
-                backgroundColor: isEditing ? '#fff' : '#fafafa',
-                color: isEditing ? '#000' : '#666',
-                outline: 'none',
-                transition: 'border-color 0.2s'
-              }}
-              onFocus={(e) => {
-                console.log('🎯 FOCUS: state');
-                if (isEditing) e.target.style.borderColor = '#1976d2';
-              }}
-              onBlur={(e) => {
-                console.log('🔲 BLUR: state');
-                e.target.style.borderColor = '#c4c4c4';
-              }}
-            />
-          </Box>
-        </Grid>
-        
-        <Grid item xs={12} sm={4}>
-          <Box sx={{ mb: 1 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              PIN Code
-            </Typography>
-            <input
-              key="pincode"
-              id="input-pincode"
-              type="text"
-              value={profileData.pincode}
-              onChange={handleInputChange('pincode')}
-              disabled={!isEditing}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                border: isEditing ? '1px solid #c4c4c4' : '1px solid #e0e0e0',
-                borderRadius: '4px',
-                fontSize: '16px',
-                fontFamily: 'inherit',
-                backgroundColor: isEditing ? '#fff' : '#fafafa',
-                color: isEditing ? '#000' : '#666',
-                outline: 'none',
-                transition: 'border-color 0.2s'
-              }}
-              onFocus={(e) => {
-                console.log('🎯 FOCUS: pincode');
-                if (isEditing) e.target.style.borderColor = '#1976d2';
-              }}
-              onBlur={(e) => {
-                console.log('🔲 BLUR: pincode');
-                e.target.style.borderColor = '#c4c4c4';
-              }}
-            />
-          </Box>
-        </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <Box sx={{ mb: 1 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              Occupation
-            </Typography>
-            <input
-              key="occupation"
-              id="input-occupation"
-              type="text"
-              value={profileData.occupation}
-              onChange={handleInputChange('occupation')}
-              disabled={!isEditing}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                border: isEditing ? '1px solid #c4c4c4' : '1px solid #e0e0e0',
-                borderRadius: '4px',
-                fontSize: '16px',
-                fontFamily: 'inherit',
-                backgroundColor: isEditing ? '#fff' : '#fafafa',
-                color: isEditing ? '#000' : '#666',
-                outline: 'none',
-                transition: 'border-color 0.2s'
-              }}
-              onFocus={(e) => {
-                console.log('🎯 FOCUS: occupation');
-                if (isEditing) e.target.style.borderColor = '#1976d2';
-              }}
-              onBlur={(e) => {
-                console.log('🔲 BLUR: occupation');
-                e.target.style.borderColor = '#c4c4c4';
-              }}
-            />
-          </Box>
-        </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <Box sx={{ mb: 1 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              Date of Birth
-            </Typography>
-            <input
-              key="dateOfBirth"
-              id="input-dateOfBirth"
-              type="date"
-              value={profileData.dateOfBirth}
-              onChange={handleInputChange('dateOfBirth')}
-              disabled={!isEditing}
-              style={{
-                width: '100%',
-                padding: '12px 14px',
-                border: isEditing ? '1px solid #c4c4c4' : '1px solid #e0e0e0',
-                borderRadius: '4px',
-                fontSize: '16px',
-                fontFamily: 'inherit',
-                backgroundColor: isEditing ? '#fff' : '#fafafa',
-                color: isEditing ? '#000' : '#666',
-                outline: 'none',
-                transition: 'border-color 0.2s'
-              }}
-              onFocus={(e) => {
-                console.log('🎯 FOCUS: dateOfBirth');
-                if (isEditing) e.target.style.borderColor = '#1976d2';
-              }}
-              onBlur={(e) => {
-                console.log('🔲 BLUR: dateOfBirth');
-                e.target.style.borderColor = '#c4c4c4';
-              }}
-            />
-          </Box>
-        </Grid>
-      </Grid>
-    );
-  }, (prevProps, nextProps) => {
-    // Custom comparison to prevent unnecessary re-renders
-    const isEqual = 
-      prevProps.isEditing === nextProps.isEditing &&
-      JSON.stringify(prevProps.profileData) === JSON.stringify(nextProps.profileData);
-    
-    console.log('🔄 PERSONAL FORM MEMO CHECK:', {
-      isEqual,
-      prevEditing: prevProps.isEditing,
-      nextEditing: nextProps.isEditing,
-      timestamp: Date.now()
-    });
-    
-    return isEqual;
-  });
-  
-  PersonalInfoForm.displayName = 'PersonalInfoForm';
+
   
   return (
-    <Container maxWidth="lg">
-      
-      <Box sx={{ mt: 4, mb: 4 }}>
+    <Container 
+      maxWidth="lg" 
+      sx={{ 
+        px: { xs: 2, sm: 3, md: 4 },
+        py: { xs: 2, sm: 3 }
+      }}
+    >
+      <Box sx={{ 
+        mt: { xs: 2, sm: 3, md: 4 }, 
+        mb: { xs: 2, sm: 3, md: 4 },
+        minHeight: '100vh'
+      }}>
         {/* Profile Header */}
-        <Paper elevation={3} sx={{ p: 4, mb: 4 }}>
-          <Grid container spacing={3} alignItems="center">
-            <Grid item>
-              <Avatar
-                sx={{ 
-                  width: 80, 
-                  height: 80, 
-                  bgcolor: 'primary.main',
-                  fontSize: '2rem'
-                }}
-              >
-                {profileData.firstName.charAt(0)}{profileData.lastName.charAt(0)}
-              </Avatar>
-            </Grid>
-            <Grid item xs>
-              <Typography variant="h4" gutterBottom color="primary">
-                {profileData.firstName} {profileData.lastName}
-                {currentUser?.emailVerified && (
-                  <Verified color="success" sx={{ ml: 1, verticalAlign: 'middle' }} />
-                )}
-              </Typography>
-              <Typography variant="h6" color="text.secondary">
-                {profileData.email}
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Role: 
-                </Typography>
-                <Typography 
-                  variant="body2" 
+        <Paper 
+          elevation={3} 
+          sx={{ 
+            p: { xs: 3, sm: 4, md: 5 }, 
+            mb: { xs: 3, sm: 4 },
+            borderRadius: 3,
+            background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+            border: '1px solid #e0e0e0'
+          }}
+        >
+          <Grid container spacing={{ xs: 2, sm: 3 }} alignItems="center">
+            <Grid item xs={12} sm="auto">
+              <Box sx={{ display: 'flex', justifyContent: { xs: 'center', sm: 'flex-start' } }}>
+                <Avatar
                   sx={{ 
-                    bgcolor: currentUser?.role === 'admin' ? 'error.light' : 
-                           currentUser?.role === 'staff' ? 'warning.light' : 
-                           currentUser?.role === 'officer' ? 'info.light' : 'grey.300',
-                    color: 'white',
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 1,
-                    fontWeight: 'bold',
-                    textTransform: 'uppercase'
+                    width: { xs: 80, sm: 90, md: 100 }, 
+                    height: { xs: 80, sm: 90, md: 100 }, 
+                    bgcolor: 'primary.main',
+                    fontSize: { xs: '1.8rem', sm: '2.2rem' },
+                    boxShadow: 4,
+                    border: '3px solid white',
+                    fontWeight: 600
                   }}
                 >
-                  {currentUser?.role || 'user'}
+                  {profileData.firstName.charAt(0)?.toUpperCase()}{profileData.lastName.charAt(0)?.toUpperCase()}
+                </Avatar>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm>
+              <Box sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
+                <Typography 
+                  variant={{ xs: 'h5', sm: 'h4' }} 
+                  color="primary"
+                  sx={{ 
+                    fontWeight: 700,
+                    mb: { xs: 1.5, sm: 2 },
+                    lineHeight: 1.2
+                  }}
+                >
+                  {profileData.firstName} {profileData.lastName}
+                  {currentUser?.emailVerified && (
+                    <Verified 
+                      color="success" 
+                      sx={{ 
+                        ml: 1.5, 
+                        verticalAlign: 'middle',
+                        fontSize: { xs: '1.3rem', sm: '1.6rem' }
+                      }} 
+                    />
+                  )}
+                </Typography>
+                <Typography 
+                  variant={{ xs: 'body1', sm: 'h6' }} 
+                  color="text.secondary"
+                  sx={{ 
+                    mb: { xs: 2, sm: 3 },
+                    fontWeight: 500,
+                    display: 'block'
+                  }}
+                >
+                  {profileData.email}
+                </Typography>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 2, 
+                  mb: 2,
+                  justifyContent: { xs: 'center', sm: 'flex-start' },
+                  flexWrap: 'wrap'
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                      {t('role', 'Role')}:
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        bgcolor: currentUser?.role === 'admin' ? '#d32f2f' : 
+                               currentUser?.role === 'staff' ? '#ed6c02' : 
+                               currentUser?.role === 'officer' ? '#0288d1' : '#757575',
+                        color: 'white',
+                        px: 2,
+                        py: 0.75,
+                        borderRadius: 3,
+                        fontWeight: 600,
+                        textTransform: 'capitalize',
+                        fontSize: '0.8rem',
+                        boxShadow: 1
+                      }}
+                    >
+                      {currentUser?.role || 'User'}
+                    </Typography>
+                  </Box>
+                </Box>
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                  sx={{ 
+                    fontWeight: 500,
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  {t('memberSince', 'Member since')} {currentUser?.metadata?.creationTime ? 
+                    new Date(currentUser.metadata.creationTime).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    }) : 
+                    new Date().toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
                 </Typography>
               </Box>
-              <Typography variant="body2" color="text.secondary">
-                Member since {currentUser?.metadata?.creationTime ? 
-                  new Date(currentUser.metadata.creationTime).toLocaleDateString() : 
-                  'Recently joined'}
-              </Typography>
             </Grid>
-            <Grid item>
-              <Box sx={{ display: 'flex', gap: 1 }}>
+            <Grid item xs={12} sm="auto">
+              <Box sx={{ 
+                display: 'flex', 
+                gap: { xs: 1, sm: 1.5 },
+                justifyContent: { xs: 'center', sm: 'flex-end' },
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: 'center'
+              }}>
                 <Button
                   variant={isEditing ? "contained" : "outlined"}
                   startIcon={isEditing ? <Save /> : <Edit />}
                   onClick={isEditing ? handleSaveProfile : () => setIsEditing(true)}
+                  size="medium"
+                  sx={{ minWidth: { xs: '140px', sm: 'auto' } }}
                 >
-                  {isEditing ? 'Save Changes' : 'Edit Profile'}
+                  {String(isEditing ? t('saveChanges', 'Save Changes') : t('editProfile', 'Edit Profile'))}
                 </Button>
                 {isEditing && (
-                  <IconButton onClick={() => setIsEditing(false)}>
+                  <IconButton 
+                    onClick={() => setIsEditing(false)}
+                    sx={{ 
+                      bgcolor: 'grey.100',
+                      '&:hover': { bgcolor: 'grey.200' }
+                    }}
+                  >
                     <Cancel />
                   </IconButton>
                 )}
@@ -776,8 +887,9 @@ const UserProfile = () => {
                   onClick={refreshUserData}
                   color="secondary"
                   size="small"
+                  sx={{ minWidth: { xs: '140px', sm: 'auto' } }}
                 >
-                  Refresh Role
+                  {String(t('refreshRole', 'Refresh Role'))}
                 </Button>
               </Box>
             </Grid>
@@ -785,13 +897,73 @@ const UserProfile = () => {
         </Paper>
         
         {/* Profile Tabs */}
-        <Paper elevation={3}>
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs value={activeTab} onChange={handleTabChange}>
-              <Tab icon={<Person />} label="Personal Info" />
-              <Tab icon={<Assignment />} label="My Applications" />
-              <Tab icon={<Security />} label="Account Security" />
-              <Tab icon={<Settings />} label="Settings" />
+        <Paper 
+          elevation={3}
+          sx={{ 
+            borderRadius: 2,
+            overflow: 'hidden'
+          }}
+        >
+          <Box sx={{ 
+            borderBottom: 1, 
+            borderColor: 'divider',
+            bgcolor: 'grey.50'
+          }}>
+            <Tabs 
+              value={activeTab} 
+              onChange={handleTabChange}
+              variant="scrollable"
+              scrollButtons="auto"
+              allowScrollButtonsMobile
+              textColor="primary"
+              indicatorColor="primary"
+              orientation="horizontal"
+              sx={{
+                '& .MuiTab-root': {
+                  minHeight: { xs: 60, sm: 72 },
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  fontWeight: 500,
+                  textTransform: 'none',
+                  px: { xs: 1, sm: 2 }
+                }
+              }}
+            >
+              <Tab 
+                icon={<Person />} 
+                label={String(t('personalInfo', 'Personal Info'))}
+                iconPosition="start"
+                sx={{ 
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  gap: { xs: 0.5, sm: 1 }
+                }}
+              />
+              <Tab 
+                icon={<Assignment />} 
+                label={String(t('myApplications', 'My Applications'))}
+                iconPosition="start"
+                sx={{ 
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  gap: { xs: 0.5, sm: 1 }
+                }}
+              />
+              <Tab 
+                icon={<Security />} 
+                label={String(t('accountSecurity', 'Account Security'))}
+                iconPosition="start"
+                sx={{ 
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  gap: { xs: 0.5, sm: 1 }
+                }}
+              />
+              <Tab 
+                icon={<Settings />} 
+                label={String(t('settings', 'Settings'))}
+                iconPosition="start"
+                sx={{ 
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  gap: { xs: 0.5, sm: 1 }
+                }}
+              />
             </Tabs>
           </Box>
           
@@ -801,51 +973,117 @@ const UserProfile = () => {
               profileData={profileData}
               isEditing={isEditing}
               handleInputChange={handleInputChange}
+              t={t}
             />
           </TabPanel>
           
           {/* Applications Tab */}
           <TabPanel key="applications-tab" value={activeTab} index={1}>
-            <MyApplications />
+            {activeTab === 1 && <MyApplications />}
           </TabPanel>
           
           {/* Security Tab */}
           <TabPanel key="security-tab" value={activeTab} index={2}>
-            <Typography variant="h6" gutterBottom color="primary">
-              Account Security
+            <Typography 
+              variant="h5" 
+              gutterBottom 
+              color="primary"
+              sx={{ 
+                mb: { xs: 2, sm: 3 },
+                fontWeight: 600
+              }}
+            >
+              {t('accountSecurity')}
             </Typography>
             
-            <Grid container spacing={3}>
+            <Grid container spacing={{ xs: 2, sm: 3 }}>
               <Grid item xs={12}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Password & Authentication
+                <Card 
+                  elevation={2}
+                  sx={{ 
+                    borderRadius: 2,
+                    border: '1px solid #f0f0f0'
+                  }}
+                >
+                  <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                    <Typography 
+                      variant="h6" 
+                      gutterBottom
+                      sx={{ 
+                        mb: { xs: 2, sm: 3 },
+                        fontWeight: 500
+                      }}
+                    >
+                      {t('passwordAndAuth')}
                     </Typography>
-                    <List>
-                      <ListItem>
-                        <ListItemIcon>
-                          <Security color={currentUser?.emailVerified ? 'success' : 'warning'} />
+                    <List sx={{ p: 0 }}>
+                      <ListItem 
+                        sx={{ 
+                          px: 0,
+                          py: { xs: 1.5, sm: 2 },
+                          borderRadius: 1,
+                          mb: 1,
+                          bgcolor: 'grey.50'
+                        }}
+                      >
+                        <ListItemIcon sx={{ minWidth: { xs: 40, sm: 56 } }}>
+                          <Security 
+                            color={currentUser?.emailVerified ? 'success' : 'warning'} 
+                            sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }}
+                          />
                         </ListItemIcon>
                         <ListItemText
-                          primary="Email Verification"
-                          secondary={currentUser?.emailVerified ? 'Verified' : 'Not verified - please check your email'}
+                          primary={t('emailVerification')}
+                          secondary={currentUser?.emailVerified ? t('verified') : t('notVerified')}
+                          sx={{
+                            '& .MuiListItemText-primary': {
+                              fontSize: { xs: '0.9rem', sm: '1rem' },
+                              fontWeight: 500
+                            },
+                            '& .MuiListItemText-secondary': {
+                              fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                            }
+                          }}
                         />
                       </ListItem>
-                      <ListItem>
-                        <ListItemIcon>
-                          <Security color="primary" />
+                      <ListItem 
+                        sx={{ 
+                          px: 0,
+                          py: { xs: 1.5, sm: 2 },
+                          borderRadius: 1,
+                          bgcolor: 'grey.50'
+                        }}
+                      >
+                        <ListItemIcon sx={{ minWidth: { xs: 40, sm: 56 } }}>
+                          <Security 
+                            color="primary" 
+                            sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }}
+                          />
                         </ListItemIcon>
                         <ListItemText
-                          primary="Password"
-                          secondary="Last updated: Recently"
+                          primary={t('password')}
+                          secondary={t('lastUpdated')}
+                          sx={{
+                            '& .MuiListItemText-primary': {
+                              fontSize: { xs: '0.9rem', sm: '1rem' },
+                              fontWeight: 500
+                            },
+                            '& .MuiListItemText-secondary': {
+                              fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                            }
+                          }}
                         />
                         <Button
                           variant="outlined"
-                          size="small"
+                          size="medium"
                           onClick={() => setShowPasswordDialog(true)}
+                          sx={{ 
+                            ml: { xs: 1, sm: 2 },
+                            borderRadius: 2,
+                            textTransform: 'none'
+                          }}
                         >
-                          Change Password
+                          {String(t('changePassword', 'Change Password'))}
                         </Button>
                       </ListItem>
                     </List>
@@ -857,26 +1095,64 @@ const UserProfile = () => {
           
           {/* Settings Tab */}
           <TabPanel key="settings-tab" value={activeTab} index={3}>
-            <Typography variant="h6" gutterBottom color="primary">
-              Account Settings
+            <Typography 
+              variant="h5" 
+              gutterBottom 
+              color="primary"
+              sx={{ 
+                mb: { xs: 2, sm: 3 },
+                fontWeight: 600
+              }}
+            >
+              {t('accountSettings')}
             </Typography>
             
-            <Grid container spacing={3}>
+            <Grid container spacing={{ xs: 2, sm: 3 }}>
               <Grid item xs={12}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom color="error">
-                      Danger Zone
+                <Card 
+                  elevation={2}
+                  sx={{ 
+                    borderRadius: 2,
+                    border: '1px solid #ffebee'
+                  }}
+                >
+                  <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                    <Typography 
+                      variant="h6" 
+                      gutterBottom 
+                      color="error"
+                      sx={{ 
+                        mb: { xs: 2, sm: 3 },
+                        fontWeight: 500
+                      }}
+                    >
+                      {t('dangerZone')}
                     </Typography>
-                    <Alert severity="warning" sx={{ mb: 2 }}>
-                      These actions are permanent and cannot be undone.
+                    <Alert 
+                      severity="warning" 
+                      sx={{ 
+                        mb: { xs: 2, sm: 3 },
+                        borderRadius: 2,
+                        '& .MuiAlert-message': {
+                          fontSize: { xs: '0.875rem', sm: '1rem' }
+                        }
+                      }}
+                    >
+                      {t('dangerZoneMsg')}
                     </Alert>
                     <Button
                       variant="outlined"
                       color="error"
                       onClick={logout}
+                      size="large"
+                      sx={{ 
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        px: { xs: 2, sm: 3 },
+                        py: { xs: 1, sm: 1.5 }
+                      }}
                     >
-                      Sign Out
+                      {String(t('signOut', 'Sign Out'))}
                     </Button>
                   </CardContent>
                 </Card>
@@ -886,21 +1162,49 @@ const UserProfile = () => {
         </Paper>
         
         {/* Change Password Dialog */}
-        <Dialog open={showPasswordDialog} onClose={() => setShowPasswordDialog(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>Change Password</DialogTitle>
-          <DialogContent>
-            <Grid container spacing={2} sx={{ mt: 1 }}>
+        <Dialog 
+          open={showPasswordDialog} 
+          onClose={() => setShowPasswordDialog(false)} 
+          maxWidth="sm" 
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 2,
+              m: { xs: 1, sm: 2 },
+              maxHeight: { xs: '90vh', sm: 'auto' }
+            }
+          }}
+        >
+          <DialogTitle 
+            sx={{ 
+              pb: { xs: 1, sm: 2 },
+              fontSize: { xs: '1.1rem', sm: '1.25rem' },
+              fontWeight: 600
+            }}
+          >
+            {t('changePassword')}
+          </DialogTitle>
+          <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
+            <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mt: 0.5 }}>
               <Grid item xs={12}>
                 <TextField
                   key="currentPassword"
                   fullWidth
-                  label="Current Password"
+                  label={t('currentPassword')}
                   type={showPassword ? 'text' : 'password'}
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2
+                    }
+                  }}
                   InputProps={{
                     endAdornment: (
-                      <IconButton onClick={() => setShowPassword(!showPassword)}>
+                      <IconButton 
+                        onClick={() => setShowPassword(!showPassword)}
+                        size={{ xs: 'small', sm: 'medium' }}
+                      >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     )
@@ -911,24 +1215,37 @@ const UserProfile = () => {
                 <TextField
                   key="newPassword"
                   fullWidth
-                  label="New Password"
+                  label={t('newPassword')}
                   type={showPassword ? 'text' : 'password'}
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                  helperText="Minimum 6 characters"
+                  helperText={t('min6Chars')}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2
+                    }
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   key="confirmPassword"
                   fullWidth
-                  label="Confirm New Password"
+                  label={t('confirmNewPassword')}
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2
+                    }
+                  }}
                   InputProps={{
                     endAdornment: (
-                      <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                      <IconButton 
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        size={{ xs: 'small', sm: 'medium' }}
+                      >
                         {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     )
@@ -937,9 +1254,37 @@ const UserProfile = () => {
               </Grid>
             </Grid>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setShowPasswordDialog(false)}>Cancel</Button>
-            <Button onClick={handlePasswordChange} variant="contained">Update Password</Button>
+          <DialogActions 
+            sx={{ 
+              px: { xs: 2, sm: 3 },
+              pb: { xs: 2, sm: 3 },
+              gap: { xs: 1, sm: 1.5 },
+              flexDirection: { xs: 'column', sm: 'row' }
+            }}
+          >
+            <Button 
+              onClick={() => setShowPasswordDialog(false)}
+              sx={{ 
+                borderRadius: 2,
+                textTransform: 'none',
+                order: { xs: 2, sm: 1 },
+                width: { xs: '100%', sm: 'auto' }
+              }}
+            >
+              {String(t('cancel', 'Cancel'))}
+            </Button>
+            <Button 
+              onClick={handlePasswordChange} 
+              variant="contained"
+              sx={{ 
+                borderRadius: 2,
+                textTransform: 'none',
+                order: { xs: 1, sm: 2 },
+                width: { xs: '100%', sm: 'auto' }
+              }}
+            >
+              {String(t('updatePassword', 'Update Password'))}
+            </Button>
           </DialogActions>
         </Dialog>
       </Box>

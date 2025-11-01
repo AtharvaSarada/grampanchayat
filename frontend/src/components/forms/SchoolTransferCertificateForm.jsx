@@ -22,9 +22,11 @@ import MultiStepForm from './MultiStepForm';
 import DocumentUpload from '../common/DocumentUpload';
 import { calculateAge, validateField, autoCorrect } from '../../utils/formValidation';
 import { getStates, getDistrictsByState } from '../../data/stateDistrictData';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 // Student Information Step
 const StudentInformationStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const [age, setAge] = React.useState(0);
 
   React.useEffect(() => {
@@ -220,7 +222,7 @@ const StudentInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Email Address"
+            label="ईमेल पत्ता"
             type="email"
             value={formData.email || ''}
             onChange={(e) => handleChange('email', e.target.value)}
@@ -672,11 +674,13 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
 
 // Main Form Component
 const SchoolTransferCertificateForm = () => {
+  const { t } = useLanguage();
+  
   const steps = [
-    { id: 'student', title: 'Student Information', icon: 'Person' },
-    { id: 'school', title: 'Current School', icon: 'School' },
-    { id: 'transfer', title: 'Transfer Details', icon: 'SwapHoriz' },
-    { id: 'documents', title: 'Documents', icon: 'Description' }
+    { id: 'student', title: 'विद्यार्थी तपशील', icon: 'Person' },
+    { id: 'school', title: 'शाळा माहिती', icon: 'School' },
+    { id: 'transfer', title: 'बदलीचे कारण', icon: 'SwapHoriz' },
+    { id: 'documents', title: 'कागदपत्रे', icon: 'Description' }
   ];
 
   const validationRules = {
@@ -711,7 +715,7 @@ const SchoolTransferCertificateForm = () => {
 
   return (
     <MultiStepForm
-      serviceName="School Transfer Certificate Application"
+      serviceName="शाळा बदली प्रमाणपत्र अर्ज"
       serviceType="school_transfer_certificate"
       steps={steps}
       validationRules={validationRules}

@@ -20,34 +20,55 @@ import MultiStepForm from './MultiStepForm';
 import DocumentUpload from '../common/DocumentUpload';
 import { calculateAge, validateField, autoCorrect, validateDateConsistency } from '../../utils/formValidation';
 import { getStates, getDistrictsByState } from '../../data/stateDistrictData';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 // Step Components
 const DeceasedPersonStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     let correctedValue = value;
     
-    // Apply auto-corrections
-    if (field === 'deceasedName' || field === 'fatherHusbandName') {
+    // Handle date objects properly
+    if (field === 'dateOfBirth' || field === 'dateOfDeath' || field === 'timeOfDeath') {
+      // If value is a Date object, keep it as is for calculations
+      // If value is null/undefined, keep it as null
+      correctedValue = value;
+    } else if (field === 'deceasedName' || field === 'fatherHusbandName') {
+      // Apply auto-corrections for text fields
       correctedValue = autoCorrect.name(value);
     }
     
     const updates = { [field]: correctedValue };
     
     // Auto-calculate age when date of birth changes
-    if (field === 'dateOfBirth') {
+    if (field === 'dateOfBirth' && formData.dateOfDeath && value) {
       updates.ageAtDeath = calculateAge(value, formData.dateOfDeath);
     }
     
-    // Validate date consistency when death date changes
-    if (field === 'dateOfDeath') {
-      updates.ageAtDeath = calculateAge(formData.dateOfBirth, value);
+    // Auto-calculate age when date of death changes
+    if (field === 'dateOfDeath' && value) {
+      if (formData.dateOfBirth) {
+        updates.ageAtDeath = calculateAge(formData.dateOfBirth, value);
+      }
       
       // Cross-field validation
-      const dateErrors = validateDateConsistency(formData.dateOfBirth, value);
-      if (dateErrors.deathDate) {
-        updates.dateOfDeathError = dateErrors.deathDate;
-      } else {
-        updates.dateOfDeathError = null;
+      if (formData.dateOfBirth) {
+        const dateErrors = validateDateConsistency(formData.dateOfBirth, value);
+        if (dateErrors && dateErrors.deathDate) {
+          updates.dateOfDeathError = dateErrors.deathDate;
+        } else {
+          updates.dateOfDeathError = null;
+        }
+      }
+    }
+    
+    // Recalculate age if both dates are available
+    if ((field === 'dateOfBirth' || field === 'dateOfDeath') && value) {
+      const birthDate = field === 'dateOfBirth' ? value : formData.dateOfBirth;
+      const deathDate = field === 'dateOfDeath' ? value : formData.dateOfDeath;
+      
+      if (birthDate && deathDate) {
+        updates.ageAtDeath = calculateAge(birthDate, deathDate);
       }
     }
     
@@ -69,22 +90,22 @@ const DeceasedPersonStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Deceased Person Information
+        {t('forms.deathCertificate.deceasedPersonInfo')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Please provide complete details of the deceased person
+        {t('forms.deathCertificate.provideDetails')}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Full Name of Deceased *"
+            label={t('forms.deathCertificate.deceasedFullName')}
             value={formData.deceasedName || ''}
             onChange={(e) => handleChange('deceasedName', e.target.value)}
             onBlur={(e) => handleBlur('deceasedName', e.target.value)}
             error={!!errors.deceasedName || !!formData.deceasedNameError}
-            helperText={errors.deceasedName || formData.deceasedNameError || 'Full name as per ID documents'}
+            helperText={errors.deceasedName || formData.deceasedNameError}
             inputProps={{ 
               maxLength: 50,
               pattern: '[A-Za-z\\s\']{2,50}'
@@ -95,7 +116,7 @@ const DeceasedPersonStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Father's/Husband's Name *"
+            label={t('forms.deathCertificate.fatherHusbandName')}
             value={formData.fatherHusbandName || ''}
             onChange={(e) => handleChange('fatherHusbandName', e.target.value)}
             onBlur={(e) => handleBlur('fatherHusbandName', e.target.value)}
@@ -111,8 +132,8 @@ const DeceasedPersonStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={4}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DatePicker
-              label="Date of Birth *"
-              value={formData.dateOfBirth || null}
+              label={t('forms.common.dateOfBirth')}
+              value={formData.dateOfBirth ? new Date(formData.dateOfBirth) : null}
               onChange={(value) => handleChange('dateOfBirth', value)}
               renderInput={(params) => (
                 <TextField
@@ -131,8 +152,8 @@ const DeceasedPersonStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={4}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DatePicker
-              label="Date of Death *"
-              value={formData.dateOfDeath || null}
+              label={t('forms.deathCertificate.dateOfDeath')}
+              value={formData.dateOfDeath ? new Date(formData.dateOfDeath) : null}
               onChange={(value) => handleChange('dateOfDeath', value)}
               renderInput={(params) => (
                 <TextField
@@ -143,7 +164,7 @@ const DeceasedPersonStep = ({ formData, updateFormData, errors }) => {
                 />
               )}
               maxDate={new Date()}
-              minDate={formData.dateOfBirth || new Date(1900, 0, 1)}
+              minDate={formData.dateOfBirth ? new Date(formData.dateOfBirth) : new Date(1900, 0, 1)}
             />
           </LocalizationProvider>
         </Grid>
@@ -151,14 +172,14 @@ const DeceasedPersonStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={4}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <TimePicker
-              label="Time of Death"
-              value={formData.timeOfDeath || null}
+              label={t('forms.deathCertificate.timeOfDeath')}
+              value={formData.timeOfDeath ? new Date(formData.timeOfDeath) : null}
               onChange={(value) => handleChange('timeOfDeath', value)}
               renderInput={(params) => (
                 <TextField
                   {...params}
                   fullWidth
-                  helperText="Approximate time of death"
+                  helperText={t('forms.deathCertificate.timeOfDeath')}
                 />
               )}
             />
@@ -168,35 +189,35 @@ const DeceasedPersonStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={4}>
           <TextField
             fullWidth
-            label="Age at Death"
+            label={t('forms.deathCertificate.ageAtDeath')}
             value={formData.ageAtDeath || ''}
             InputProps={{ readOnly: true }}
-            helperText="Auto-calculated from birth and death dates"
+            helperText={t('forms.deathCertificate.autoCalculated')}
           />
         </Grid>
 
         <Grid item xs={12} md={4}>
           <FormControl fullWidth error={!!errors.gender}>
-            <InputLabel>Gender *</InputLabel>
+            <InputLabel>{t('forms.common.gender')}</InputLabel>
             <Select
               value={formData.gender || ''}
               onChange={(e) => handleChange('gender', e.target.value)}
-              label="Gender *"
+              label={t('forms.common.gender')}
             >
-              <MenuItem value="Male">Male</MenuItem>
-              <MenuItem value="Female">Female</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
+              <MenuItem value="Male">{t('forms.common.male')}</MenuItem>
+              <MenuItem value="Female">{t('forms.common.female')}</MenuItem>
+              <MenuItem value="Other">{t('forms.common.other')}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
         <Grid item xs={12} md={4}>
           <FormControl fullWidth>
-            <InputLabel>Occupation</InputLabel>
+            <InputLabel>{t('forms.deathCertificate.occupation')}</InputLabel>
             <Select
               value={formData.occupation || ''}
               onChange={(e) => handleChange('occupation', e.target.value)}
-              label="Occupation"
+              label={t('forms.deathCertificate.occupation')}
             >
               <MenuItem value="Agriculture">Agriculture</MenuItem>
               <MenuItem value="Business">Business</MenuItem>
@@ -216,11 +237,11 @@ const DeceasedPersonStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={2}
-            label="Address of Deceased *"
+            label={t('forms.deathCertificate.deceasedAddress')}
             value={formData.deceasedAddress || ''}
             onChange={(e) => handleChange('deceasedAddress', e.target.value)}
             error={!!errors.deceasedAddress}
-            helperText={errors.deceasedAddress || 'Last known address of deceased'}
+            helperText={errors.deceasedAddress || t('forms.deathCertificate.lastKnownAddress')}
             inputProps={{ 
               minLength: 10,
               maxLength: 200
@@ -233,6 +254,7 @@ const DeceasedPersonStep = ({ formData, updateFormData, errors }) => {
 };
 
 const DeathDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const states = getStates();
   const districts = formData.stateOfDeath ? getDistrictsByState(formData.stateOfDeath) : [];
 
@@ -255,21 +277,21 @@ const DeathDetailsStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Death Details
+        {t('forms.deathCertificate.deathDetails')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Provide details about the place and circumstances of death
+        {t('forms.deathCertificate.provideDeathDetails')}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <TextField
             fullWidth
-            label="Place of Death *"
+            label={t('forms.deathCertificate.placeOfDeath')}
             value={formData.placeOfDeath || ''}
             onChange={(e) => handleChange('placeOfDeath', e.target.value)}
             error={!!errors.placeOfDeath}
-            helperText={errors.placeOfDeath || 'Exact place where death occurred'}
+            helperText={errors.placeOfDeath || t('forms.deathCertificate.exactPlace')}
             inputProps={{ 
               maxLength: 100
             }}
@@ -278,11 +300,11 @@ const DeathDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.stateOfDeath}>
-            <InputLabel>State of Death *</InputLabel>
+            <InputLabel>{t('forms.deathCertificate.stateOfDeath')}</InputLabel>
             <Select
               value={formData.stateOfDeath || ''}
               onChange={(e) => handleChange('stateOfDeath', e.target.value)}
-              label="State of Death *"
+              label={t('forms.deathCertificate.stateOfDeath')}
             >
               {states.map(state => (
                 <MenuItem key={state} value={state}>{state}</MenuItem>
@@ -293,11 +315,11 @@ const DeathDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.districtOfDeath}>
-            <InputLabel>District of Death *</InputLabel>
+            <InputLabel>{t('forms.deathCertificate.districtOfDeath')}</InputLabel>
             <Select
               value={formData.districtOfDeath || ''}
               onChange={(e) => handleChange('districtOfDeath', e.target.value)}
-              label="District of Death *"
+              label={t('forms.deathCertificate.districtOfDeath')}
               disabled={!formData.stateOfDeath}
             >
               {districts.map(district => (
@@ -309,16 +331,16 @@ const DeathDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom>
-            Where did the death occur? *
+            {t('forms.deathCertificate.whereDidDeathOccur')}
           </Typography>
           <RadioGroup
             value={formData.deathLocation || ''}
             onChange={(e) => handleChange('deathLocation', e.target.value)}
             row
           >
-            <FormControlLabel value="home" control={<Radio />} label="At Home" />
-            <FormControlLabel value="hospital" control={<Radio />} label="At Hospital" />
-            <FormControlLabel value="other" control={<Radio />} label="Other Place" />
+            <FormControlLabel value="home" control={<Radio />} label={t('forms.deathCertificate.atHome')} />
+            <FormControlLabel value="hospital" control={<Radio />} label={t('forms.deathCertificate.atHospital')} />
+            <FormControlLabel value="other" control={<Radio />} label={t('forms.deathCertificate.otherPlace')} />
           </RadioGroup>
         </Grid>
 
@@ -326,53 +348,52 @@ const DeathDetailsStep = ({ formData, updateFormData, errors }) => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Hospital Name *"
+              label={t('forms.deathCertificate.hospitalName')}
               value={formData.hospitalName || ''}
               onChange={(e) => handleChange('hospitalName', e.target.value)}
               error={!!errors.hospitalName}
-              helperText={errors.hospitalName || 'Name of hospital where death occurred'}
+              helperText={errors.hospitalName}
             />
           </Grid>
         )}
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom>
-            Was the death medically attended? *
+            {t('forms.deathCertificate.medicallyAttended')}
           </Typography>
           <RadioGroup
             value={formData.medicallyAttended || ''}
             onChange={(e) => handleChange('medicallyAttended', e.target.value)}
             row
           >
-            <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-            <FormControlLabel value="no" control={<Radio />} label="No" />
+            <FormControlLabel value="yes" control={<Radio />} label={t('forms.deathCertificate.yes')} />
+            <FormControlLabel value="no" control={<Radio />} label={t('forms.deathCertificate.no')} />
           </RadioGroup>
         </Grid>
 
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Disease/Cause of Death *"
+            label={t('forms.deathCertificate.causeOfDeath')}
             value={formData.causeOfDeath || ''}
             onChange={(e) => handleChange('causeOfDeath', e.target.value)}
             error={!!errors.causeOfDeath}
-            helperText={errors.causeOfDeath || 'Primary cause of death'}
-            placeholder="e.g., Heart Attack, Cancer, Accident, Natural Death"
+            helperText={errors.causeOfDeath || t('forms.deathCertificate.primaryCause')}
           />
         </Grid>
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom>
-            Body disposal method *
+            {t('forms.deathCertificate.bodyDisposal')}
           </Typography>
           <RadioGroup
             value={formData.disposalMethod || ''}
             onChange={(e) => handleChange('disposalMethod', e.target.value)}
             row
           >
-            <FormControlLabel value="cremated" control={<Radio />} label="Cremated" />
-            <FormControlLabel value="buried" control={<Radio />} label="Buried" />
-            <FormControlLabel value="other" control={<Radio />} label="Other" />
+            <FormControlLabel value="cremated" control={<Radio />} label={t('forms.deathCertificate.cremated')} />
+            <FormControlLabel value="buried" control={<Radio />} label={t('forms.deathCertificate.buried')} />
+            <FormControlLabel value="other" control={<Radio />} label={t('forms.deathCertificate.other')} />
           </RadioGroup>
         </Grid>
       </Grid>
@@ -381,6 +402,7 @@ const DeathDetailsStep = ({ formData, updateFormData, errors }) => {
 };
 
 const ApplicantDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     let correctedValue = value;
     
@@ -412,17 +434,17 @@ const ApplicantDetailsStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Applicant Information
+        {t('forms.deathCertificate.applicantInfo')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Details of the person applying for the death certificate
+        {t('forms.deathCertificate.applicantDetails')}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Applicant Name *"
+            label={t('forms.deathCertificate.applicantName')}
             value={formData.applicantName || ''}
             onChange={(e) => handleChange('applicantName', e.target.value)}
             onBlur={(e) => handleBlur('applicantName', e.target.value)}
@@ -437,11 +459,11 @@ const ApplicantDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.relationshipWithDeceased}>
-            <InputLabel>Relationship with Deceased *</InputLabel>
+            <InputLabel>{t('forms.deathCertificate.relationshipWithDeceased')}</InputLabel>
             <Select
               value={formData.relationshipWithDeceased || ''}
               onChange={(e) => handleChange('relationshipWithDeceased', e.target.value)}
-              label="Relationship with Deceased *"
+              label={t('forms.deathCertificate.relationshipWithDeceased')}
             >
               <MenuItem value="Son">Son</MenuItem>
               <MenuItem value="Daughter">Daughter</MenuItem>
@@ -463,11 +485,11 @@ const ApplicantDetailsStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={2}
-            label="Applicant Address *"
+            label={t('forms.deathCertificate.applicantAddress')}
             value={formData.applicantAddress || ''}
             onChange={(e) => handleChange('applicantAddress', e.target.value)}
             error={!!errors.applicantAddress}
-            helperText={errors.applicantAddress || 'Current address of applicant'}
+            helperText={errors.applicantAddress || t('forms.deathCertificate.currentAddress')}
             inputProps={{ 
               minLength: 10,
               maxLength: 200
@@ -478,12 +500,12 @@ const ApplicantDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Mobile Number *"
+            label={t('forms.common.mobile')}
             value={formData.mobile || ''}
             onChange={(e) => handleChange('mobile', e.target.value)}
             onBlur={(e) => handleBlur('mobile', e.target.value)}
             error={!!errors.mobile || !!formData.mobileError}
-            helperText={errors.mobile || formData.mobileError || '10-digit mobile number starting with 6-9'}
+            helperText={errors.mobile || formData.mobileError}
             inputProps={{ 
               maxLength: 10,
               pattern: '[6-9][0-9]{9}'
@@ -494,12 +516,12 @@ const ApplicantDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Aadhaar Number *"
+            label={t('forms.common.aadhaar')}
             value={formData.aadhaar || ''}
             onChange={(e) => handleChange('aadhaar', e.target.value)}
             onBlur={(e) => handleBlur('aadhaar', e.target.value)}
             error={!!errors.aadhaar || !!formData.aadhaarError}
-            helperText={errors.aadhaar || formData.aadhaarError || '12-digit Aadhaar number'}
+            helperText={errors.aadhaar || formData.aadhaarError}
             inputProps={{ 
               maxLength: 12,
               pattern: '[0-9]{12}'
@@ -509,15 +531,15 @@ const ApplicantDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom>
-            Type of death *
+            {t('forms.deathCertificate.deathType')}
           </Typography>
           <RadioGroup
             value={formData.deathType || ''}
             onChange={(e) => handleChange('deathType', e.target.value)}
             row
           >
-            <FormControlLabel value="natural" control={<Radio />} label="Natural Death" />
-            <FormControlLabel value="unnatural" control={<Radio />} label="Unnatural Death" />
+            <FormControlLabel value="natural" control={<Radio />} label={t('forms.deathCertificate.naturalDeath')} />
+            <FormControlLabel value="unnatural" control={<Radio />} label={t('forms.deathCertificate.unnaturalDeath')} />
           </RadioGroup>
         </Grid>
 
@@ -525,11 +547,10 @@ const ApplicantDetailsStep = ({ formData, updateFormData, errors }) => {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Police Station & FIR Number"
+              label={t('forms.deathCertificate.policeDetails')}
               value={formData.policeDetails || ''}
               onChange={(e) => handleChange('policeDetails', e.target.value)}
-              helperText="Required for unnatural deaths"
-              placeholder="Police Station Name, FIR Number, Date"
+              helperText={t('forms.deathCertificate.requiredForUnnatural')}
             />
           </Grid>
         )}
@@ -539,6 +560,7 @@ const ApplicantDetailsStep = ({ formData, updateFormData, errors }) => {
 };
 
 const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
+  const { t } = useLanguage();
   const requiredDocuments = [
     'Identity proof of deceased',
     'Identity proof of applicant',
@@ -555,10 +577,10 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
   return (
     <Box>
       <Typography variant="h6" gutterBottom color="primary">
-        Document Upload
+        {t('forms.deathCertificate.documentUpload')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Please upload all required documents for death certificate processing
+        {t('forms.deathCertificate.uploadAllDocs')}
       </Typography>
 
       <DocumentUpload
@@ -572,7 +594,7 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
       
       <Box sx={{ mt: 3 }}>
         <Typography variant="subtitle2" gutterBottom>
-          Required Documents:
+          {t('forms.common.requiredDocuments')}:
         </Typography>
         <ul style={{ margin: 0, paddingLeft: 20 }}>
           {requiredDocuments.map((doc, index) => (
@@ -586,11 +608,12 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
 
 // Main Form Component
 const DeathCertificateForm = () => {
+  const { t } = useLanguage();
   const steps = [
-    { id: 'deceased', title: 'Deceased Person Info', icon: 'Person' },
-    { id: 'death', title: 'Death Details', icon: 'LocationOn' },
-    { id: 'applicant', title: 'Applicant Information', icon: 'ContactPhone' },
-    { id: 'documents', title: 'Documents', icon: 'Description' }
+    { id: 'deceased', title: t('forms.deathCertificate.step1'), icon: 'Person' },
+    { id: 'death', title: t('forms.deathCertificate.step2'), icon: 'LocationOn' },
+    { id: 'applicant', title: t('forms.deathCertificate.step3'), icon: 'ContactPhone' },
+    { id: 'documents', title: t('forms.deathCertificate.step4'), icon: 'Description' }
   ];
 
   const validationRules = {
@@ -622,7 +645,7 @@ const DeathCertificateForm = () => {
 
   return (
     <MultiStepForm
-      serviceName="Death Certificate Application"
+      serviceName={t('forms.deathCertificate.title')}
       serviceType="death_certificate"
       steps={steps}
       validationRules={validationRules}

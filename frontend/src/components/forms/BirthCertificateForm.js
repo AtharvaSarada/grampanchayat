@@ -1,860 +1,549 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Box,
-  Paper,
-  Typography,
-  TextField,
-  Button,
   Grid,
-  MenuItem,
+  TextField,
   FormControl,
   InputLabel,
   Select,
-  Alert,
-  Divider,
-  Card,
-  CardContent,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Stepper,
-  Step,
-  StepLabel,
-  Chip,
+  MenuItem,
+  Typography,
+  Paper,
+  FormControlLabel,
+  Radio,
+  RadioGroup
 } from '@mui/material';
-import {
-  Person,
-  LocationOn,
-  CalendarToday,
-  Upload,
-  CheckCircle,
-  Info,
-  Save,
-  Delete
-} from '@mui/icons-material';
-import { useAuth } from '../../context/AuthContext';
+import { DatePicker, TimePicker } from '@mui/x-date-pickers';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import MultiStepForm from './MultiStepForm';
-import ChakraSpinner from '../common/ChakraSpinner';
-import toast from 'react-hot-toast';
-import { handleFormSubmission } from '../../services/formSubmissionService';
-import { useFormDraft } from '../../hooks/useFormDraft';
+import DocumentUpload from '../common/DocumentUpload';
+import { validateField, autoCorrect } from '../../utils/formValidation';
+import { getStates, getDistrictsByState } from '../../data/stateDistrictData';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
-const BirthCertificateForm = () => {
-  const { currentUser } = useAuth();
-  const [activeStep, setActiveStep] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
+// Step Components
+const ChildDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   
-  // Use auto-save draft hook
-  const {
-    formData,
-    setFormData,
-    lastSaved,
-    isSaving,
-    clearDraft,
-    saveDraft,
-    hasDraft
-  } = useFormDraft('birth-certificate', {
-    // Child Details
-    childFirstName: '',
-    childLastName: '',
-    dateOfBirth: '',
-    timeOfBirth: '',
-    placeOfBirth: '',
-    gender: '',
-    weight: '',
+  const handleChange = (field, value) => {
+    let correctedValue = value;
     
-    // Father's Details
-    fatherFirstName: '',
-    fatherLastName: '',
-    fatherAge: '',
-    fatherEducation: '',
-    fatherOccupation: '',
-    fatherNationality: '',
-    
-    // Mother's Details
-    motherFirstName: '',
-    motherLastName: '',
-    motherAge: '',
-    motherEducation: '',
-    motherOccupation: '',
-    motherNationality: '',
-    
-    // Address Details
-    permanentAddress: '',
-    city: '',
-    district: '',
-    state: '',
-    pincode: '',
-    
-    // Hospital/Delivery Details
-    hospitalName: '',
-    hospitalAddress: '',
-    doctorName: '',
-    attendantType: '',
-    
-    // Additional Information
-    registrationDelay: 'Within 21 days',
-    reasonForDelay: '',
-    informantName: '',
-    informantRelation: '',
-    informantAddress: ''
-  }, 1000); // Auto-save after 1 second of inactivity
-
-  const [documents, setDocuments] = useState({
-    birthProofHospital: null,
-    parentsIdProof: null,
-    addressProof: null,
-    marriageCertificate: null
-  });
-
-  const steps = ['Personal Details', 'Parent Details', 'Address & Hospital', 'Documents', 'Review & Submit'];
-
-  const requiredDocuments = [
-    'Birth proof from hospital/medical certificate',
-    'Identity proof of parents (Aadhar/PAN/Passport)',
-    'Address proof (Ration card/Electricity bill/Rent agreement)',
-    'Marriage certificate of parents (if available)',
-    'Affidavit (if birth registration is delayed)'
-  ];
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleFileUpload = (documentType, file) => {
-    setDocuments(prev => ({
-      ...prev,
-      [documentType]: file
-    }));
-  };
-
-  const validateStep = (step) => {
-    switch (step) {
-      case 0: // Personal Details
-        return formData.childFirstName && formData.childLastName && formData.dateOfBirth && formData.gender;
-      case 1: // Parent Details
-        return formData.fatherFirstName && formData.fatherLastName && formData.motherFirstName && formData.motherLastName;
-      case 2: // Address & Hospital
-        return formData.permanentAddress && formData.city && formData.district && formData.hospitalName;
-      case 3: // Documents
-        return documents.birthProofHospital && documents.parentsIdProof;
-      default:
-        return true;
+    // Handle date objects properly
+    if (field === 'dateOfBirth' || field === 'timeOfBirth') {
+      correctedValue = value;
+    } else if (field === 'childName') {
+      correctedValue = autoCorrect.name(value);
     }
+    
+    updateFormData({ [field]: correctedValue });
   };
 
-  const handleNext = () => {
-    if (validateStep(activeStep)) {
-      setActiveStep((prevStep) => prevStep + 1);
-    } else {
-      toast.error('Please fill all required fields in this step');
-    }
-  };
-
-  const handleBack = () => {
-    setActiveStep((prevStep) => prevStep - 1);
-  };
-
-  const handleSubmit = async () => {
-    if (!currentUser) {
-      toast.error('Please log in to submit an application.');
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      // Prepare documents array from uploaded files
-      const documentFiles = [];
-      Object.entries(documents).forEach(([key, file]) => {
-        if (file) {
-          documentFiles.push({
-            name: file.name,
-            type: key,
-            file: file
-          });
-        }
-      });
-
-      // Create submission data
-      const submissionData = {
-        serviceType: 'birth_certificate',
-        currentUser: currentUser, // Pass the current user
-        formData: {
-          // Child Details
-          childName: `${formData.childFirstName} ${formData.childLastName}`,
-          childFirstName: formData.childFirstName,
-          childLastName: formData.childLastName,
-          dateOfBirth: formData.dateOfBirth,
-          timeOfBirth: formData.timeOfBirth,
-          placeOfBirth: formData.placeOfBirth,
-          gender: formData.gender,
-          weight: formData.weight,
-          
-          // Parent Details
-          fatherName: `${formData.fatherFirstName} ${formData.fatherLastName}`,
-          fatherFirstName: formData.fatherFirstName,
-          fatherLastName: formData.fatherLastName,
-          fatherAge: formData.fatherAge,
-          fatherEducation: formData.fatherEducation,
-          fatherOccupation: formData.fatherOccupation,
-          
-          motherName: `${formData.motherFirstName} ${formData.motherLastName}`,
-          motherFirstName: formData.motherFirstName,
-          motherLastName: formData.motherLastName,
-          motherAge: formData.motherAge,
-          motherEducation: formData.motherEducation,
-          motherOccupation: formData.motherOccupation,
-          
-          // Address Details
-          permanentAddress: formData.permanentAddress,
-          city: formData.city,
-          district: formData.district,
-          state: formData.state,
-          pincode: formData.pincode,
-          
-          // Hospital Details
-          hospitalName: formData.hospitalName,
-          hospitalAddress: formData.hospitalAddress,
-          doctorName: formData.doctorName,
-          
-          // Additional Information
-          registrationDelay: formData.registrationDelay,
-          reasonForDelay: formData.reasonForDelay,
-          informantName: formData.informantName,
-          informantRelation: formData.informantRelation,
-          informantAddress: formData.informantAddress
-        },
-        documents: documentFiles
-      };
-
-      // Submit using the form submission service
-      const result = await handleFormSubmission(submissionData);
-      
-      if (result.success) {
-        // Clear draft after successful submission
-        clearDraft();
-        
-        // Reset form on success
-        setFormData({
-          childFirstName: '', childLastName: '', dateOfBirth: '', timeOfBirth: '', 
-          placeOfBirth: '', gender: '', weight: '',
-          fatherFirstName: '', fatherLastName: '', fatherAge: '', fatherEducation: '',
-          fatherOccupation: '', fatherNationality: '',
-          motherFirstName: '', motherLastName: '', motherAge: '', motherEducation: '',
-          motherOccupation: '', motherNationality: '',
-          permanentAddress: '', city: '', district: '', state: '', pincode: '',
-          hospitalName: '', hospitalAddress: '', doctorName: '', attendantType: '',
-          registrationDelay: 'Within 21 days', reasonForDelay: '', 
-          informantName: '', informantRelation: '', informantAddress: ''
-        });
-        setDocuments({ birthProofHospital: null, parentsIdProof: null, addressProof: null, marriageCertificate: null });
-        setActiveStep(0);
-        
-        // Show success message with reference number
-        toast.success(`Application submitted successfully! Reference: ${result.referenceNumber}`, {
-          duration: 6000
-        });
-        
-        // Optional: Redirect to applications page after a delay
-        setTimeout(() => {
-          // window.location.href = '/user/applications';
-        }, 3000);
-      }
-    } catch (error) {
-      console.error('Submission error:', error);
-      toast.error(`Failed to submit application: ${error.message}`);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const renderPersonalDetails = () => (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <Typography variant="h6" gutterBottom color="primary">
-          Child Details
-        </Typography>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          required
-          fullWidth
-          label="Child's First Name"
-          name="childFirstName"
-          value={formData.childFirstName}
-          onChange={handleInputChange}
-          InputProps={{
-            startAdornment: <Person color="action" />
-          }}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          required
-          fullWidth
-          label="Child's Last Name"
-          name="childLastName"
-          value={formData.childLastName}
-          onChange={handleInputChange}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          required
-          fullWidth
-          label="Date of Birth"
-          name="dateOfBirth"
-          type="date"
-          value={formData.dateOfBirth}
-          onChange={handleInputChange}
-          InputLabelProps={{ shrink: true }}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label="Time of Birth"
-          name="timeOfBirth"
-          type="time"
-          value={formData.timeOfBirth}
-          onChange={handleInputChange}
-          InputLabelProps={{ shrink: true }}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <FormControl fullWidth required>
-          <InputLabel>Gender</InputLabel>
-          <Select
-            name="gender"
-            value={formData.gender}
-            onChange={handleInputChange}
-            label="Gender"
-          >
-            <MenuItem value="Male">Male</MenuItem>
-            <MenuItem value="Female">Female</MenuItem>
-            <MenuItem value="Other">Other</MenuItem>
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label="Weight at Birth (kg)"
-          name="weight"
-          type="number"
-          value={formData.weight}
-          onChange={handleInputChange}
-          inputProps={{ step: 0.1 }}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          required
-          fullWidth
-          label="Place of Birth"
-          name="placeOfBirth"
-          value={formData.placeOfBirth}
-          onChange={handleInputChange}
-          placeholder="Hospital/Home/City, State"
-        />
-      </Grid>
-    </Grid>
-  );
-
-  const renderParentDetails = () => (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <Typography variant="h6" gutterBottom color="primary">
-          Father's Details
-        </Typography>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          required
-          fullWidth
-          label="Father's First Name"
-          name="fatherFirstName"
-          value={formData.fatherFirstName}
-          onChange={handleInputChange}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          required
-          fullWidth
-          label="Father's Last Name"
-          name="fatherLastName"
-          value={formData.fatherLastName}
-          onChange={handleInputChange}
-        />
-      </Grid>
-      <Grid item xs={12} sm={4}>
-        <TextField
-          fullWidth
-          label="Age"
-          name="fatherAge"
-          type="number"
-          value={formData.fatherAge}
-          onChange={handleInputChange}
-        />
-      </Grid>
-      <Grid item xs={12} sm={4}>
-        <TextField
-          fullWidth
-          label="Education"
-          name="fatherEducation"
-          value={formData.fatherEducation}
-          onChange={handleInputChange}
-        />
-      </Grid>
-      <Grid item xs={12} sm={4}>
-        <TextField
-          fullWidth
-          label="Occupation"
-          name="fatherOccupation"
-          value={formData.fatherOccupation}
-          onChange={handleInputChange}
-        />
-      </Grid>
-
-      <Grid item xs={12} sx={{ mt: 2 }}>
-        <Typography variant="h6" gutterBottom color="primary">
-          Mother's Details
-        </Typography>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          required
-          fullWidth
-          label="Mother's First Name"
-          name="motherFirstName"
-          value={formData.motherFirstName}
-          onChange={handleInputChange}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          required
-          fullWidth
-          label="Mother's Last Name"
-          name="motherLastName"
-          value={formData.motherLastName}
-          onChange={handleInputChange}
-        />
-      </Grid>
-      <Grid item xs={12} sm={4}>
-        <TextField
-          fullWidth
-          label="Age"
-          name="motherAge"
-          type="number"
-          value={formData.motherAge}
-          onChange={handleInputChange}
-        />
-      </Grid>
-      <Grid item xs={12} sm={4}>
-        <TextField
-          fullWidth
-          label="Education"
-          name="motherEducation"
-          value={formData.motherEducation}
-          onChange={handleInputChange}
-        />
-      </Grid>
-      <Grid item xs={12} sm={4}>
-        <TextField
-          fullWidth
-          label="Occupation"
-          name="motherOccupation"
-          value={formData.motherOccupation}
-          onChange={handleInputChange}
-        />
-      </Grid>
-    </Grid>
-  );
-
-  const renderAddressHospital = () => (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <Typography variant="h6" gutterBottom color="primary">
-          Address Details
-        </Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          required
-          fullWidth
-          label="Permanent Address"
-          name="permanentAddress"
-          multiline
-          rows={3}
-          value={formData.permanentAddress}
-          onChange={handleInputChange}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          required
-          fullWidth
-          label="City"
-          name="city"
-          value={formData.city}
-          onChange={handleInputChange}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          required
-          fullWidth
-          label="District"
-          name="district"
-          value={formData.district}
-          onChange={handleInputChange}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label="State"
-          name="state"
-          value={formData.state}
-          onChange={handleInputChange}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label="PIN Code"
-          name="pincode"
-          value={formData.pincode}
-          onChange={(e) => {
-            const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-            setFormData(prev => ({ ...prev, pincode: value }));
-          }}
-          inputProps={{ maxLength: 6, inputMode: 'numeric', pattern: '[0-9]*' }}
-        />
-      </Grid>
-
-      <Grid item xs={12} sx={{ mt: 2 }}>
-        <Typography variant="h6" gutterBottom color="primary">
-          Hospital/Delivery Details
-        </Typography>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          required
-          fullWidth
-          label="Hospital/Institution Name"
-          name="hospitalName"
-          value={formData.hospitalName}
-          onChange={handleInputChange}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6}>
-        <TextField
-          fullWidth
-          label="Doctor/Attendant Name"
-          name="doctorName"
-          value={formData.doctorName}
-          onChange={handleInputChange}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          label="Hospital Address"
-          name="hospitalAddress"
-          multiline
-          rows={2}
-          value={formData.hospitalAddress}
-          onChange={handleInputChange}
-        />
-      </Grid>
-    </Grid>
-  );
-
-  const renderDocuments = () => (
-    <Box>
-      <Typography variant="h6" gutterBottom color="primary">
-        Required Documents
-      </Typography>
-      <Alert severity="info" sx={{ mb: 3 }}>
-        Please upload clear, readable copies of all required documents. Maximum file size: 5MB per document.
-      </Alert>
-      
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <List>
-            {requiredDocuments.map((doc, index) => (
-              <ListItem key={index}>
-                <ListItemIcon>
-                  <CheckCircle color="primary" />
-                </ListItemIcon>
-                <ListItemText primary={doc} />
-              </ListItem>
-            ))}
-          </List>
-        </CardContent>
-      </Card>
-
-      <Grid container spacing={3}>
-        <Grid item xs={12} sm={6}>
-          <Button
-            variant="outlined"
-            fullWidth
-            component="label"
-            startIcon={<Upload />}
-            sx={{ p: 2 }}
-          >
-            Upload Birth Proof from Hospital *
-            <input
-              type="file"
-              hidden
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => handleFileUpload('birthProofHospital', e.target.files[0])}
-            />
-          </Button>
-          {documents.birthProofHospital && (
-            <Typography variant="body2" color="success.main" sx={{ mt: 1 }}>
-              ✓ {documents.birthProofHospital.name}
-            </Typography>
-          )}
-        </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <Button
-            variant="outlined"
-            fullWidth
-            component="label"
-            startIcon={<Upload />}
-            sx={{ p: 2 }}
-          >
-            Upload Parents' ID Proof *
-            <input
-              type="file"
-              hidden
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => handleFileUpload('parentsIdProof', e.target.files[0])}
-            />
-          </Button>
-          {documents.parentsIdProof && (
-            <Typography variant="body2" color="success.main" sx={{ mt: 1 }}>
-              ✓ {documents.parentsIdProof.name}
-            </Typography>
-          )}
-        </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <Button
-            variant="outlined"
-            fullWidth
-            component="label"
-            startIcon={<Upload />}
-            sx={{ p: 2 }}
-          >
-            Upload Address Proof
-            <input
-              type="file"
-              hidden
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => handleFileUpload('addressProof', e.target.files[0])}
-            />
-          </Button>
-          {documents.addressProof && (
-            <Typography variant="body2" color="success.main" sx={{ mt: 1 }}>
-              ✓ {documents.addressProof.name}
-            </Typography>
-          )}
-        </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <Button
-            variant="outlined"
-            fullWidth
-            component="label"
-            startIcon={<Upload />}
-            sx={{ p: 2 }}
-          >
-            Upload Marriage Certificate
-            <input
-              type="file"
-              hidden
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => handleFileUpload('marriageCertificate', e.target.files[0])}
-            />
-          </Button>
-          {documents.marriageCertificate && (
-            <Typography variant="body2" color="success.main" sx={{ mt: 1 }}>
-              ✓ {documents.marriageCertificate.name}
-            </Typography>
-          )}
-        </Grid>
-      </Grid>
-    </Box>
-  );
-
-  const renderReview = () => (
-    <Box>
-      <Typography variant="h6" gutterBottom color="primary">
-        Review Your Application
-      </Typography>
-      <Alert severity="warning" sx={{ mb: 3 }}>
-        Please review all information carefully before submitting. You will not be able to edit the application after submission.
-      </Alert>
-      
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2, mb: 2 }}>
-            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-              Child Details
-            </Typography>
-            <Typography>Name: {formData.childFirstName} {formData.childLastName}</Typography>
-            <Typography>Date of Birth: {formData.dateOfBirth}</Typography>
-            <Typography>Gender: {formData.gender}</Typography>
-            <Typography>Place of Birth: {formData.placeOfBirth}</Typography>
-          </Paper>
-        </Grid>
-        
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2, mb: 2 }}>
-            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-              Parents Details
-            </Typography>
-            <Typography>Father: {formData.fatherFirstName} {formData.fatherLastName}</Typography>
-            <Typography>Mother: {formData.motherFirstName} {formData.motherLastName}</Typography>
-          </Paper>
-        </Grid>
-        
-        <Grid item xs={12}>
-          <Paper sx={{ p: 2, mb: 2 }}>
-            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-              Documents Uploaded
-            </Typography>
-            <Box>
-              {Object.entries(documents).map(([key, file]) => 
-                file && (
-                  <Typography key={key}>
-                    ✓ {file.name}
-                  </Typography>
-                )
-              )}
-            </Box>
-          </Paper>
-        </Grid>
-      </Grid>
-    </Box>
-  );
-
-  const getStepContent = () => {
-    switch (activeStep) {
-      case 0:
-        return renderPersonalDetails();
-      case 1:
-        return renderParentDetails();
-      case 2:
-        return renderAddressHospital();
-      case 3:
-        return renderDocuments();
-      case 4:
-        return renderReview();
-      default:
-        return null;
+  const handleBlur = (field, value) => {
+    const validationRules = {
+      childName: { type: 'name', required: true }
+    };
+    
+    if (validationRules[field]) {
+      const error = validateField(value, validationRules[field].type, validationRules[field].required);
+      updateFormData({ [`${field}Error`]: error });
     }
   };
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom color="primary" textAlign="center">
-          Birth Certificate Application
+    <Paper sx={{ p: 3 }}>
+      <Typography variant="h6" gutterBottom color="primary">
+        {t('forms.birthCertificate.childDetails')}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        {t('forms.birthCertificate.provideChildDetails')}
+      </Typography>
+
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t('forms.birthCertificate.childName')}
+            value={formData.childName || ''}
+            onChange={(e) => handleChange('childName', e.target.value)}
+            onBlur={(e) => handleBlur('childName', e.target.value)}
+            error={!!errors.childName || !!formData.childNameError}
+            helperText={errors.childName || formData.childNameError}
+            inputProps={{ 
+              maxLength: 50,
+              pattern: '[A-Za-z\\s\']{2,50}'
+            }}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <FormControl fullWidth error={!!errors.gender}>
+            <InputLabel>{t('forms.common.gender')}</InputLabel>
+            <Select
+              value={formData.gender || ''}
+              onChange={(e) => handleChange('gender', e.target.value)}
+              label={t('forms.common.gender')}
+            >
+              <MenuItem value="Male">{t('forms.common.male')}</MenuItem>
+              <MenuItem value="Female">{t('forms.common.female')}</MenuItem>
+              <MenuItem value="Other">{t('forms.common.other')}</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DatePicker
+              label={t('forms.common.dateOfBirth')}
+              value={formData.dateOfBirth ? new Date(formData.dateOfBirth) : null}
+              onChange={(value) => handleChange('dateOfBirth', value)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  fullWidth
+                  error={!!errors.dateOfBirth}
+                  helperText={errors.dateOfBirth}
+                />
+              )}
+              maxDate={new Date()}
+              minDate={new Date(new Date().getFullYear() - 1, 0, 1)}
+            />
+          </LocalizationProvider>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <TimePicker
+              label={t('forms.birthCertificate.timeOfBirth')}
+              value={formData.timeOfBirth ? new Date(formData.timeOfBirth) : null}
+              onChange={(value) => handleChange('timeOfBirth', value)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  fullWidth
+                  helperText={t('forms.birthCertificate.timeOfBirthHelper')}
+                />
+              )}
+            />
+          </LocalizationProvider>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t('forms.birthCertificate.placeOfBirth')}
+            value={formData.placeOfBirth || ''}
+            onChange={(e) => handleChange('placeOfBirth', e.target.value)}
+            error={!!errors.placeOfBirth}
+            helperText={errors.placeOfBirth || t('forms.birthCertificate.placeOfBirthHelper')}
+            inputProps={{ maxLength: 100 }}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t('forms.birthCertificate.weight')}
+            value={formData.weight || ''}
+            onChange={(e) => handleChange('weight', e.target.value)}
+            type="number"
+            inputProps={{ step: 0.1, min: 0, max: 10 }}
+            helperText={t('forms.birthCertificate.weightHelper')}
+          />
+        </Grid>
+      </Grid>
+    </Paper>
+  );
+};
+
+const ParentDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
+  
+  const handleChange = (field, value) => {
+    let correctedValue = value;
+    
+    if (field === 'fatherName' || field === 'motherName') {
+      correctedValue = autoCorrect.name(value);
+    }
+    
+    updateFormData({ [field]: correctedValue });
+  };
+
+  const handleBlur = (field, value) => {
+    const validationRules = {
+      fatherName: { type: 'name', required: true },
+      motherName: { type: 'name', required: true }
+    };
+    
+    if (validationRules[field]) {
+      const error = validateField(value, validationRules[field].type, validationRules[field].required);
+      updateFormData({ [`${field}Error`]: error });
+    }
+  };
+
+  return (
+    <Paper sx={{ p: 3 }}>
+      <Typography variant="h6" gutterBottom color="primary">
+        {t('forms.birthCertificate.parentDetails')}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        {t('forms.birthCertificate.provideParentDetails')}
+      </Typography>
+
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Typography variant="subtitle1" gutterBottom color="primary">
+            {t('forms.birthCertificate.fatherDetails')}
+          </Typography>
+        </Grid>
+        
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t('forms.birthCertificate.fatherName')}
+            value={formData.fatherName || ''}
+            onChange={(e) => handleChange('fatherName', e.target.value)}
+            onBlur={(e) => handleBlur('fatherName', e.target.value)}
+            error={!!errors.fatherName || !!formData.fatherNameError}
+            helperText={errors.fatherName || formData.fatherNameError}
+            inputProps={{ 
+              maxLength: 50,
+              pattern: '[A-Za-z\\s\']{2,50}'
+            }}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t('forms.birthCertificate.fatherAge')}
+            value={formData.fatherAge || ''}
+            onChange={(e) => handleChange('fatherAge', e.target.value)}
+            type="number"
+            inputProps={{ min: 18, max: 100 }}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t('forms.birthCertificate.fatherEducation')}
+            value={formData.fatherEducation || ''}
+            onChange={(e) => handleChange('fatherEducation', e.target.value)}
+            inputProps={{ maxLength: 50 }}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t('forms.birthCertificate.fatherOccupation')}
+            value={formData.fatherOccupation || ''}
+            onChange={(e) => handleChange('fatherOccupation', e.target.value)}
+            inputProps={{ maxLength: 50 }}
+          />
+        </Grid>
+
+        <Grid item xs={12} sx={{ mt: 2 }}>
+          <Typography variant="subtitle1" gutterBottom color="primary">
+            {t('forms.birthCertificate.motherDetails')}
+          </Typography>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t('forms.birthCertificate.motherName')}
+            value={formData.motherName || ''}
+            onChange={(e) => handleChange('motherName', e.target.value)}
+            onBlur={(e) => handleBlur('motherName', e.target.value)}
+            error={!!errors.motherName || !!formData.motherNameError}
+            helperText={errors.motherName || formData.motherNameError}
+            inputProps={{ 
+              maxLength: 50,
+              pattern: '[A-Za-z\\s\']{2,50}'
+            }}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t('forms.birthCertificate.motherAge')}
+            value={formData.motherAge || ''}
+            onChange={(e) => handleChange('motherAge', e.target.value)}
+            type="number"
+            inputProps={{ min: 18, max: 100 }}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t('forms.birthCertificate.motherEducation')}
+            value={formData.motherEducation || ''}
+            onChange={(e) => handleChange('motherEducation', e.target.value)}
+            inputProps={{ maxLength: 50 }}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t('forms.birthCertificate.motherOccupation')}
+            value={formData.motherOccupation || ''}
+            onChange={(e) => handleChange('motherOccupation', e.target.value)}
+            inputProps={{ maxLength: 50 }}
+          />
+        </Grid>
+      </Grid>
+    </Paper>
+  );
+};
+
+const AddressHospitalStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
+  const states = getStates();
+  const districts = formData.state ? getDistrictsByState(formData.state) : [];
+
+  const handleChange = (field, value) => {
+    let updates = { [field]: value };
+    
+    // Clear district when state changes
+    if (field === 'state') {
+      updates.district = '';
+    }
+    
+    // Apply auto-corrections for location fields
+    if (field === 'city' || field === 'district' || field === 'state') {
+      updates[field] = autoCorrect.name(value);
+    }
+    
+    updateFormData(updates);
+  };
+
+  return (
+    <Paper sx={{ p: 3 }}>
+      <Typography variant="h6" gutterBottom color="primary">
+        {t('forms.birthCertificate.addressHospitalDetails')}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        {t('forms.birthCertificate.provideAddressDetails')}
+      </Typography>
+
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Typography variant="subtitle1" gutterBottom color="primary">
+            {t('forms.birthCertificate.addressDetails')}
+          </Typography>
+        </Grid>
+
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            label={t('forms.birthCertificate.permanentAddress')}
+            value={formData.permanentAddress || ''}
+            onChange={(e) => handleChange('permanentAddress', e.target.value)}
+            error={!!errors.permanentAddress}
+            helperText={errors.permanentAddress}
+            inputProps={{ 
+              minLength: 10,
+              maxLength: 200
+            }}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t('forms.birthCertificate.city')}
+            value={formData.city || ''}
+            onChange={(e) => handleChange('city', e.target.value)}
+            error={!!errors.city}
+            helperText={errors.city}
+            inputProps={{ maxLength: 50 }}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <FormControl fullWidth error={!!errors.state}>
+            <InputLabel>{t('forms.common.state')}</InputLabel>
+            <Select
+              value={formData.state || ''}
+              onChange={(e) => handleChange('state', e.target.value)}
+              label={t('forms.common.state')}
+            >
+              {states.map(state => (
+                <MenuItem key={state} value={state}>{state}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <FormControl fullWidth error={!!errors.district}>
+            <InputLabel>{t('forms.common.district')}</InputLabel>
+            <Select
+              value={formData.district || ''}
+              onChange={(e) => handleChange('district', e.target.value)}
+              label={t('forms.common.district')}
+              disabled={!formData.state}
+            >
+              {districts.map(district => (
+                <MenuItem key={district} value={district}>{district}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t('forms.common.pincode')}
+            value={formData.pincode || ''}
+            onChange={(e) => handleChange('pincode', e.target.value.replace(/\D/g, ''))}
+            inputProps={{ 
+              maxLength: 6,
+              pattern: '[0-9]{6}'
+            }}
+          />
+        </Grid>
+
+        <Grid item xs={12} sx={{ mt: 2 }}>
+          <Typography variant="subtitle1" gutterBottom color="primary">
+            {t('forms.birthCertificate.hospitalDetails')}
+          </Typography>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t('forms.birthCertificate.hospitalName')}
+            value={formData.hospitalName || ''}
+            onChange={(e) => handleChange('hospitalName', e.target.value)}
+            error={!!errors.hospitalName}
+            helperText={errors.hospitalName}
+            inputProps={{ maxLength: 100 }}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t('forms.birthCertificate.doctorName')}
+            value={formData.doctorName || ''}
+            onChange={(e) => handleChange('doctorName', e.target.value)}
+            inputProps={{ maxLength: 50 }}
+          />
+        </Grid>
+
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            multiline
+            rows={2}
+            label={t('forms.birthCertificate.hospitalAddress')}
+            value={formData.hospitalAddress || ''}
+            onChange={(e) => handleChange('hospitalAddress', e.target.value)}
+            inputProps={{ maxLength: 200 }}
+          />
+        </Grid>
+      </Grid>
+    </Paper>
+  );
+};
+
+const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
+  const { t } = useLanguage();
+  
+  const requiredDocuments = [
+    'Hospital birth certificate/Medical certificate',
+    'Parents identity proof (Aadhaar/PAN/Passport)',
+    'Address proof (Ration card/Electricity bill/Rent agreement)',
+    'Parents marriage certificate (if available)',
+    'Affidavit (if birth registration is delayed)'
+  ];
+
+  return (
+    <Box>
+      <Typography variant="h6" gutterBottom color="primary">
+        {t('forms.birthCertificate.documentUpload')}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        {t('forms.birthCertificate.uploadAllDocs')}
+      </Typography>
+
+      <DocumentUpload
+        documents={formData.documents || []}
+        onDocumentsChange={(docs) => updateFormData({ documents: docs })}
+        maxFiles={10}
+        acceptedTypes={['application/pdf', 'image/jpeg', 'image/png']}
+        maxSize={5 * 1024 * 1024} // 5MB
+        applicationId={tempApplicationId}
+      />
+      
+      <Box sx={{ mt: 3 }}>
+        <Typography variant="subtitle2" gutterBottom>
+          {t('forms.common.requiredDocuments')}:
         </Typography>
-        
-        {/* Draft Status Indicator */}
-        {lastSaved && (
-          <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Chip
-              icon={<Save />}
-              label={`Auto-saved ${new Date(lastSaved).toLocaleTimeString()}`}
-              color="success"
-              size="small"
-              variant="outlined"
-            />
-            <Button
-              size="small"
-              startIcon={<Delete />}
-              onClick={clearDraft}
-              color="error"
-              variant="text"
-            >
-              Clear Draft
-            </Button>
-          </Box>
-        )}
-        
-        {isSaving && (
-          <Box sx={{ mb: 2 }}>
-            <Chip
-              icon={<ChakraSpinner size="16px" />}
-              label="Saving draft..."
-              color="info"
-              size="small"
-              variant="outlined"
-            />
-          </Box>
-        )}
-        
-        <Box sx={{ mb: 4 }}>
-          <Stepper activeStep={activeStep} alternativeLabel>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-        </Box>
-
-        <Box sx={{ mb: 4 }}>
-          {getStepContent()}
-        </Box>
-
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Button
-            disabled={activeStep === 0}
-            onClick={handleBack}
-            variant="outlined"
-          >
-            Back
-          </Button>
-          
-          {activeStep === steps.length - 1 ? (
-            <Button
-              onClick={handleSubmit}
-              variant="contained"
-              color="primary"
-              size="large"
-              disabled={submitting}
-              startIcon={submitting ? <ChakraSpinner size="20px" /> : null}
-            >
-              {submitting ? 'Submitting...' : 'Submit Application'}
-            </Button>
-          ) : (
-            <Button
-              onClick={handleNext}
-              variant="contained"
-              color="primary"
-            >
-              Next
-            </Button>
-          )}
-        </Box>
-      </Paper>
+        <ul style={{ margin: 0, paddingLeft: 20 }}>
+          {requiredDocuments.map((doc, index) => (
+            <li key={index}>{doc}</li>
+          ))}
+        </ul>
+      </Box>
     </Box>
   );
 };
+
+// Main Form Component
+const BirthCertificateForm = () => {
+  const { t } = useLanguage();
+  const steps = [
+    { id: 'child', title: t('forms.birthCertificate.step1'), icon: 'Person' },
+    { id: 'parents', title: t('forms.birthCertificate.step2'), icon: 'Family' },
+    { id: 'address', title: t('forms.birthCertificate.step3'), icon: 'LocationOn' },
+    { id: 'documents', title: t('forms.birthCertificate.step4'), icon: 'Description' }
+  ];
+
+  const validationRules = {
+    // Child Details
+    childName: { type: 'name', required: true },
+    dateOfBirth: { type: 'birthDate', required: true },
+    gender: { type: 'text', required: true },
+    placeOfBirth: { type: 'text', required: true },
+    
+    // Parent Details
+    fatherName: { type: 'name', required: true },
+    motherName: { type: 'name', required: true },
+    
+    // Address Details
+    permanentAddress: { type: 'address', required: true },
+    city: { type: 'text', required: true },
+    state: { type: 'location', required: true },
+    district: { type: 'location', required: true },
+    
+    // Hospital Details
+    hospitalName: { type: 'text', required: true }
+  };
+
+  return (
+    <MultiStepForm
+      serviceName={t('forms.birthCertificate.title')}
+      serviceType="birth_certificate"
+      steps={steps}
+      validationRules={validationRules}
+    >
+      <ChildDetailsStep />
+      <ParentDetailsStep />
+      <AddressHospitalStep />
+      <DocumentsStep />
+    </MultiStepForm>
+  );
+};
+
+
 
 export default BirthCertificateForm;

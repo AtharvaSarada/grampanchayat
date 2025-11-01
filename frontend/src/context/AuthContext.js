@@ -92,6 +92,13 @@ export const AuthProvider = ({ children }) => {
           dispatch(loginSuccess({ user: userData, token }));
           localStorage.setItem('authToken', token);
           
+          // Force a small delay on mobile devices to ensure proper state updates
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          if (isMobile) {
+            // Add a small delay for mobile devices to ensure state is properly updated
+            await new Promise(resolve => setTimeout(resolve, 300));
+          }
+          
           // Log successful login
           try {
             await logLogin(userData, null, navigator.userAgent);

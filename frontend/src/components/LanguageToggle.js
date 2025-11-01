@@ -90,12 +90,35 @@ const LanguageToggle = ({ variant = 'icon' }) => {
           bgcolor: 'rgba(255, 255, 255, 0.1)',
           '&:hover': {
             bgcolor: 'rgba(255, 255, 255, 0.2)'
-          }
+          },
+          // Mobile responsive styling
+          minWidth: { xs: '44px', sm: '48px' },
+          height: { xs: '44px', sm: '48px' },
+          padding: { xs: '8px', sm: '12px' },
+          // Ensure visibility on mobile
+          zIndex: 1300,
+          position: 'relative'
         }}
+        aria-label={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Language />
-          <Typography variant="caption" fontWeight="bold">
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: { xs: 0.25, sm: 0.5 },
+            fontSize: { xs: '0.75rem', sm: '0.875rem' }
+          }}
+        >
+          <Language sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }} />
+          <Typography 
+            variant="caption" 
+            fontWeight="bold"
+            sx={{ 
+              fontSize: { xs: '0.65rem', sm: '0.75rem' },
+              lineHeight: 1,
+              minWidth: 'fit-content'
+            }}
+          >
             {isMarathi ? 'EN' : 'मर'}
           </Typography>
         </Box>

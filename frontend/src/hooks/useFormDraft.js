@@ -44,6 +44,13 @@ export const useFormDraft = (formId, initialData = {}, debounceMs = 1000) => {
     const storageKey = getStorageKey();
     if (!storageKey) return;
 
+    // Don't auto-save if formData is empty or only has initial values
+    const hasActualData = Object.values(formData).some(value => 
+      value !== '' && value !== null && value !== undefined
+    );
+    
+    if (!hasActualData) return;
+
     const timeoutId = setTimeout(() => {
       try {
         setIsSaving(true);
@@ -58,7 +65,7 @@ export const useFormDraft = (formId, initialData = {}, debounceMs = 1000) => {
         console.log('💾 Draft auto-saved:', formId);
       } catch (error) {
         console.error('Error saving draft:', error);
-        toast.error('Failed to save draft');
+        // Don't show toast for auto-save errors to avoid interrupting user
       } finally {
         setIsSaving(false);
       }

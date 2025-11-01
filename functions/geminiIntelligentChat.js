@@ -8,28 +8,47 @@ const { enhancedServicesData } = require('./enhancedServicesData');
  */
 class GeminiIntelligentChat {
   constructor() {
-    // Initialize Gemini AI with API key from Firebase Functions config
-    // Load from environment variables (dotenv)
+    // Initialize Gemini AI with API key from environment (v2 secrets or local .env)
     this.geminiApiKey = process.env.GEMINI_API_KEY;
     
     if (!this.geminiApiKey) {
-      throw new Error('GEMINI_API_KEY not configured in Firebase Functions environment');
+      console.error('❌ GEMINI_API_KEY not found in process.env');
+      console.error('Available env keys:', Object.keys(process.env).filter(k => k.includes('GEMINI')));
+      throw new Error('GEMINI_API_KEY not configured. Set it via `firebase functions:secrets:set GEMINI_API_KEY`');
     }
     
+    console.log('✅ Gemini API key loaded successfully');
     this.genAI = new GoogleGenerativeAI(this.geminiApiKey);
-    this.model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    // Use gemini-2.0-flash-exp which is the latest model available
+    // This is the newest model from Google AI Studio (Dec 2024)
+    this.model = this.genAI.getGenerativeModel({ 
+      model: "gemini-2.0-flash-exp",
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 1024,
+      }
+    });
+    console.log('✅ Successfully loaded model: gemini-2.0-flash-exp');
+    
     this.services = enhancedServicesData;
   }
 
   /**
    * Create intelligent system prompt for government services
    */
-  createSystemPrompt() {
+  createSystemPrompt(lang = 'en') {
     const servicesInfo = this.services.map(service => 
       `${service.service_name}: ${service.description} | Fee: ${service.fee} | Time: ${service.processing_time} | Link: ${service.application_link} | Docs: ${service.documents_required?.join(', ') || 'Standard documents'}`
     ).join('\n');
 
-    return `You are an intelligent, warm, and conversational AI assistant for a Gram Panchayat (village government office) in India. Your job is to help citizens with government services.
+    const langNote = lang === 'mr'
+      ? 'IMPORTANT: Respond in Marathi (mr-IN). Use simple, respectful Marathi suitable for government service guidance.'
+      : 'IMPORTANT: Respond in English (en-IN). Use simple, respectful English suitable for government service guidance.';
+
+    return `${langNote}\n\nYou are an intelligent, warm, and conversational AI assistant for a Gram Panchayat (village government office) in India. Your job is to help citizens with government services.
 
 AVAILABLE SERVICES (with full details):
 ${servicesInfo}
@@ -53,27 +72,25 @@ LIST QUERY KEYWORDS: "what services", "which services", "how many services", "al
 YOUR RESPONSE FORMATS:
 
 **FOR SINGLE SERVICE QUERIES:**
-Be warm and conversational, recommend the specific service they need with application link.
+Be warm and conversational, recommend the specific service they need.\n\nCRITICAL: Always include the exact application link from the services list. Add a separate line that begins exactly with:\nApply: /apply/{ID}
 
 **FOR LIST QUERIES:**
-Provide a complete formatted list of ALL matching services. Use this exact format:
+Provide a complete formatted list of ALL matching services. Use this exact format and ALWAYS include the apply link line starting with "Apply:":
 
 "Here are the [NUMBER] services that [CRITERIA]:
-
 1. **Service Name**
    Brief description
    Fee: [amount] | Processing: [time]
-   [Apply Link]
+   Apply: /apply/{ID}
 
-2. **Service Name**
+2. **Service Name** 
    Brief description  
    Fee: [amount] | Processing: [time]
-   [Apply Link]
+   Apply: /apply/{ID}
 
-[Continue for ALL matching services]"
+[Continue for ALL matching services]
 
 EXAMPLES:
-
 User: "I'm getting married next month" (SINGLE SERVICE)
 Response: "Congratulations on your upcoming wedding! 🎉 You'll need a **Marriage Certificate** which legally registers your marriage. This is required for joint bank accounts, passports, and legal purposes. You can apply here: /apply/3"
 
@@ -130,7 +147,6 @@ Remember: Understand their intent - are they asking for ONE specific service or 
     
     for (const service of this.services) {
       let matches = false;
-      
       // Document-based matching
       if (queryLower.includes('aadhaar') || queryLower.includes('aadhar')) {
         if (service.documents_required?.some(doc => doc.toLowerCase().includes('aadhaar') || doc.toLowerCase().includes('aadhar'))) {
@@ -229,10 +245,10 @@ Remember: Understand their intent - are they asking for ONE specific service or 
   /**
    * Generate intelligent response using Gemini Pro
    */
-  async generateResponse(userQuery) {
+  async generateResponse(userQuery, lang = 'en') {
     try {
       const queryType = this.classifyQueryType(userQuery);
-      const systemPrompt = this.createSystemPrompt();
+      const systemPrompt = this.createSystemPrompt(lang);
       
       let enhancedPrompt;
       
@@ -261,7 +277,7 @@ User Query: "${userQuery}"
 
 DETECTED: This is a SINGLE SERVICE QUERY for a specific life situation.
 
-Please provide a warm, conversational response recommending the specific service they need.`;
+Please provide a warm, conversational response recommending the specific service they need. Include an explicit apply line like: Apply: /apply/{ID}`;
       }
 
       const result = await this.model.generateContent(enhancedPrompt);
@@ -270,7 +286,7 @@ Please provide a warm, conversational response recommending the specific service
 
       // Extract application links if mentioned in the response
       const linkMatches = generatedText.match(/\/apply\/[\w\d-]+/g);
-      const applicationLinks = linkMatches || [];
+      let applicationLinks = linkMatches || [];
 
       // For list queries, find all mentioned services
       let recommendedServices = [];
@@ -292,30 +308,87 @@ Please provide a warm, conversational response recommending the specific service
         }
       }
 
+      // Fallback mapping: if we have links but didn't match services by name, map links to service objects
+      if (recommendedServices.length === 0 && applicationLinks.length > 0) {
+        for (const link of applicationLinks) {
+          const svc = this.services.find(s => s.application_link === link);
+          if (svc) {
+            recommendedServices.push(svc);
+            if (!queryType.isListQuery) break;
+          }
+        }
+      }
+
+      // If we matched services but the model omitted explicit links, derive links from matched services
+      if (applicationLinks.length === 0 && recommendedServices.length > 0) {
+        applicationLinks = recommendedServices
+          .filter(s => !!s.application_link)
+          .map(s => s.application_link);
+      }
+
+      // Translate service objects to the requested language
+      const translateService = (service) => {
+        if (!service) return null;
+        if (lang === 'mr') {
+          return {
+            ...service,
+            service_name: service.service_name_mr || service.service_name,
+            description: service.description_mr || service.description,
+            documents_required: service.documents_required_mr || service.documents_required,
+            eligibility: service.eligibility_mr || service.eligibility,
+            processing_time: service.processing_time_mr || service.processing_time,
+            category: service.category_mr || service.category
+          };
+        }
+        return service;
+      };
+
+      const translatedServices = recommendedServices.map(translateService);
+
       return {
         success: true,
         message: generatedText,
         query_type: queryType.isListQuery ? 'list_query' : 'single_service',
-        recommended_service: recommendedServices[0] || null, // For backward compatibility
-        recommended_services: recommendedServices, // New field for list queries
+        recommended_service: translatedServices[0] || null, // For backward compatibility
+        recommended_services: translatedServices, // New field for list queries
         application_links: applicationLinks,
         query: userQuery,
         method: 'gemini_pro_intelligent_enhanced',
+        lang,
         timestamp: new Date().toISOString()
       };
 
     } catch (error) {
-      console.error('Gemini API error:', error);
+      console.error('❌ Gemini API error:', error);
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
       
-      // Fallback response
+      // Fallback response (localized)
+      const isMr = lang === 'mr';
       return {
         success: false,
         error: true,
-        message: "I'm having trouble processing your request right now. Could you please tell me specifically what government service you need? For example, you could say 'I need a birth certificate' or 'I'm getting married, what do I need?' 🤔",
+        message: isMr
+          ? 'सध्या तुमची विनंती प्रक्रिया करण्यात अडचण येत आहे. कृपया तुम्हाला नेमकी कोणती सरकारी सेवा हवी आहे ते सांगा. उदाहरणार्थ, "मला जन्म प्रमाणपत्र हवे आहे" किंवा "माझे लग्न आहे, मला काय लागेल?" असे सांगा. 🤔'
+          : "I'm having trouble processing your request right now. Could you please tell me specifically what government service you need? For example, you could say 'I need a birth certificate' or 'I'm getting married, what do I need?' 🤔",
         fallback: true,
         query: userQuery,
         error_message: error.message,
-        suggestions: [
+        error_details: {
+          name: error.name,
+          message: error.message,
+          status: error.status,
+          statusText: error.statusText
+        },
+        suggestions: isMr ? [
+          'मला जन्म प्रमाणपत्र हवे आहे',
+          'माझे लग्न आहे, मला कोणती कागदपत्रे लागतील?',
+          'मला व्यवसाय कसा सुरू करायचा?',
+          'मला घरासाठी पाणी कनेक्शन हवे आहे',
+          'मला घर बांधायचे आहे',
+          'मला उत्पन्न प्रमाणपत्र हवे आहे'
+        ] : [
           "I need a birth certificate",
           "I'm getting married, what documents do I need?", 
           "How do I start a business?",
@@ -351,7 +424,7 @@ Please provide a warm, conversational response recommending the specific service
  */
 async function intelligentChat(req, res) {
   try {
-    const { query } = req.body;
+    const { query, lang = 'en' } = req.body;
     
     // Validate input
     if (!query || typeof query !== 'string' || query.trim().length === 0) {
@@ -376,7 +449,7 @@ async function intelligentChat(req, res) {
     const geminiService = new GeminiIntelligentChat();
     
     // Generate intelligent response
-    const result = await geminiService.generateResponse(cleanQuery);
+    const result = await geminiService.generateResponse(cleanQuery, lang);
     
     // Log the interaction for analytics
     try {
@@ -406,6 +479,7 @@ async function intelligentChat(req, res) {
         application_links: result.application_links,
         query: cleanQuery,
         method: result.method,
+        lang: result.lang || lang,
         timestamp: result.timestamp
       });
     } else {

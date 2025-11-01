@@ -59,6 +59,7 @@ import { db } from '../../services/firebase';
 import DocumentManager from '../../components/documents/DocumentManager';
 import InternalMessaging from '../../components/messaging/InternalMessaging';
 import AppointmentScheduler from '../../components/appointments/AppointmentScheduler';
+import ApplicationReviewDialog from '../../components/admin/ApplicationReviewDialog';
 import {
   collection,
   getDocs,
@@ -75,7 +76,7 @@ import {
 import toast from 'react-hot-toast';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../services/firebase';
-import { createSampleData, createAllSampleData } from '../../utils/createSampleData';
+
 import ChakraSpinner from '../../components/common/ChakraSpinner';
 import { getAllServices } from '../../data/servicesData';
 
@@ -146,60 +147,7 @@ const seedDefaultServices = async (currentUserId) => {
   }
 };
 
-// Force populate all 21 services (for admin use)
-const populateAllServices = async (currentUserId) => {
-  try {
-    console.log('Force populating all 21 services...');
-    
-    const allServices = convertServicesDataToAdminFormat();
-    console.log('Services to populate:', allServices.length, allServices);
-    
-    // Get existing services to avoid duplicates
-    const servicesSnapshot = await getDocs(collection(db, 'services'));
-    const existingServices = servicesSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-    
-    let addedCount = 0;
-    let updatedCount = 0;
-    
-    for (const service of allServices) {
-      // Check if service already exists by name or serviceId
-      const existingService = existingServices.find(
-        existing => existing.name === service.name || existing.serviceId === service.serviceId
-      );
-      
-      const serviceData = {
-        ...service,
-        createdBy: currentUserId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      
-      if (existingService) {
-        // Update existing service
-        const serviceRef = doc(db, 'services', existingService.id);
-        await updateDoc(serviceRef, {
-          ...serviceData,
-          createdAt: existingService.createdAt, // Keep original creation date
-        });
-        updatedCount++;
-      } else {
-        // Add new service
-        await addDoc(collection(db, 'services'), serviceData);
-        addedCount++;
-      }
-    }
-    
-    toast.success(`Services populated: ${addedCount} added, ${updatedCount} updated. Total: ${allServices.length} services`);
-    return true;
-  } catch (error) {
-    console.error('Error populating all services:', error);
-    toast.error('Failed to populate services');
-    return false;
-  }
-};
+
 
 const AdminDashboard = () => {
   const { currentUser } = useAuth();
@@ -248,6 +196,24 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'officer')) {
       loadDashboardData();
+      
+      // Set up real-time listener for applications
+      console.log('🔄 AdminDashboard: Setting up real-time listener for applications');
+      const unsubscribe = onSnapshot(
+        collection(db, 'applications'),
+        (snapshot) => {
+          console.log('🔄 AdminDashboard: Applications collection changed, reloading data');
+          loadDashboardData();
+        },
+        (error) => {
+          console.error('❌ AdminDashboard: Error in applications listener:', error);
+        }
+      );
+      
+      return () => {
+        console.log('🔄 AdminDashboard: Cleaning up real-time listener');
+        unsubscribe();
+      };
     }
   }, [currentUser]);
 
@@ -323,11 +289,21 @@ const AdminDashboard = () => {
       
       setServices(servicesData);
       
-      // Calculate stats
+      // Calculate stats with proper status filtering
+      console.log('📊 AdminDashboard: Calculating stats from applications:', applicationsData.length);
+      console.log('📊 AdminDashboard: Application statuses:', applicationsData.map(app => app.status));
+      
+      const pendingCount = applicationsData.filter(app => {
+        const status = app.status?.toLowerCase();
+        return status === 'pending' || status === 'submitted' || status === 'under review' || status === 'under_review';
+      }).length;
+      
+      console.log('📊 AdminDashboard: Pending applications count:', pendingCount);
+      
       setStats({
         totalUsers: usersData.length,
         totalApplications: applicationsData.length,
-        pendingApplications: applicationsData.filter(app => app.status === 'Pending').length,
+        pendingApplications: pendingCount,
         totalServices: servicesData.length
       });
       
@@ -799,52 +775,324 @@ const AdminDashboard = () => {
   );
 
   // Applications Management Tab
-  const ApplicationsTab = () => (
-    <Box>
-      <Typography variant="h6" sx={{ mb: 3 }}>Application Oversight</Typography>
-      
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Application ID</TableCell>
-              <TableCell>Service</TableCell>
-              <TableCell>Applicant</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Assigned To</TableCell>
-              <TableCell>Submitted</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {applications.slice(0, 10).map((application) => (
-              <TableRow key={application.id}>
-                <TableCell>{application.id.substring(0, 8)}...</TableCell>
-                <TableCell>{application.serviceId}</TableCell>
-                <TableCell>{application.userId}</TableCell>
-                <TableCell>
-                  <Chip 
-                    label={application.status} 
-                    color={getStatusColor(application.status)} 
-                    size="small" 
-                  />
-                </TableCell>
-                <TableCell>{application.assignedTo || 'Unassigned'}</TableCell>
-                <TableCell>
-                  {application.submittedAt?.toDate?.()?.toLocaleDateString() || 'N/A'}
-                </TableCell>
-                <TableCell>
-                  <IconButton color="primary">
-                    <Visibility />
-                  </IconButton>
-                </TableCell>
+  const ApplicationsTab = () => {
+    const [selectedApplication, setSelectedApplication] = useState(null);
+    const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+    const [statusUpdateDialogOpen, setStatusUpdateDialogOpen] = useState(false);
+    const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+    const [newStatus, setNewStatus] = useState('');
+    const [statusComment, setStatusComment] = useState('');
+
+    const statusLabels = {
+      'pending': 'Pending',
+      'submitted': 'Submitted',
+      'under_review': 'Under Review',
+      'documents_required': 'Documents Required',
+      'approved': 'Approved',
+      'rejected': 'Rejected',
+      'completed': 'Completed',
+      'cancelled': 'Cancelled'
+    };
+
+    const handleStatusUpdate = async () => {
+      if (!selectedApplication || !newStatus) {
+        toast.error('Please select a status');
+        return;
+      }
+
+      try {
+        const { updateApplicationStatus } = await import('../../services/realWorldApplicationService');
+        await updateApplicationStatus(
+          selectedApplication.id, 
+          newStatus, 
+          currentUser.uid, 
+          statusComment.trim()
+        );
+        
+        toast.success('Application status updated successfully');
+        setStatusUpdateDialogOpen(false);
+        setNewStatus('');
+        setStatusComment('');
+        setSelectedApplication(null);
+        
+        // Reload applications
+        await loadDashboardData();
+      } catch (error) {
+        console.error('Error updating application status:', error);
+        toast.error('Failed to update application status');
+      }
+    };
+
+    const handleDeleteApplication = async (applicationId) => {
+      if (!window.confirm('Are you sure you want to delete this application? This action cannot be undone.')) {
+        return;
+      }
+
+      try {
+        await deleteDoc(doc(db, 'applications', applicationId));
+        toast.success('Application deleted successfully');
+        
+        // Reload applications
+        await loadDashboardData();
+      } catch (error) {
+        console.error('Error deleting application:', error);
+        toast.error('Failed to delete application');
+      }
+    };
+
+    const getServiceName = (serviceId) => {
+      const serviceNames = {
+        'birth-certificate': 'Birth Certificate',
+        'death-certificate': 'Death Certificate',
+        'marriage-certificate': 'Marriage Certificate',
+        'income-certificate': 'Income Certificate',
+        'caste-certificate': 'Caste Certificate',
+        'domicile-certificate': 'Domicile Certificate',
+        'bpl-certificate': 'BPL Certificate',
+        'agricultural-subsidy': 'Agricultural Subsidy',
+        'crop-insurance': 'Crop Insurance',
+        'property-tax-payment': 'Property Tax Payment',
+        'property-tax-assessment': 'Property Tax Assessment',
+        'water-connection': 'Water Connection',
+        'drainage-connection': 'Drainage Connection',
+        'trade-license': 'Trade License',
+        'building-permission': 'Building Permission',
+        'school-transfer-certificate': 'School Transfer Certificate',
+        'scholarship': 'Scholarship Application',
+        'vaccination-certificate': 'Vaccination Certificate',
+        'street-light-installation': 'Street Light Installation',
+        'water-tax-payment': 'Water Tax Payment'
+      };
+      return serviceNames[serviceId] || serviceId;
+    };
+
+    return (
+      <Box>
+        <Typography variant="h6" sx={{ mb: 3 }}>Application Oversight</Typography>
+        
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Application ID</TableCell>
+                <TableCell>Service</TableCell>
+                <TableCell>Applicant</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Assigned To</TableCell>
+                <TableCell>Submitted</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Box>
-  );
+            </TableHead>
+            <TableBody>
+              {applications.slice(0, 10).map((application) => (
+                <TableRow key={application.id}>
+                  <TableCell>
+                    <Typography variant="body2" fontWeight="bold">
+                      {application.applicationId || application.id.substring(0, 8)}...
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    {getServiceName(application.serviceType || application.serviceId)}
+                  </TableCell>
+                  <TableCell>{application.applicantName || application.userId}</TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={statusLabels[application.status] || application.status} 
+                      color={getStatusColor(application.status)} 
+                      size="small" 
+                    />
+                  </TableCell>
+                  <TableCell>{application.assignedTo || 'Unassigned'}</TableCell>
+                  <TableCell>
+                    {application.submittedAt ? 
+                      (application.submittedAt instanceof Date ? 
+                        application.submittedAt.toLocaleDateString() : 
+                        application.submittedAt.toDate?.()?.toLocaleDateString() || 'N/A'
+                      ) : 'N/A'
+                    }
+                  </TableCell>
+                  <TableCell>
+                    <Tooltip title="Review Application">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => {
+                          setSelectedApplication(application);
+                          setReviewDialogOpen(true);
+                        }}
+                      >
+                        <Visibility />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Update Status">
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          setSelectedApplication(application);
+                          setNewStatus(application.status);
+                          setStatusUpdateDialogOpen(true);
+                        }}
+                      >
+                        <Edit />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Quick Approve">
+                      <IconButton
+                        size="small"
+                        color="success"
+                        onClick={() => {
+                          setSelectedApplication(application);
+                          setNewStatus('approved');
+                          setStatusComment('Application approved by admin');
+                          handleStatusUpdate();
+                        }}
+                      >
+                        <CheckCircle />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete Application">
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDeleteApplication(application.id)}
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Application Details Dialog */}
+        <Dialog
+          open={detailsDialogOpen}
+          onClose={() => setDetailsDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>Application Details</DialogTitle>
+          <DialogContent>
+            {selectedApplication && (
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2">Application ID</Typography>
+                  <Typography variant="body2" gutterBottom>
+                    {selectedApplication.applicationId || selectedApplication.id}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2">Service</Typography>
+                  <Typography variant="body2" gutterBottom>
+                    {getServiceName(selectedApplication.serviceType || selectedApplication.serviceId)}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2">Applicant Name</Typography>
+                  <Typography variant="body2" gutterBottom>
+                    {selectedApplication.applicantName || 'N/A'}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2">Status</Typography>
+                  <Chip
+                    label={statusLabels[selectedApplication.status] || selectedApplication.status}
+                    color={getStatusColor(selectedApplication.status)}
+                    size="small"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2">Submitted Date</Typography>
+                  <Typography variant="body2" gutterBottom>
+                    {selectedApplication.submittedAt ? 
+                      (selectedApplication.submittedAt instanceof Date ? 
+                        selectedApplication.submittedAt.toLocaleDateString() : 
+                        selectedApplication.submittedAt.toDate?.()?.toLocaleDateString() || 'N/A'
+                      ) : 'N/A'
+                    }
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2">Last Updated</Typography>
+                  <Typography variant="body2" gutterBottom>
+                    {selectedApplication.updatedAt ? 
+                      (selectedApplication.updatedAt instanceof Date ? 
+                        selectedApplication.updatedAt.toLocaleDateString() : 
+                        selectedApplication.updatedAt.toDate?.()?.toLocaleDateString() || 'N/A'
+                      ) : 'N/A'
+                    }
+                  </Typography>
+                </Grid>
+                {selectedApplication.latestComment && (
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2">Latest Comment</Typography>
+                    <Typography variant="body2" gutterBottom>
+                      {selectedApplication.latestComment}
+                    </Typography>
+                  </Grid>
+                )}
+              </Grid>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDetailsDialogOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Status Update Dialog */}
+        <Dialog
+          open={statusUpdateDialogOpen}
+          onClose={() => setStatusUpdateDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Update Application Status</DialogTitle>
+          <DialogContent>
+            <FormControl fullWidth sx={{ mb: 3, mt: 1 }}>
+              <InputLabel>New Status</InputLabel>
+              <Select
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value)}
+                label="New Status"
+              >
+                <MenuItem value="pending">Pending</MenuItem>
+                <MenuItem value="under_review">Under Review</MenuItem>
+                <MenuItem value="documents_required">Documents Required</MenuItem>
+                <MenuItem value="approved">Approved</MenuItem>
+                <MenuItem value="rejected">Rejected</MenuItem>
+                <MenuItem value="completed">Completed</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Status Comment (Optional)"
+              value={statusComment}
+              onChange={(e) => setStatusComment(e.target.value)}
+              placeholder="Add a comment about this status change..."
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setStatusUpdateDialogOpen(false)}>Cancel</Button>
+            <Button variant="contained" onClick={handleStatusUpdate}>
+              Update Status
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Application Review Dialog */}
+        <ApplicationReviewDialog
+          open={reviewDialogOpen}
+          onClose={() => setReviewDialogOpen(false)}
+          application={selectedApplication}
+          onStatusUpdate={loadDashboardData}
+        />
+      </Box>
+    );
+  };
 
   // Refresh services data
   const refreshServices = async () => {
@@ -875,36 +1123,9 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleCreateSampleData = async () => {
-    try {
-      setLoading(true);
-      await createAllSampleData();
-      toast.success('Sample data created successfully!');
-      // Reload dashboard data
-      await loadDashboardData();
-    } catch (error) {
-      console.error('Error creating sample data:', error);
-      toast.error('Failed to create sample data');
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handlePopulateAllServices = async () => {
-    try {
-      setLoading(true);
-      await populateAllServices(currentUser.uid);
-      // Reload services data
-      await refreshServices();
-      // Reload dashboard data to update stats
-      await loadDashboardData();
-    } catch (error) {
-      console.error('Error populating services:', error);
-      toast.error('Failed to populate services');
-    } finally {
-      setLoading(false);
-    }
-  };
+
+
 
   // Toggle service availability
   const handleToggleServiceAvailability = async (serviceId, currentStatus) => {
@@ -944,15 +1165,7 @@ const AdminDashboard = () => {
           >
             Refresh Services
           </Button>
-          <Button
-            variant="outlined"
-            color="secondary"
-            startIcon={<Add />}
-            onClick={handlePopulateAllServices}
-            disabled={loading}
-          >
-            Populate All 21 Services
-          </Button>
+
           <Button
             variant="contained"
             startIcon={<Add />}
@@ -1186,15 +1399,7 @@ const AdminDashboard = () => {
                 Manage users, oversee applications, and configure services
               </Typography>
             </Box>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={handleCreateSampleData}
-              disabled={loading}
-              startIcon={<Add />}
-            >
-              Create Sample Data
-            </Button>
+
           </Box>
         </Paper>
 

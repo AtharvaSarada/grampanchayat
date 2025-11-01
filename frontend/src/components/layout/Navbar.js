@@ -48,7 +48,7 @@ const Navbar = () => {
 
   return (
     <AppBar position="fixed">
-      <Toolbar>
+      <Toolbar sx={{ minHeight: { xs: 56, sm: 64 } }}>
         <IconButton
           edge="start"
           color="inherit"
@@ -57,12 +57,13 @@ const Navbar = () => {
           <Business />
         </IconButton>
         
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
           {t('home.title')}
         </Typography>
 
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Button color="inherit" onClick={() => navigate('/')}>
+        {/* Desktop/Tablet actions */}
+        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
+          <Button color="inherit" onClick={() => navigate('/')}> 
             <Home sx={{ mr: 1 }} />
             {t('nav.home')}
           </Button>
@@ -73,7 +74,6 @@ const Navbar = () => {
 
           {isAuthenticated ? (
             <>
-              <LanguageToggle variant="icon" />
               <IconButton
                 size="large"
                 aria-label="account of current user"
@@ -158,8 +158,48 @@ const Navbar = () => {
               </Button>
             </>
           )}
+          {/* Language toggle always visible on md+ */}
+          <Box sx={{ ml: 1 }}>
+            <LanguageToggle variant="icon" />
+          </Box>
+        </Box>
+
+        {/* Compact actions for mobile (xs-sm) */}
+        <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', gap: 0.5 }}>
+          {/* Keep only essential buttons to avoid crowding; language toggle always visible */}
+          <Box sx={{ mr: 0.5 }}>
+            <LanguageToggle variant="icon" />
+          </Box>
+          {isAuthenticated ? (
+            <IconButton
+              size="large"
+              aria-label="account of current user"
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+              onClick={handleMenu}
+              color="inherit"
+            >
+              <AccountCircle />
+            </IconButton>
+          ) : (
+            <>
+              <Button color="inherit" size="small" onClick={() => navigate('/login')} sx={{ minWidth: 'auto' }}>
+                {t('nav.login')}
+              </Button>
+            </>
+          )}
         </Box>
       </Toolbar>
+      {/* Floating language toggle for extra mobile accessibility */}
+      <Box sx={{
+        position: 'fixed',
+        bottom: 88,
+        right: 16,
+        zIndex: 1400,
+        display: { xs: 'flex', md: 'none' }
+      }}>
+        <LanguageToggle variant="icon" />
+      </Box>
     </AppBar>
   );
 };

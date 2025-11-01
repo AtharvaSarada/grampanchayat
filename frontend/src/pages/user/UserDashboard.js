@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Container,
   Typography,
@@ -32,20 +32,37 @@ import {
   Description,
   Dashboard,
   Build,
-  Folder,
   History
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { subscribeToUserStatistics, getRecentApplications, getTotalServices } from '../../services/statisticsService';
-import DocumentManager from '../../components/documents/DocumentManager';
-import AppointmentScheduler from '../../components/appointments/AppointmentScheduler';
+
+
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useSelector(state => state.auth);
   const { currentUser } = useAuth();
+  const { language, t: translate } = useLanguage();
+  
+  // Use the global translation system with dashboard.user prefix
+  const t = (key, fallback = '') => {
+    try {
+      const translation = translate(`dashboard.user.${key}`);
+      // Ensure we always return a non-empty string to prevent MUI capitalize errors
+      if (typeof translation === 'string' && translation.trim() !== '') {
+        return translation;
+      }
+      // Return fallback or key as string
+      return fallback || String(key);
+    } catch (error) {
+      console.warn(`Translation error for key: dashboard.user.${key}`, error);
+      return fallback || String(key);
+    }
+  };
   
   // Tab state
   const [activeTab, setActiveTab] = useState(0);
@@ -60,32 +77,36 @@ const UserDashboard = () => {
   const [recentApplications, setRecentApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalServices, setTotalServices] = useState(0);
-  const [notifications] = useState([
+  // Use useMemo to ensure notifications are properly initialized with translations
+  const notifications = useMemo(() => [
     {
       id: 1,
       type: 'info',
-      title: 'Welcome to Gram Panchayat Services',
-      message: 'Your digital gateway to government services is ready!',
+      title: t('welcomeNotification', 'Welcome to Gram Panchayat Services'),
+      message: t('welcomeNotificationMsg', 'Your digital gateway to government services is ready!'),
       date: new Date().toISOString()
     },
     {
       id: 2,
       type: 'success',
-      title: 'Service Updates Available',
-      message: 'New online services have been added to the portal.',
+      title: t('serviceUpdates', 'Service Updates Available'),
+      message: t('serviceUpdatesMsg', 'New online services have been added to the portal.'),
       date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
     }
-  ]);
+  ], [language, translate]);
 
   // Subscribe to user statistics and recent applications
   useEffect(() => {
-    if (!user?.uid) {
+    if (!currentUser?.uid) {
       setLoading(false);
       return;
     }
 
+    console.log('🔍 UserDashboard: Setting up statistics for user:', currentUser.uid);
+
     // Subscribe to real-time user statistics
-    const unsubscribeStats = subscribeToUserStatistics(user.uid, (stats) => {
+    const unsubscribeStats = subscribeToUserStatistics(currentUser.uid, (stats) => {
+      console.log('📊 UserDashboard: Received stats update:', stats);
       setUserStats(stats);
       setLoading(false); // Set loading to false once user stats are loaded
     });
@@ -93,10 +114,12 @@ const UserDashboard = () => {
     // Load recent applications
     const loadRecentApplications = async () => {
       try {
-        const applications = await getRecentApplications(user.uid, 3);
+        console.log('🔍 UserDashboard: Loading recent applications for user:', currentUser.uid);
+        const applications = await getRecentApplications(currentUser.uid, 3);
+        console.log('📊 UserDashboard: Recent applications loaded:', applications.length, applications);
         setRecentApplications(applications);
       } catch (error) {
-        console.error('Error loading recent applications:', error);
+        console.error('❌ UserDashboard: Error loading recent applications:', error);
       }
     };
     
@@ -116,34 +139,46 @@ const UserDashboard = () => {
     return () => {
       if (unsubscribeStats) unsubscribeStats();
     };
-  }, [user?.uid]);
+  }, [currentUser?.uid]);
 
-  const quickActions = [
+  // Use useMemo to ensure quickActions are properly initialized with translations
+  const quickActions = useMemo(() => [
     {
-      title: 'Browse Services',
-      description: 'Explore all available government services',
+      title: t('browseServices', 'Browse Services'),
+      description: t('browseServicesMsg', 'Explore all available government services'),
       icon: <Assignment color="primary" />,
       action: () => navigate('/services')
     },
     {
-      title: 'Track Applications',
-      description: 'Monitor your application status',
+      title: t('trackApplications', 'Track Applications'),
+      description: t('trackApplicationsMsg', 'Monitor your application status'),
       icon: <Schedule color="primary" />,
       action: () => navigate('/my-applications')
     },
     {
-      title: 'Pay Fees',
-      description: 'Make online payments for services',
+      title: t('payFees', 'Pay Fees'),
+      description: t('payFeesMsg', 'Make online payments for services'),
       icon: <AttachMoney color="primary" />,
       action: () => navigate('/payments')
     },
     {
-      title: 'Download Forms',
-      description: 'Access and download required forms',
+      title: t('downloadForms', 'Download Forms'),
+      description: t('downloadFormsMsg', 'Access and download required forms'),
       icon: <Description color="primary" />,
       action: () => navigate('/downloads')
     }
-  ];
+  ], [language, navigate, translate]);
+
+  // Add safety check for translation system
+  if (!translate) {
+    return (
+      <Container maxWidth="lg">
+        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+          <Typography>Loading...</Typography>
+        </Box>
+      </Container>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
@@ -168,10 +203,10 @@ const UserDashboard = () => {
             </Grid>
             <Grid item xs>
               <Typography variant="h4" component="h1" gutterBottom>
-                Welcome, {user?.displayName || 'Citizen'}!
+                {t('welcome') || 'Welcome'}, {currentUser?.displayName || user?.displayName || 'Citizen'}!
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                Access government services online and track your applications easily.
+                {t('welcomeMsg') || 'Access government services online and track your applications easily.'}
               </Typography>
             </Grid>
             <Grid item>
@@ -179,7 +214,7 @@ const UserDashboard = () => {
                 variant="outlined"
                 onClick={() => navigate('/profile')}
               >
-                View Profile
+                {t('viewProfile') || 'View Profile'}
               </Button>
             </Grid>
           </Grid>
@@ -200,7 +235,7 @@ const UserDashboard = () => {
                   </Typography>
                 )}
                 <Typography color="text.secondary">
-                  Services Available
+                  {t('servicesAvailable') || 'Services Available'}
                 </Typography>
               </CardContent>
             </Card>
@@ -217,7 +252,7 @@ const UserDashboard = () => {
                   </Typography>
                 )}
                 <Typography color="text.secondary">
-                  Total Applications
+                  {t('totalApplications') || 'Total Applications'}
                 </Typography>
               </CardContent>
             </Card>
@@ -234,7 +269,7 @@ const UserDashboard = () => {
                   </Typography>
                 )}
                 <Typography color="text.secondary">
-                  Pending Applications
+                  {t('pendingApplications') || 'Pending Applications'}
                 </Typography>
               </CardContent>
             </Card>
@@ -251,7 +286,7 @@ const UserDashboard = () => {
                   </Typography>
                 )}
                 <Typography color="text.secondary">
-                  Completed Applications
+                  {t('completedApplications') || 'Completed Applications'}
                 </Typography>
               </CardContent>
             </Card>
@@ -267,13 +302,13 @@ const UserDashboard = () => {
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="h6" component="h2">
-                    Recent Applications
+                    {t('recentApplications') || 'Recent Applications'}
                   </Typography>
                   <Button 
                     size="small" 
                     onClick={() => navigate('/my-applications')}
                   >
-                    View All
+                    {t('viewAll') || 'View All'}
                   </Button>
                 </Box>
                 <List>
@@ -304,11 +339,15 @@ const UserDashboard = () => {
                           </ListItemIcon>
                           <ListItemText
                             primary={app.serviceName}
-                            secondary={`Applied on: ${new Date(app.applicationDate).toLocaleDateString()}`}
+                            secondary={`${t('appliedOn') || 'Applied on:'} ${new Date(app.applicationDate).toLocaleDateString()}`}
                           />
                           <Chip
-                            label={app.status}
-                            color={app.statusColor}
+                            label={app.status || 'Pending'}
+                            color={
+                              app.statusColor && ['default', 'primary', 'secondary', 'error', 'info', 'success', 'warning'].includes(app.statusColor) 
+                                ? app.statusColor 
+                                : 'default'
+                            }
                             size="small"
                             variant="outlined"
                           />
@@ -320,8 +359,8 @@ const UserDashboard = () => {
                     // Empty state
                     <ListItem>
                       <ListItemText
-                        primary="No applications yet"
-                        secondary="Start by browsing available services and submitting your first application."
+                        primary={t('noAppsYet') || 'No applications yet'}
+                        secondary={t('noAppsYetMsg') || 'Start by browsing available services and submitting your first application.'}
                         sx={{ textAlign: 'center', py: 4 }}
                       />
                     </ListItem>
@@ -334,7 +373,7 @@ const UserDashboard = () => {
             <Card sx={{ mt: 3 }}>
               <CardContent>
                 <Typography variant="h6" component="h2" gutterBottom>
-                  Quick Actions
+                  {t('quickActions') || 'Quick Actions'}
                 </Typography>
                 <Grid container spacing={2}>
                   {quickActions.map((action, index) => (
@@ -376,7 +415,7 @@ const UserDashboard = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                   <Notifications color="primary" sx={{ mr: 1 }} />
                   <Typography variant="h6" component="h2">
-                    Notifications
+                    {t('notifications') || 'Notifications'}
                   </Typography>
                 </Box>
                 <List>
@@ -407,7 +446,7 @@ const UserDashboard = () => {
                   ))}
                 </List>
                 <Button fullWidth size="small" sx={{ mt: 1 }}>
-                  View All Notifications
+                  {t('viewAllNotifications') || 'View All Notifications'}
                 </Button>
               </CardContent>
             </Card>
@@ -417,24 +456,33 @@ const UserDashboard = () => {
         {/* Enhanced User Features Tabs */}
         <Paper elevation={3} sx={{ mt: 4 }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
-              <Tab icon={<Dashboard />} label="Overview" />
-              <Tab icon={<Assignment />} label="My Applications" />
-              <Tab icon={<Folder />} label="Documents" />
-              <Tab icon={<Schedule />} label="Appointments" />
-              <Tab icon={<Build />} label="Services" />
+            <Tabs 
+              value={activeTab} 
+              onChange={(e, newValue) => setActiveTab(newValue)}
+              variant="scrollable"
+              scrollButtons="auto"
+              allowScrollButtonsMobile
+              sx={{
+                '& .MuiTabs-scrollButtons': {
+                  '&.Mui-disabled': { opacity: 0.3 }
+                }
+              }}
+            >
+              <Tab icon={<Dashboard />} label={t('overview') || 'Overview'} />
+              <Tab icon={<Assignment />} label={t('myApplications') || 'My Applications'} />
+              <Tab icon={<Build />} label={t('services') || 'Services'} />
             </Tabs>
           </Box>
           
-          <Box sx={{ p: (activeTab === 2 || activeTab === 3) ? 0 : 3 }}>
+          <Box sx={{ p: 3 }}>
             {activeTab === 0 && (
               <Box>
-                <Typography variant="h6" gutterBottom>Dashboard Overview</Typography>
+                <Typography variant="h6" gutterBottom>{t('dashboardOverview') || 'Dashboard Overview'}</Typography>
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
                     <Card>
                       <CardContent>
-                        <Typography variant="h6" gutterBottom>Recent Activity</Typography>
+                        <Typography variant="h6" gutterBottom>{t('recentActivity') || 'Recent Activity'}</Typography>
                         <List>
                           {recentApplications.slice(0, 3).map((app, index) => (
                             <ListItem key={index}>
@@ -442,8 +490,8 @@ const UserDashboard = () => {
                                 <Assignment />
                               </ListItemIcon>
                               <ListItemText
-                                primary={`Application #${app.id?.substring(0, 8)}`}
-                                secondary={`Status: ${app.status} - ${new Date(app.submittedAt).toLocaleDateString()}`}
+                                primary={`${t('application') || 'Application'} #${app.id?.substring(0, 8)}`}
+                                secondary={`${t('status') || 'Status'}: ${app.status || 'Pending'} - ${new Date(app.submittedAt).toLocaleDateString()}`}
                               />
                             </ListItem>
                           ))}
@@ -454,16 +502,16 @@ const UserDashboard = () => {
                   <Grid item xs={12} md={6}>
                     <Card>
                       <CardContent>
-                        <Typography variant="h6" gutterBottom>Quick Actions</Typography>
+                        <Typography variant="h6" gutterBottom>{t('quickActions') || 'Quick Actions'}</Typography>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                           <Button variant="outlined" onClick={() => navigate('/services')}>
-                            Browse Services
+                            {t('browseServices') || 'Browse Services'}
                           </Button>
                           <Button variant="outlined" onClick={() => navigate('/my-applications')}>
-                            View Applications
+                            {t('viewApplications') || 'View Applications'}
                           </Button>
                           <Button variant="outlined" onClick={() => navigate('/profile')}>
-                            Update Profile
+                            {t('updateProfile') || 'Update Profile'}
                           </Button>
                         </Box>
                       </CardContent>
@@ -475,10 +523,10 @@ const UserDashboard = () => {
             
             {activeTab === 1 && (
               <Box>
-                <Typography variant="h6" gutterBottom>My Applications</Typography>
+                <Typography variant="h6" gutterBottom>{t('myApplications') || 'My Applications'}</Typography>
                 {recentApplications.length === 0 ? (
                   <Alert severity="info">
-                    No applications found. <Button onClick={() => navigate('/services')}>Apply for services</Button>
+                    {t('noAppsFound') || 'No applications found.'} <Button onClick={() => navigate('/services')}>{t('applyForServices') || 'Apply for Services'}</Button>
                   </Alert>
                 ) : (
                   <Grid container spacing={2}>
@@ -488,19 +536,19 @@ const UserDashboard = () => {
                           <CardContent>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                               <Typography variant="subtitle1">
-                                Application #{app.id?.substring(0, 8)}
+                                {t('application') || 'Application'} #{app.id?.substring(0, 8)}
                               </Typography>
                               <Chip 
-                                label={app.status} 
+                                label={app.status || 'Pending'} 
                                 color={app.status === 'Approved' ? 'success' : app.status === 'Rejected' ? 'error' : 'warning'}
                                 size="small"
                               />
                             </Box>
                             <Typography variant="body2" color="text.secondary">
-                              Service: {app.serviceId}
+                              {t('service') || 'Service'}: {app.serviceName || app.serviceId}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                              Submitted: {new Date(app.submittedAt).toLocaleDateString()}
+                              {t('submitted') || 'Submitted'}: {new Date(app.applicationDate || app.submittedAt).toLocaleDateString()}
                             </Typography>
                           </CardContent>
                         </Card>
@@ -512,25 +560,17 @@ const UserDashboard = () => {
             )}
             
             {activeTab === 2 && (
-              <DocumentManager userRole="user" />
-            )}
-            
-            {activeTab === 3 && (
-              <AppointmentScheduler userRole="user" />
-            )}
-            
-            {activeTab === 4 && (
               <Box>
-                <Typography variant="h6" gutterBottom>Available Services</Typography>
+                <Typography variant="h6" gutterBottom>{t('availableServices') || 'Available Services'}</Typography>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Browse and apply for government services online.
+                  {t('availableServicesMsg') || 'Browse and apply for government services online.'}
                 </Typography>
                 <Button 
                   variant="contained" 
                   onClick={() => navigate('/services')}
                   sx={{ mt: 2 }}
                 >
-                  View All Services
+                  {t('viewAllServices') || 'View All Services'}
                 </Button>
               </Box>
             )}

@@ -31,9 +31,11 @@ import MultiStepForm from './MultiStepForm';
 import DocumentUpload from '../common/DocumentUpload';
 import { validateField, autoCorrect } from '../../utils/formValidation';
 import { getStates, getDistrictsByState } from '../../data/stateDistrictData';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 // Farmer Information Step
 const FarmerInformationStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const [states] = React.useState(getStates());
   const [districts, setDistricts] = React.useState([]);
 
@@ -69,21 +71,21 @@ const FarmerInformationStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Farmer Information
+        {t("forms.cropInsurance.farmerInfo.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Enter your personal details as the primary farmer
+        {t("forms.cropInsurance.farmerInfo.subtitle")}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Farmer Name *"
+            label={t("forms.cropInsurance.farmerInfo.farmerName")}
             value={formData.farmerName || ''}
             onChange={(e) => handleChange('farmerName', e.target.value)}
             error={!!errors.farmerName}
-            helperText={errors.farmerName || 'Full name as per Aadhaar'}
+            helperText={errors.farmerName || t("forms.cropInsurance.farmerInfo.farmerNameHelper")}
             inputProps={{ maxLength: 50, pattern: '[A-Za-z\\s\']{2,50}' }}
           />
         </Grid>
@@ -91,7 +93,7 @@ const FarmerInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Father's/Husband's Name *"
+            label={t("forms.cropInsurance.farmerInfo.fatherName")}
             value={formData.fatherName || ''}
             onChange={(e) => handleChange('fatherName', e.target.value)}
             error={!!errors.fatherName}
@@ -103,7 +105,7 @@ const FarmerInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DatePicker
-              label="Date of Birth *"
+              label={t("forms.cropInsurance.farmerInfo.dateOfBirth")}
               value={formData.dateOfBirth || null}
               onChange={(date) => handleChange('dateOfBirth', date)}
               renderInput={(params) => (
@@ -121,15 +123,15 @@ const FarmerInformationStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.gender}>
-            <InputLabel>Gender *</InputLabel>
+            <InputLabel>{t("common.gender")} *</InputLabel>
             <Select
               value={formData.gender || ''}
               onChange={(e) => handleChange('gender', e.target.value)}
-              label="Gender *"
+              label={t("common.gender") + " *"}
             >
-              <MenuItem value="Male">Male</MenuItem>
-              <MenuItem value="Female">Female</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
+              <MenuItem value="Male">{t("common.male")}</MenuItem>
+              <MenuItem value="Female">{t("common.female")}</MenuItem>
+              <MenuItem value="Other">{t("common.other")}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -137,11 +139,11 @@ const FarmerInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Mobile Number *"
+            label={t("common.mobile")}
             value={formData.mobile || ''}
             onChange={(e) => handleChange('mobile', e.target.value)}
             error={!!errors.mobile}
-            helperText={errors.mobile || '10-digit mobile number'}
+            helperText={errors.mobile || t("forms.cropInsurance.farmerInfo.mobileHelper")}
             inputProps={{ maxLength: 10, pattern: '[6-9][0-9]{9}' }}
           />
         </Grid>
@@ -149,39 +151,39 @@ const FarmerInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Email Address"
+            label={t('forms.common.email')}
             type="email"
             value={formData.email || ''}
             onChange={(e) => handleChange('email', e.target.value)}
             error={!!errors.email}
-            helperText={errors.email || 'Optional email address'}
+            helperText={errors.email || t("forms.cropInsurance.farmerInfo.emailHelper")}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Aadhaar Number *"
+            label={t("common.aadhaar")}
             value={formData.aadhaar || ''}
             onChange={(e) => handleChange('aadhaar', e.target.value)}
             error={!!errors.aadhaar}
-            helperText={errors.aadhaar || '12-digit Aadhaar number'}
+            helperText={errors.aadhaar || t("forms.cropInsurance.farmerInfo.aadhaarHelper")}
             inputProps={{ maxLength: 12, pattern: '\\d{12}' }}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.category}>
-            <InputLabel>Category *</InputLabel>
+            <InputLabel>{t("common.category")} *</InputLabel>
             <Select
               value={formData.category || ''}
               onChange={(e) => handleChange('category', e.target.value)}
-              label="Category *"
+              label={t("common.category") + " *"}
             >
-              <MenuItem value="General">General</MenuItem>
-              <MenuItem value="OBC">OBC</MenuItem>
-              <MenuItem value="SC">SC</MenuItem>
-              <MenuItem value="ST">ST</MenuItem>
+              <MenuItem value="General">{t("common.general")}</MenuItem>
+              <MenuItem value="OBC">{t("common.obc")}</MenuItem>
+              <MenuItem value="SC">{t("common.sc")}</MenuItem>
+              <MenuItem value="ST">{t("common.st")}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -191,22 +193,22 @@ const FarmerInformationStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={3}
-            label="Address *"
+            label={t("forms.cropInsurance.farmerInfo.address")}
             value={formData.address || ''}
             onChange={(e) => handleChange('address', e.target.value)}
             error={!!errors.address}
-            helperText={errors.address || 'Complete residential address'}
+            helperText={errors.address || t("forms.cropInsurance.farmerInfo.addressHelper")}
             inputProps={{ minLength: 10, maxLength: 200 }}
           />
         </Grid>
 
         <Grid item xs={12} md={4}>
           <FormControl fullWidth error={!!errors.state}>
-            <InputLabel>State *</InputLabel>
+            <InputLabel>{t("common.state")} *</InputLabel>
             <Select
               value={formData.state || ''}
               onChange={(e) => handleChange('state', e.target.value)}
-              label="State *"
+              label={t("common.state") + " *"}
             >
               {states.map((state) => (
                 <MenuItem key={state} value={state}>
@@ -219,11 +221,11 @@ const FarmerInformationStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12} md={4}>
           <FormControl fullWidth error={!!errors.district}>
-            <InputLabel>District *</InputLabel>
+            <InputLabel>{t("common.district")} *</InputLabel>
             <Select
               value={formData.district || ''}
               onChange={(e) => handleChange('district', e.target.value)}
-              label="District *"
+              label={t("common.district") + " *"}
               disabled={!formData.state}
             >
               {districts.map((district) => (
@@ -238,7 +240,7 @@ const FarmerInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={4}>
           <TextField
             fullWidth
-            label="PIN Code *"
+            label={t("forms.cropInsurance.farmerInfo.pincode")}
             value={formData.pincode || ''}
             onChange={(e) => handleChange('pincode', e.target.value)}
             error={!!errors.pincode}
@@ -253,6 +255,7 @@ const FarmerInformationStep = ({ formData, updateFormData, errors }) => {
 
 // Land Details Step
 const LandDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const [landRecords, setLandRecords] = React.useState(formData.landRecords || []);
 
   const addLandRecord = () => {
@@ -286,10 +289,10 @@ const LandDetailsStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Land Details
+        {t("forms.cropInsurance.landDetails.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Add details of all land holdings for crop insurance
+        {t("forms.cropInsurance.landDetails.subtitle")}
       </Typography>
 
       <Box sx={{ mb: 3 }}>
@@ -299,12 +302,12 @@ const LandDetailsStep = ({ formData, updateFormData, errors }) => {
           onClick={addLandRecord}
           sx={{ mb: 2 }}
         >
-          Add Land Record
+          {t("forms.cropInsurance.landDetails.addLandRecord")}
         </Button>
 
         {landRecords.length === 0 && (
           <Alert severity="info">
-            Please add at least one land record to proceed with crop insurance application.
+            {t("forms.cropInsurance.landDetails.noLandRecords")}
           </Alert>
         )}
       </Box>
@@ -313,7 +316,7 @@ const LandDetailsStep = ({ formData, updateFormData, errors }) => {
         <Paper key={record.id} variant="outlined" sx={{ p: 2, mb: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="subtitle1" color="primary">
-              Land Record {index + 1}
+              {t("forms.cropInsurance.landDetails.landRecord")} {index + 1}
             </Typography>
             <IconButton
               color="error"
@@ -328,7 +331,7 @@ const LandDetailsStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Survey Number *"
+                label={t("forms.cropInsurance.landDetails.surveyNumber")}
                 value={record.surveyNumber || ''}
                 onChange={(e) => updateLandRecord(record.id, 'surveyNumber', e.target.value)}
                 inputProps={{ maxLength: 20, pattern: '[A-Za-z0-9\\/\\-]{1,20}' }}
@@ -338,7 +341,7 @@ const LandDetailsStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Village *"
+                label={t("forms.cropInsurance.landDetails.village")}
                 value={record.village || ''}
                 onChange={(e) => updateLandRecord(record.id, 'village', e.target.value)}
                 inputProps={{ maxLength: 50 }}
@@ -348,7 +351,7 @@ const LandDetailsStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="Area (Acres) *"
+                label={t("forms.cropInsurance.landDetails.area")}
                 type="number"
                 value={record.area || ''}
                 onChange={(e) => updateLandRecord(record.id, 'area', e.target.value)}
@@ -358,32 +361,32 @@ const LandDetailsStep = ({ formData, updateFormData, errors }) => {
 
             <Grid item xs={12} md={4}>
               <FormControl fullWidth>
-                <InputLabel>Land Type *</InputLabel>
+                <InputLabel>{t("forms.cropInsurance.landDetails.landType")}</InputLabel>
                 <Select
                   value={record.landType || ''}
                   onChange={(e) => updateLandRecord(record.id, 'landType', e.target.value)}
-                  label="Land Type *"
+                  label={t("forms.cropInsurance.landDetails.landType")}
                 >
-                  <MenuItem value="Irrigated">Irrigated</MenuItem>
-                  <MenuItem value="Rainfed">Rainfed</MenuItem>
-                  <MenuItem value="Semi-irrigated">Semi-irrigated</MenuItem>
+                  <MenuItem value="Irrigated">{t("forms.cropInsurance.landDetails.irrigated")}</MenuItem>
+                  <MenuItem value="Rainfed">{t("forms.cropInsurance.landDetails.rainfed")}</MenuItem>
+                  <MenuItem value="Semi-irrigated">{t("forms.cropInsurance.landDetails.semiIrrigated")}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
 
             <Grid item xs={12} md={4}>
               <FormControl fullWidth>
-                <InputLabel>Irrigation Type</InputLabel>
+                <InputLabel>{t("forms.cropInsurance.landDetails.irrigationType")}</InputLabel>
                 <Select
                   value={record.irrigationType || ''}
                   onChange={(e) => updateLandRecord(record.id, 'irrigationType', e.target.value)}
-                  label="Irrigation Type"
+                  label={t("forms.cropInsurance.landDetails.irrigationType")}
                 >
-                  <MenuItem value="Canal">Canal</MenuItem>
-                  <MenuItem value="Borewell">Borewell</MenuItem>
-                  <MenuItem value="Tank">Tank</MenuItem>
-                  <MenuItem value="River">River</MenuItem>
-                  <MenuItem value="None">None (Rainfed)</MenuItem>
+                  <MenuItem value="Canal">{t("forms.cropInsurance.landDetails.canal")}</MenuItem>
+                  <MenuItem value="Borewell">{t("forms.cropInsurance.landDetails.borewell")}</MenuItem>
+                  <MenuItem value="Tank">{t("forms.cropInsurance.landDetails.tank")}</MenuItem>
+                  <MenuItem value="River">{t("forms.cropInsurance.landDetails.river")}</MenuItem>
+                  <MenuItem value="None">{t("forms.cropInsurance.landDetails.none")}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -394,13 +397,13 @@ const LandDetailsStep = ({ formData, updateFormData, errors }) => {
       {landRecords.length > 0 && (
         <Paper variant="outlined" sx={{ p: 2, bgcolor: 'primary.50' }}>
           <Typography variant="h6" color="primary" gutterBottom>
-            Summary
+            {t("forms.cropInsurance.landDetails.summary")}
           </Typography>
           <Typography variant="body1">
-            Total Land Records: <strong>{landRecords.length}</strong>
+            {t("forms.cropInsurance.landDetails.totalLandRecords")} <strong>{landRecords.length}</strong>
           </Typography>
           <Typography variant="body1">
-            Total Area: <strong>{landRecords.reduce((sum, record) => sum + (parseFloat(record.area) || 0), 0).toFixed(2)} Acres</strong>
+            {t("forms.cropInsurance.landDetails.totalArea")} <strong>{landRecords.reduce((sum, record) => sum + (parseFloat(record.area) || 0), 0).toFixed(2)} {t("common.acres")}</strong>
           </Typography>
         </Paper>
       )}
@@ -410,6 +413,7 @@ const LandDetailsStep = ({ formData, updateFormData, errors }) => {
 
 // Crop Details Step
 const CropDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const [cropDetails, setCropDetails] = React.useState(formData.cropDetails || []);
 
   const addCropDetail = () => {
@@ -445,10 +449,10 @@ const CropDetailsStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Crop Details
+        {t("forms.cropInsurance.cropDetails.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Add details of crops to be insured
+        {t("forms.cropInsurance.cropDetails.subtitle")}
       </Typography>
 
       <Box sx={{ mb: 3 }}>
@@ -458,12 +462,12 @@ const CropDetailsStep = ({ formData, updateFormData, errors }) => {
           onClick={addCropDetail}
           sx={{ mb: 2 }}
         >
-          Add Crop
+          {t("forms.cropInsurance.cropDetails.addCrop")}
         </Button>
 
         {cropDetails.length === 0 && (
           <Alert severity="info">
-            Please add at least one crop detail to proceed with insurance application.
+            {t("forms.cropInsurance.cropDetails.noCropDetails")}
           </Alert>
         )}
       </Box>
@@ -472,7 +476,7 @@ const CropDetailsStep = ({ formData, updateFormData, errors }) => {
         <Paper key={crop.id} variant="outlined" sx={{ p: 2, mb: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="subtitle1" color="primary">
-              Crop {index + 1}
+              {t("forms.cropInsurance.cropDetails.crop")} {index + 1}
             </Typography>
             <IconButton
               color="error"
@@ -487,7 +491,7 @@ const CropDetailsStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Crop Name *"
+                label={t("forms.cropInsurance.cropDetails.cropName")}
                 value={crop.cropName || ''}
                 onChange={(e) => updateCropDetail(crop.id, 'cropName', e.target.value)}
                 inputProps={{ maxLength: 30, pattern: '[A-Za-z\\s]{2,30}' }}
@@ -497,7 +501,7 @@ const CropDetailsStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Variety"
+                label={t("forms.cropInsurance.cropDetails.variety")}
                 value={crop.variety || ''}
                 onChange={(e) => updateCropDetail(crop.id, 'variety', e.target.value)}
                 inputProps={{ maxLength: 30 }}
@@ -507,7 +511,7 @@ const CropDetailsStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
-                  label="Sowing Date *"
+                  label={t("forms.cropInsurance.cropDetails.sowingDate")}
                   value={crop.sowingDate || null}
                   onChange={(date) => updateCropDetail(crop.id, 'sowingDate', date)}
                   renderInput={(params) => <TextField {...params} fullWidth />}
@@ -518,7 +522,7 @@ const CropDetailsStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
-                  label="Expected Harvest Date *"
+                  label={t("forms.cropInsurance.cropDetails.expectedHarvestDate")}
                   value={crop.expectedHarvestDate || null}
                   onChange={(date) => updateCropDetail(crop.id, 'expectedHarvestDate', date)}
                   renderInput={(params) => <TextField {...params} fullWidth />}
@@ -530,7 +534,7 @@ const CropDetailsStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="Area Under Crop (Acres) *"
+                label={t("forms.cropInsurance.cropDetails.areaUnderCrop")}
                 type="number"
                 value={crop.areaUnderCrop || ''}
                 onChange={(e) => updateCropDetail(crop.id, 'areaUnderCrop', e.target.value)}
@@ -541,7 +545,7 @@ const CropDetailsStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="Expected Yield (Quintals) *"
+                label={t("forms.cropInsurance.cropDetails.expectedYield")}
                 type="number"
                 value={crop.expectedYield || ''}
                 onChange={(e) => updateCropDetail(crop.id, 'expectedYield', e.target.value)}
@@ -552,7 +556,7 @@ const CropDetailsStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="Sum Insured (₹) *"
+                label={t("forms.cropInsurance.cropDetails.sumInsured")}
                 type="number"
                 value={crop.sumInsured || ''}
                 onChange={(e) => updateCropDetail(crop.id, 'sumInsured', e.target.value)}
@@ -566,16 +570,16 @@ const CropDetailsStep = ({ formData, updateFormData, errors }) => {
       {cropDetails.length > 0 && (
         <Paper variant="outlined" sx={{ p: 2, bgcolor: 'success.50' }}>
           <Typography variant="h6" color="success.main" gutterBottom>
-            Insurance Summary
+            {t("forms.cropInsurance.cropDetails.insuranceSummary")}
           </Typography>
           <Typography variant="body1">
-            Total Crops: <strong>{cropDetails.length}</strong>
+            {t("forms.cropInsurance.cropDetails.totalCrops")} <strong>{cropDetails.length}</strong>
           </Typography>
           <Typography variant="body1">
-            Total Area: <strong>{cropDetails.reduce((sum, crop) => sum + (parseFloat(crop.areaUnderCrop) || 0), 0).toFixed(2)} Acres</strong>
+            {t("forms.cropInsurance.landDetails.totalArea")} <strong>{cropDetails.reduce((sum, crop) => sum + (parseFloat(crop.areaUnderCrop) || 0), 0).toFixed(2)} {t("common.acres")}</strong>
           </Typography>
           <Typography variant="body1">
-            Total Sum Insured: <strong>₹{cropDetails.reduce((sum, crop) => sum + (parseFloat(crop.sumInsured) || 0), 0).toLocaleString()}</strong>
+            {t("forms.cropInsurance.cropDetails.totalSumInsured")} <strong>₹{cropDetails.reduce((sum, crop) => sum + (parseFloat(crop.sumInsured) || 0), 0).toLocaleString()}</strong>
           </Typography>
         </Paper>
       )}
@@ -585,26 +589,28 @@ const CropDetailsStep = ({ formData, updateFormData, errors }) => {
 
 // Documents Step
 const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
+  const { t } = useLanguage();
+  
   const requiredDocuments = [
-    'Aadhaar Card of farmer',
-    'Land ownership documents (Patta/Title deed)',
-    'Survey settlement records',
-    'Bank account details/Passbook',
-    'Crop sowing certificate',
-    'Previous year harvest records',
-    'Irrigation source certificate',
-    'Soil health card (if available)',
-    'Crop cutting experiment report (if available)'
+    t("forms.cropInsurance.documents.aadhaarCard"),
+    t("forms.cropInsurance.documents.landOwnership"),
+    t("forms.cropInsurance.documents.surveyRecords"),
+    t("forms.cropInsurance.documents.bankDetails"),
+    t("forms.cropInsurance.documents.sowingCertificate"),
+    t("forms.cropInsurance.documents.harvestRecords"),
+    t("forms.cropInsurance.documents.irrigationCertificate"),
+    t("forms.cropInsurance.documents.soilHealthCard"),
+    t("forms.cropInsurance.documents.cropCuttingReport")
   ];
 
 
   return (
     <Box>
       <Typography variant="h6" gutterBottom color="primary">
-        Document Upload
+        {t("forms.cropInsurance.documents.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Please upload supporting documents for crop insurance application
+        {t("forms.cropInsurance.documents.subtitle")}
       </Typography>
 
       <DocumentUpload
@@ -618,7 +624,7 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
       
       <Box sx={{ mt: 3 }}>
         <Typography variant="subtitle2" gutterBottom>
-          Required Documents:
+          {t("forms.cropInsurance.documents.requiredDocuments")}
         </Typography>
         <ul style={{ margin: 0, paddingLeft: 20 }}>
           {requiredDocuments.map((doc, index) => (
@@ -632,11 +638,13 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
 
 // Main Form Component
 const CropInsuranceForm = () => {
+  const { t } = useLanguage();
+  
   const steps = [
-    { id: 'farmer', title: 'Farmer Information', icon: 'Person' },
-    { id: 'land', title: 'Land Details', icon: 'Landscape' },
-    { id: 'crop', title: 'Crop Details', icon: 'Agriculture' },
-    { id: 'documents', title: 'Documents', icon: 'Description' }
+    { id: 'farmer', title: t("forms.cropInsurance.step1"), icon: 'Person' },
+    { id: 'land', title: t("forms.cropInsurance.step2"), icon: 'Landscape' },
+    { id: 'crop', title: t("forms.cropInsurance.step3"), icon: 'Agriculture' },
+    { id: 'documents', title: t("forms.cropInsurance.step4"), icon: 'Description' }
   ];
 
   const validationRules = {
@@ -657,7 +665,7 @@ const CropInsuranceForm = () => {
 
   return (
     <MultiStepForm
-      serviceName="Crop Insurance Application"
+      serviceName={t("forms.cropInsurance.title")}
       serviceType="crop_insurance"
       steps={steps}
       validationRules={validationRules}

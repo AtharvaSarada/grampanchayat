@@ -23,9 +23,11 @@ import MultiStepForm from './MultiStepForm';
 import DocumentUpload from '../common/DocumentUpload';
 import { validateField, autoCorrect } from '../../utils/formValidation';
 import { getStates, getDistrictsByState } from '../../data/stateDistrictData';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 // Connection Details Step
 const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     let correctedValue = value;
     
@@ -43,21 +45,21 @@ const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Water Connection Details
+        {t("forms.waterTaxPayment.connectionDetails")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Enter your water connection details for tax payment
+        {t("forms.waterTaxPayment.connectionDetailsSubtitle")}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Water Connection ID *"
+            label={t("forms.waterTaxPayment.connectionId") + " *"}
             value={formData.connectionId || ''}
             onChange={(e) => handleChange('connectionId', e.target.value)}
             error={!!errors.connectionId}
-            helperText={errors.connectionId || 'Water connection identification number'}
+            helperText={errors.connectionId || t("forms.waterTaxPayment.connectionIdHelper")}
             inputProps={{ maxLength: 20, pattern: '[A-Za-z0-9\\-]{5,20}' }}
           />
         </Grid>
@@ -65,11 +67,11 @@ const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Consumer Name *"
+            label={t("forms.waterTaxPayment.consumerName") + " *"}
             value={formData.consumerName || ''}
             onChange={(e) => handleChange('consumerName', e.target.value)}
             error={!!errors.consumerName}
-            helperText={errors.consumerName || 'Name as per water connection'}
+            helperText={errors.consumerName || t("forms.waterTaxPayment.consumerNameHelper")}
             inputProps={{ maxLength: 50, pattern: '[A-Za-z\\s\']{2,50}' }}
           />
         </Grid>
@@ -77,28 +79,28 @@ const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Mobile Number *"
+            label={t("common.mobile") + " *"}
             value={formData.mobile || ''}
             onChange={(e) => handleChange('mobile', e.target.value)}
             error={!!errors.mobile}
-            helperText={errors.mobile || '10-digit mobile number'}
+            helperText={errors.mobile || t("common.mobileHelper")}
             inputProps={{ maxLength: 10, pattern: '[6-9][0-9]{9}' }}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.connectionType}>
-            <InputLabel>Connection Type *</InputLabel>
+            <InputLabel>{t("forms.waterTaxPayment.connectionType")} *</InputLabel>
             <Select
               value={formData.connectionType || ''}
               onChange={(e) => handleChange('connectionType', e.target.value)}
-              label="Connection Type *"
+              label={t("forms.waterTaxPayment.connectionType") + " *"}
             >
-              <MenuItem value="Domestic">Domestic</MenuItem>
-              <MenuItem value="Commercial">Commercial</MenuItem>
-              <MenuItem value="Industrial">Industrial</MenuItem>
-              <MenuItem value="Institutional">Institutional</MenuItem>
-              <MenuItem value="Bulk Supply">Bulk Supply</MenuItem>
+              <MenuItem value="Domestic">{t("forms.waterTaxPayment.domestic")}</MenuItem>
+              <MenuItem value="Commercial">{t("forms.waterTaxPayment.commercial")}</MenuItem>
+              <MenuItem value="Industrial">औद्योगिक</MenuItem>
+              <MenuItem value="Institutional">संस्थात्मक</MenuItem>
+              <MenuItem value="Bulk Supply">मोठ्या प्रमाणात पुरवठा</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -108,11 +110,11 @@ const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={3}
-            label="Service Address *"
+            label="सेवा पत्ता *"
             value={formData.serviceAddress || ''}
             onChange={(e) => handleChange('serviceAddress', e.target.value)}
             error={!!errors.serviceAddress}
-            helperText={errors.serviceAddress || 'Address where water connection is provided'}
+            helperText={errors.serviceAddress || 'पाणी कनेक्शन दिलेला पत्ता'}
             inputProps={{ minLength: 10, maxLength: 200 }}
           />
         </Grid>
@@ -120,26 +122,26 @@ const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Meter Number"
+            label="मीटर नंबर"
             value={formData.meterNumber || ''}
             onChange={(e) => handleChange('meterNumber', e.target.value)}
-            helperText="Water meter number (if applicable)"
+            helperText="पाणी मीटर नंबर (लागू असल्यास)"
             inputProps={{ maxLength: 20 }}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.meterType}>
-            <InputLabel>Meter Type *</InputLabel>
+            <InputLabel>मीटर प्रकार *</InputLabel>
             <Select
               value={formData.meterType || ''}
               onChange={(e) => handleChange('meterType', e.target.value)}
-              label="Meter Type *"
+              label="मीटर प्रकार *"
             >
-              <MenuItem value="Digital">Digital Meter</MenuItem>
-              <MenuItem value="Analog">Analog Meter</MenuItem>
-              <MenuItem value="Smart">Smart Meter</MenuItem>
-              <MenuItem value="No Meter">No Meter (Fixed Rate)</MenuItem>
+              <MenuItem value="Digital">डिजिटल मीटर</MenuItem>
+              <MenuItem value="Analog">अॅनालॉग मीटर</MenuItem>
+              <MenuItem value="Smart">स्मार्ट मीटर</MenuItem>
+              <MenuItem value="No Meter">मीटर नाही (निश्चित दर)</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -150,6 +152,7 @@ const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
 
 // Usage and Billing Step
 const UsageBillingStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const [taxCalculation, setTaxCalculation] = React.useState({
     waterCharges: 0,
     sewerageCharges: 0,
@@ -218,33 +221,33 @@ const UsageBillingStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Usage and Billing Information
+        वापर आणि बिलिंग माहिती
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Enter water usage details and billing period
+        पाणी वापर तपशील आणि बिलिंग कालावधी प्रविष्ट करा
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.billingPeriod}>
-            <InputLabel>Billing Period *</InputLabel>
+            <InputLabel>बिलिंग कालावधी *</InputLabel>
             <Select
               value={formData.billingPeriod || ''}
               onChange={(e) => handleChange('billingPeriod', e.target.value)}
-              label="Billing Period *"
+              label="बिलिंग कालावधी *"
             >
-              <MenuItem value="January 2024">January 2024</MenuItem>
-              <MenuItem value="February 2024">February 2024</MenuItem>
-              <MenuItem value="March 2024">March 2024</MenuItem>
-              <MenuItem value="April 2024">April 2024</MenuItem>
-              <MenuItem value="May 2024">May 2024</MenuItem>
-              <MenuItem value="June 2024">June 2024</MenuItem>
-              <MenuItem value="July 2024">July 2024</MenuItem>
-              <MenuItem value="August 2024">August 2024</MenuItem>
-              <MenuItem value="September 2024">September 2024</MenuItem>
-              <MenuItem value="October 2024">October 2024</MenuItem>
-              <MenuItem value="November 2024">November 2024</MenuItem>
-              <MenuItem value="December 2024">December 2024</MenuItem>
+              <MenuItem value="January 2024">जानेवारी 2024</MenuItem>
+              <MenuItem value="February 2024">फेब्रुवारी 2024</MenuItem>
+              <MenuItem value="March 2024">मार्च 2024</MenuItem>
+              <MenuItem value="April 2024">एप्रिल 2024</MenuItem>
+              <MenuItem value="May 2024">मे 2024</MenuItem>
+              <MenuItem value="June 2024">जून 2024</MenuItem>
+              <MenuItem value="July 2024">जुलै 2024</MenuItem>
+              <MenuItem value="August 2024">ऑगस्ट 2024</MenuItem>
+              <MenuItem value="September 2024">सप्टेंबर 2024</MenuItem>
+              <MenuItem value="October 2024">ऑक्टोबर 2024</MenuItem>
+              <MenuItem value="November 2024">नोव्हेंबर 2024</MenuItem>
+              <MenuItem value="December 2024">डिसेंबर 2024</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -252,12 +255,12 @@ const UsageBillingStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Water Usage (Liters) *"
+            label="पाणी वापर (लिटर) *"
             type="number"
             value={formData.waterUsage || ''}
             onChange={(e) => handleChange('waterUsage', e.target.value)}
             error={!!errors.waterUsage}
-            helperText={errors.waterUsage || 'Water consumption in liters'}
+            helperText={errors.waterUsage || 'लिटरमध्ये पाणी वापर'}
             inputProps={{ min: 0, max: 999999 }}
           />
         </Grid>
@@ -265,14 +268,14 @@ const UsageBillingStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DatePicker
-              label="Previous Reading Date"
+              label="मागील रीडिंग तारीख"
               value={formData.previousReadingDate || null}
               onChange={(date) => handleChange('previousReadingDate', date)}
               renderInput={(params) => (
                 <TextField
                   {...params}
                   fullWidth
-                  helperText="Date of previous meter reading"
+                  helperText="मागील मीटर रीडिंगची तारीख"
                 />
               )}
               maxDate={new Date()}
@@ -283,14 +286,14 @@ const UsageBillingStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DatePicker
-              label="Current Reading Date"
+              label="सध्याची रीडिंग तारीख"
               value={formData.currentReadingDate || null}
               onChange={(date) => handleChange('currentReadingDate', date)}
               renderInput={(params) => (
                 <TextField
                   {...params}
                   fullWidth
-                  helperText="Date of current meter reading"
+                  helperText="सध्याच्या मीटर रीडिंगची तारीख"
                 />
               )}
               maxDate={new Date()}
@@ -302,11 +305,11 @@ const UsageBillingStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Previous Meter Reading"
+            label={t("forms.waterTaxPayment.previousMeterReading")}
             type="number"
             value={formData.previousReading || ''}
             onChange={(e) => handleChange('previousReading', e.target.value)}
-            helperText="Previous meter reading (if applicable)"
+            helperText={t("forms.waterTaxPayment.previousMeterReadingHelper")}
             inputProps={{ min: 0 }}
           />
         </Grid>
@@ -314,52 +317,52 @@ const UsageBillingStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Current Meter Reading"
+            label={t("forms.waterTaxPayment.currentMeterReading")}
             type="number"
             value={formData.currentReading || ''}
             onChange={(e) => handleChange('currentReading', e.target.value)}
-            helperText="Current meter reading (if applicable)"
+            helperText={t("forms.waterTaxPayment.currentMeterReadingHelper")}
             inputProps={{ min: formData.previousReading || 0 }}
           />
         </Grid>
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom color="primary">
-            Is this a delayed payment? *
+            {t("forms.waterTaxPayment.isDelayedPayment")} *
           </Typography>
           <RadioGroup
             value={formData.isDelayed || 'no'}
             onChange={(e) => handleChange('isDelayed', e.target.value)}
             row
           >
-            <FormControlLabel value="no" control={<Radio />} label="No" />
-            <FormControlLabel value="yes" control={<Radio />} label="Yes (Penalty applicable)" />
+            <FormControlLabel value="no" control={<Radio />} label={t("common.no")} />
+            <FormControlLabel value="yes" control={<Radio />} label={t("forms.waterTaxPayment.yesWithPenalty")} />
           </RadioGroup>
         </Grid>
 
         <Grid item xs={12}>
           <Paper variant="outlined" sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>
-              Tax Calculation
+              {t("forms.waterTaxPayment.taxCalculation")}
             </Typography>
             
             <Grid container spacing={2}>
               <Grid item xs={6}>
-                <Typography>Water Charges:</Typography>
+                <Typography>{t("forms.waterTaxPayment.waterCharges")}:</Typography>
               </Grid>
               <Grid item xs={6}>
                 <Typography align="right">₹{taxCalculation.waterCharges.toLocaleString()}</Typography>
               </Grid>
 
               <Grid item xs={6}>
-                <Typography>Sewerage Charges (30%):</Typography>
+                <Typography>{t("forms.waterTaxPayment.sewerageCharges")}:</Typography>
               </Grid>
               <Grid item xs={6}>
                 <Typography align="right">₹{taxCalculation.sewerageCharges.toLocaleString()}</Typography>
               </Grid>
 
               <Grid item xs={6}>
-                <Typography>Development Charges (10%):</Typography>
+                <Typography>{t("forms.waterTaxPayment.developmentCharges")}:</Typography>
               </Grid>
               <Grid item xs={6}>
                 <Typography align="right">₹{taxCalculation.developmentCharges.toLocaleString()}</Typography>
@@ -368,7 +371,7 @@ const UsageBillingStep = ({ formData, updateFormData, errors }) => {
               {formData.isDelayed === 'yes' && (
                 <>
                   <Grid item xs={6}>
-                    <Typography color="error">Penalty (15%):</Typography>
+                    <Typography color="error">{t("forms.waterTaxPayment.penalty")}:</Typography>
                   </Grid>
                   <Grid item xs={6}>
                     <Typography align="right" color="error">₹{taxCalculation.penalty.toLocaleString()}</Typography>
@@ -381,7 +384,7 @@ const UsageBillingStep = ({ formData, updateFormData, errors }) => {
               </Grid>
 
               <Grid item xs={6}>
-                <Typography variant="h6" color="primary">Total Amount:</Typography>
+                <Typography variant="h6" color="primary">{t("forms.waterTaxPayment.totalAmount")}:</Typography>
               </Grid>
               <Grid item xs={6}>
                 <Typography variant="h6" color="primary" align="right">
@@ -396,7 +399,7 @@ const UsageBillingStep = ({ formData, updateFormData, errors }) => {
           <Grid item xs={12}>
             <Alert severity="warning">
               <Typography variant="body2">
-                <strong>Late Payment Penalty:</strong> A penalty of 15% has been added to your water tax amount due to delayed payment.
+                <strong>उशीरा पेमेंट दंड:</strong> उशीरा पेमेंटमुळे तुमच्या पाणी कर रकमेत 15% दंड जोडला गेला आहे.
               </Typography>
             </Alert>
           </Grid>
@@ -408,6 +411,7 @@ const UsageBillingStep = ({ formData, updateFormData, errors }) => {
 
 // Payment Details Step
 const PaymentDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     let correctedValue = value;
     
@@ -423,21 +427,21 @@ const PaymentDetailsStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Payment Information
+        पेमेंट माहिती
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Provide payment details and payer information
+        पेमेंट तपशील आणि पेमेंट करणाऱ्याची माहिती द्या
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Payer Name *"
+            label="पेमेंट करणाऱ्याचे नाव *"
             value={formData.payerName || ''}
             onChange={(e) => handleChange('payerName', e.target.value)}
             error={!!errors.payerName}
-            helperText={errors.payerName || 'Name of person making payment'}
+            helperText={errors.payerName || 'पेमेंट करणाऱ्या व्यक्तीचे नाव'}
             inputProps={{ maxLength: 50, pattern: '[A-Za-z\\s\']{2,50}' }}
           />
         </Grid>
@@ -445,26 +449,26 @@ const PaymentDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Payer Mobile Number *"
+            label="पेमेंट करणाऱ्याचा मोबाइल नंबर *"
             value={formData.payerMobile || ''}
             onChange={(e) => handleChange('payerMobile', e.target.value)}
             error={!!errors.payerMobile}
-            helperText={errors.payerMobile || '10-digit mobile number'}
+            helperText={errors.payerMobile || '10-अंकी मोबाइल नंबर'}
             inputProps={{ maxLength: 10, pattern: '[6-9][0-9]{9}' }}
           />
         </Grid>
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom color="primary">
-            Is the payer same as consumer? *
+            पेमेंट करणारा ग्राहकासारखाच आहे का? *
           </Typography>
           <RadioGroup
             value={formData.sameAsPayer || ''}
             onChange={(e) => handleChange('sameAsPayer', e.target.value)}
             row
           >
-            <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-            <FormControlLabel value="no" control={<Radio />} label="No" />
+            <FormControlLabel value="yes" control={<Radio />} label="होय" />
+            <FormControlLabel value="no" control={<Radio />} label="नाही" />
           </RadioGroup>
         </Grid>
 
@@ -474,11 +478,11 @@ const PaymentDetailsStep = ({ formData, updateFormData, errors }) => {
               fullWidth
               multiline
               rows={2}
-              label="Relationship to Consumer *"
+              label="ग्राहकाशी नाते *"
               value={formData.relationshipToConsumer || ''}
               onChange={(e) => handleChange('relationshipToConsumer', e.target.value)}
               error={!!errors.relationshipToConsumer}
-              helperText={errors.relationshipToConsumer || 'Explain relationship to water consumer'}
+              helperText={errors.relationshipToConsumer || 'पाणी ग्राहकाशी नाते स्पष्ट करा'}
               inputProps={{ maxLength: 100 }}
             />
           </Grid>
@@ -486,16 +490,16 @@ const PaymentDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12}>
           <FormControl fullWidth error={!!errors.paymentMethod}>
-            <InputLabel>Payment Method *</InputLabel>
+            <InputLabel>पेमेंट पद्धत *</InputLabel>
             <Select
               value={formData.paymentMethod || ''}
               onChange={(e) => handleChange('paymentMethod', e.target.value)}
-              label="Payment Method *"
+              label="पेमेंट पद्धत *"
             >
-              <MenuItem value="Online">Online Payment</MenuItem>
-              <MenuItem value="Cash">Cash Payment</MenuItem>
-              <MenuItem value="Cheque">Cheque Payment</MenuItem>
-              <MenuItem value="DD">Demand Draft</MenuItem>
+              <MenuItem value="Online">ऑनलाइन पेमेंट</MenuItem>
+              <MenuItem value="Cash">रोख पेमेंट</MenuItem>
+              <MenuItem value="Cheque">चेक पेमेंट</MenuItem>
+              <MenuItem value="DD">डिमांड ड्राफ्ट</MenuItem>
               <MenuItem value="NEFT/RTGS">NEFT/RTGS</MenuItem>
             </Select>
           </FormControl>
@@ -504,22 +508,22 @@ const PaymentDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12}>
           <Paper variant="outlined" sx={{ p: 2, bgcolor: 'primary.50' }}>
             <Typography variant="h6" color="primary" gutterBottom>
-              Payment Summary
+              पेमेंट सारांश
             </Typography>
             <Typography variant="body1">
-              Connection ID: <strong>{formData.connectionId}</strong>
+              कनेक्शन आयडी: <strong>{formData.connectionId}</strong>
             </Typography>
             <Typography variant="body1">
-              Consumer Name: <strong>{formData.consumerName}</strong>
+              ग्राहक नाव: <strong>{formData.consumerName}</strong>
             </Typography>
             <Typography variant="body1">
-              Billing Period: <strong>{formData.billingPeriod}</strong>
+              बिलिंग कालावधी: <strong>{formData.billingPeriod}</strong>
             </Typography>
             <Typography variant="body1">
-              Water Usage: <strong>{formData.waterUsage} Liters</strong>
+              पाणी वापर: <strong>{formData.waterUsage} लिटर</strong>
             </Typography>
             <Typography variant="h5" color="primary" sx={{ mt: 2 }}>
-              Total Amount: ₹{(formData.totalAmount || 0).toLocaleString()}
+              एकूण रक्कम: ₹{(formData.totalAmount || 0).toLocaleString()}
             </Typography>
           </Paper>
         </Grid>
@@ -527,9 +531,9 @@ const PaymentDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12}>
           <Alert severity="info">
             <Typography variant="body2">
-              <strong>Note:</strong> After successful payment, you will receive a payment receipt. 
-              Please keep this receipt for your records and future reference. Water supply will continue 
-              uninterrupted after payment confirmation.
+              <strong>टीप:</strong> यशस्वी पेमेंटनंतर, तुम्हाला पेमेंट पावती मिळेल. 
+              कृपया ही पावती तुमच्या नोंदी आणि भविष्यातील संदर्भासाठी ठेवा. पेमेंट पुष्टीनंतर पाणी पुरवठा 
+              अखंडित चालू राहील.
             </Typography>
           </Alert>
         </Grid>
@@ -540,16 +544,18 @@ const PaymentDetailsStep = ({ formData, updateFormData, errors }) => {
 
 // Documents Step
 const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
+  const { t } = useLanguage();
+  
   const requiredDocuments = [
-    'Water connection agreement',
-    'Previous water tax receipts',
-    'Identity proof of payer',
-    'Address proof of service location',
-    'Meter reading photographs',
-    'Bank account details (for online payment)',
-    'Power of attorney (if paying on behalf)',
-    'Property ownership documents',
-    'Previous correspondence with water department'
+    'पाणी कनेक्शन करार',
+    'मागील पाणी कर पावत्या',
+    'पेमेंट करणाऱ्याचा ओळख पुरावा',
+    'सेवा स्थानाचा पत्ता पुरावा',
+    'मीटर रीडिंग फोटो',
+    'बँक खाते तपशील (ऑनलाइन पेमेंटसाठी)',
+    'मुख्तारनामा (वतीने पेमेंट करत असल्यास)',
+    'मालमत्ता मालकी कागदपत्रे',
+    'पाणी विभागाशी मागील पत्रव्यवहार'
   ];
 
   const handleDocumentsChange = (documents) => {
@@ -559,10 +565,10 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
   return (
     <Box>
       <Typography variant="h6" gutterBottom color="primary">
-        Document Upload
+        कागदपत्रे अपलोड
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Please upload supporting documents for water tax payment
+        कृपया पाणी कर भरणेसाठी सहायक कागदपत्रे अपलोड करा
       </Typography>
 
       <DocumentUpload
@@ -578,11 +584,13 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
 
 // Main Form Component
 const WaterTaxPaymentForm = () => {
+  const { t } = useLanguage();
+  
   const steps = [
-    { id: 'connection', title: 'Connection Details', icon: 'Water' },
-    { id: 'usage', title: 'Usage & Billing', icon: 'Receipt' },
-    { id: 'payment', title: 'Payment Details', icon: 'Payment' },
-    { id: 'documents', title: 'Documents', icon: 'Description' }
+    { id: 'connection', title: 'कनेक्शन तपशील', icon: 'Water' },
+    { id: 'usage', title: 'वापर आणि बिलिंग', icon: 'Receipt' },
+    { id: 'payment', title: 'पेमेंट तपशील', icon: 'Payment' },
+    { id: 'documents', title: 'कागदपत्रे', icon: 'Description' }
   ];
 
   const validationRules = {
@@ -607,7 +615,7 @@ const WaterTaxPaymentForm = () => {
 
   return (
     <MultiStepForm
-      serviceName="Water Tax Payment"
+      serviceName="पाणी कर भरणा"
       serviceType="water_tax_payment"
       steps={steps}
       validationRules={validationRules}

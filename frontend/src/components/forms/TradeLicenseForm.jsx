@@ -20,8 +20,10 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import MultiStepForm from './MultiStepForm';
 import DocumentUpload from '../common/DocumentUpload';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 const TradeLicenseForm = () => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     // Applicant Information
     applicantName: '',
@@ -62,10 +64,10 @@ const TradeLicenseForm = () => {
   });
 
   const steps = [
-    { id: 'applicant', title: 'Applicant Details' },
-    { id: 'business', title: 'Business Information' },
-    { id: 'address', title: 'Address & License' },
-    { id: 'documents', title: 'Documents' }
+    { id: 'applicant', title: t('forms.tradeLicense.step1') },
+    { id: 'business', title: t('forms.tradeLicense.step2') },
+    { id: 'address', title: t('forms.tradeLicense.step3') },
+    { id: 'documents', title: t('forms.tradeLicense.step4') }
   ];
 
   const validationRules = {
@@ -87,46 +89,46 @@ const TradeLicenseForm = () => {
   };
 
   const businessTypes = [
-    'Retail Trade',
-    'Wholesale Trade',
-    'Manufacturing',
-    'Service Provider',
-    'Restaurant/Food Service',
-    'Medical/Healthcare',
-    'Educational Services',
-    'Transportation',
-    'Construction',
-    'Agriculture Related',
-    'Other'
+    { value: 'Retail Trade', label: t('forms.tradeLicense.retailTrade') },
+    { value: 'Wholesale Trade', label: t('forms.tradeLicense.wholesaleTrade') },
+    { value: 'Manufacturing', label: t('forms.tradeLicense.manufacturing') },
+    { value: 'Service Provider', label: t('forms.tradeLicense.serviceProvider') },
+    { value: 'Restaurant/Food Service', label: t('forms.tradeLicense.restaurant') },
+    { value: 'Medical/Healthcare', label: t('forms.tradeLicense.medical') },
+    { value: 'Educational Services', label: t('forms.tradeLicense.educational') },
+    { value: 'Transportation', label: t('forms.tradeLicense.transportation') },
+    { value: 'Construction', label: t('forms.tradeLicense.construction') },
+    { value: 'Agriculture Related', label: t('forms.tradeLicense.agricultureRelated') },
+    { value: 'Other', label: t('forms.common.other') }
   ];
 
   const businessCategories = [
-    'Micro Enterprise',
-    'Small Enterprise',
-    'Medium Enterprise',
-    'Large Enterprise'
+    { value: 'Micro Enterprise', label: t('forms.tradeLicense.microEnterprise') },
+    { value: 'Small Enterprise', label: t('forms.tradeLicense.smallEnterprise') },
+    { value: 'Medium Enterprise', label: t('forms.tradeLicense.mediumEnterprise') },
+    { value: 'Large Enterprise', label: t('forms.tradeLicense.largeEnterprise') }
   ];
 
   const licenseTypes = [
-    'General Trade License',
-    'Food Business License',
-    'Medical Store License',
-    'Petrol Pump License',
-    'Liquor License',
-    'Factory License',
-    'Other'
+    { value: 'General Trade License', label: t('forms.tradeLicense.generalTradeLicense') },
+    { value: 'Food Business License', label: t('forms.tradeLicense.foodBusinessLicense') },
+    { value: 'Medical Store License', label: t('forms.tradeLicense.medicalStoreLicense') },
+    { value: 'Petrol Pump License', label: t('forms.tradeLicense.petrolPumpLicense') },
+    { value: 'Liquor License', label: t('forms.tradeLicense.liquorLicense') },
+    { value: 'Factory License', label: t('forms.tradeLicense.factoryLicense') },
+    { value: 'Other', label: t('forms.common.other') }
   ];
 
   const ApplicantDetailsStep = ({ formData, updateFormData, errors }) => (
     <Paper elevation={2} sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Applicant Information
+        {t('forms.tradeLicense.applicantInfo')}
       </Typography>
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Applicant's Full Name *"
+            label={t('forms.tradeLicense.applicantFullName')}
             value={formData.applicantName || ''}
             onChange={(e) => updateFormData({ applicantName: e.target.value })}
             error={!!errors.applicantName}
@@ -136,7 +138,7 @@ const TradeLicenseForm = () => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Father's Name *"
+            label={t('forms.tradeLicense.fatherName')}
             value={formData.fatherName || ''}
             onChange={(e) => updateFormData({ fatherName: e.target.value })}
             error={!!errors.fatherName}
@@ -146,7 +148,7 @@ const TradeLicenseForm = () => {
         <Grid item xs={12} md={6}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DatePicker
-              label="Date of Birth *"
+              label={t('forms.common.dateOfBirth')}
               value={formData.dateOfBirth}
               onChange={(date) => updateFormData({ dateOfBirth: date })}
               renderInput={(params) => (
@@ -163,15 +165,15 @@ const TradeLicenseForm = () => {
         </Grid>
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.gender}>
-            <InputLabel>Gender *</InputLabel>
+            <InputLabel>{t('forms.common.gender')}</InputLabel>
             <Select
               value={formData.gender || ''}
               onChange={(e) => updateFormData({ gender: e.target.value })}
-              label="Gender *"
+              label={t('forms.common.gender')}
             >
-              <MenuItem value="Male">Male</MenuItem>
-              <MenuItem value="Female">Female</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
+              <MenuItem value="Male">{t('forms.common.male')}</MenuItem>
+              <MenuItem value="Female">{t('forms.common.female')}</MenuItem>
+              <MenuItem value="Other">{t('forms.common.other')}</MenuItem>
             </Select>
             {errors.gender && <FormHelperText>{errors.gender}</FormHelperText>}
           </FormControl>
@@ -179,7 +181,7 @@ const TradeLicenseForm = () => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Mobile Number *"
+            label={t('forms.common.mobile')}
             value={formData.mobile || ''}
             onChange={(e) => updateFormData({ mobile: e.target.value })}
             error={!!errors.mobile}
@@ -190,7 +192,7 @@ const TradeLicenseForm = () => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Email Address"
+            label={t('forms.common.email')}
             type="email"
             value={formData.email || ''}
             onChange={(e) => updateFormData({ email: e.target.value.toLowerCase() })}
@@ -201,7 +203,7 @@ const TradeLicenseForm = () => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Aadhaar Number *"
+            label={t('forms.common.aadhaar')}
             value={formData.aadhaar || ''}
             onChange={(e) => updateFormData({ aadhaar: e.target.value })}
             error={!!errors.aadhaar}
@@ -216,13 +218,13 @@ const TradeLicenseForm = () => {
   const BusinessInformationStep = ({ formData, updateFormData, errors }) => (
     <Paper elevation={2} sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Business Information
+        {t('forms.tradeLicense.businessInfo')}
       </Typography>
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Business Name *"
+            label={t('forms.tradeLicense.businessName')}
             value={formData.businessName || ''}
             onChange={(e) => updateFormData({ businessName: e.target.value })}
             error={!!errors.businessName}
@@ -231,14 +233,14 @@ const TradeLicenseForm = () => {
         </Grid>
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.businessType}>
-            <InputLabel>Business Type *</InputLabel>
+            <InputLabel>{t('forms.tradeLicense.businessType')}</InputLabel>
             <Select
               value={formData.businessType || ''}
               onChange={(e) => updateFormData({ businessType: e.target.value })}
-              label="Business Type *"
+              label={t('forms.tradeLicense.businessType')}
             >
               {businessTypes.map((type) => (
-                <MenuItem key={type} value={type}>{type}</MenuItem>
+                <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
               ))}
             </Select>
             {errors.businessType && <FormHelperText>{errors.businessType}</FormHelperText>}
@@ -246,14 +248,14 @@ const TradeLicenseForm = () => {
         </Grid>
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.businessCategory}>
-            <InputLabel>Business Category *</InputLabel>
+            <InputLabel>{t('forms.tradeLicense.businessCategory')}</InputLabel>
             <Select
               value={formData.businessCategory || ''}
               onChange={(e) => updateFormData({ businessCategory: e.target.value })}
-              label="Business Category *"
+              label={t('forms.tradeLicense.businessCategory')}
             >
               {businessCategories.map((category) => (
-                <MenuItem key={category} value={category}>{category}</MenuItem>
+                <MenuItem key={category.value} value={category.value}>{category.label}</MenuItem>
               ))}
             </Select>
             {errors.businessCategory && <FormHelperText>{errors.businessCategory}</FormHelperText>}
@@ -262,7 +264,7 @@ const TradeLicenseForm = () => {
         <Grid item xs={12} md={6}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DatePicker
-              label="Establishment Date"
+              label={t('forms.tradeLicense.establishmentDate')}
               value={formData.establishmentDate}
               onChange={(date) => updateFormData({ establishmentDate: date })}
               renderInput={(params) => (
@@ -275,18 +277,18 @@ const TradeLicenseForm = () => {
         <Grid item xs={12}>
           <TextField
             fullWidth
-            label="Business Description"
+            label={t('forms.tradeLicense.businessDescription')}
             multiline
             rows={3}
             value={formData.businessDescription || ''}
             onChange={(e) => updateFormData({ businessDescription: e.target.value })}
-            placeholder="Describe your business activities"
+            placeholder={t('forms.tradeLicense.businessDescriptionPlaceholder')}
           />
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Number of Employees"
+            label={t('forms.tradeLicense.numberOfEmployees')}
             type="number"
             value={formData.numberOfEmployees || ''}
             onChange={(e) => updateFormData({ numberOfEmployees: e.target.value })}
@@ -296,7 +298,7 @@ const TradeLicenseForm = () => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Investment Amount (₹)"
+            label={t('forms.tradeLicense.investmentAmount')}
             type="number"
             value={formData.investmentAmount || ''}
             onChange={(e) => updateFormData({ investmentAmount: e.target.value })}
@@ -306,7 +308,7 @@ const TradeLicenseForm = () => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Expected Annual Turnover (₹)"
+            label={t('forms.tradeLicense.expectedTurnover')}
             type="number"
             value={formData.expectedTurnover || ''}
             onChange={(e) => updateFormData({ expectedTurnover: e.target.value })}
@@ -320,30 +322,30 @@ const TradeLicenseForm = () => {
   const AddressLicenseStep = ({ formData, updateFormData, errors }) => (
     <Paper elevation={2} sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Business Address & License Details
+        {t('forms.tradeLicense.businessAddressLicense')}
       </Typography>
       
       <Typography variant="subtitle1" sx={{ mt: 2, mb: 2, fontWeight: 'bold' }}>
-        Business Address
+        {t('forms.tradeLicense.businessAddress')}
       </Typography>
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <TextField
             fullWidth
-            label="Business Address *"
+            label={t('forms.tradeLicense.businessAddress')}
             multiline
             rows={3}
             value={formData.businessAddress || ''}
             onChange={(e) => updateFormData({ businessAddress: e.target.value })}
             error={!!errors.businessAddress}
             helperText={errors.businessAddress}
-            placeholder="Enter complete business address"
+            placeholder={t('forms.tradeLicense.businessAddressPlaceholder')}
           />
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Village/Town *"
+            label={t('forms.tradeLicense.villageTown')}
             value={formData.village || ''}
             onChange={(e) => updateFormData({ village: e.target.value })}
             error={!!errors.village}
@@ -353,7 +355,7 @@ const TradeLicenseForm = () => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="District *"
+            label={t('forms.common.district')}
             value={formData.district || ''}
             onChange={(e) => updateFormData({ district: e.target.value })}
             error={!!errors.district}
@@ -363,7 +365,7 @@ const TradeLicenseForm = () => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="State *"
+            label={t('forms.common.state')}
             value={formData.state || ''}
             onChange={(e) => updateFormData({ state: e.target.value })}
           />
@@ -371,7 +373,7 @@ const TradeLicenseForm = () => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="PIN Code *"
+            label={t('forms.common.pincode')}
             value={formData.pincode || ''}
             onChange={(e) => updateFormData({ pincode: e.target.value })}
             error={!!errors.pincode}
@@ -384,19 +386,19 @@ const TradeLicenseForm = () => {
       <Divider sx={{ my: 3 }} />
 
       <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold' }}>
-        License Information
+        {t('forms.tradeLicense.licenseInfo')}
       </Typography>
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.licenseType}>
-            <InputLabel>License Type *</InputLabel>
+            <InputLabel>{t('forms.tradeLicense.licenseType')}</InputLabel>
             <Select
               value={formData.licenseType || ''}
               onChange={(e) => updateFormData({ licenseType: e.target.value })}
-              label="License Type *"
+              label={t('forms.tradeLicense.licenseType')}
             >
               {licenseTypes.map((type) => (
-                <MenuItem key={type} value={type}>{type}</MenuItem>
+                <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
               ))}
             </Select>
             {errors.licenseType && <FormHelperText>{errors.licenseType}</FormHelperText>}
@@ -404,15 +406,15 @@ const TradeLicenseForm = () => {
         </Grid>
         <Grid item xs={12} md={6}>
           <FormControl fullWidth>
-            <InputLabel>License Validity</InputLabel>
+            <InputLabel>{t('forms.tradeLicense.licenseValidity')}</InputLabel>
             <Select
               value={formData.licenseValidity || '1'}
               onChange={(e) => updateFormData({ licenseValidity: e.target.value })}
-              label="License Validity"
+              label={t('forms.tradeLicense.licenseValidity')}
             >
-              <MenuItem value="1">1 Year</MenuItem>
-              <MenuItem value="3">3 Years</MenuItem>
-              <MenuItem value="5">5 Years</MenuItem>
+              <MenuItem value="1">{t('forms.tradeLicense.oneYear')}</MenuItem>
+              <MenuItem value="3">{t('forms.tradeLicense.threeYears')}</MenuItem>
+              <MenuItem value="5">{t('forms.tradeLicense.fiveYears')}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -424,14 +426,14 @@ const TradeLicenseForm = () => {
                 onChange={(e) => updateFormData({ previousLicense: e.target.checked })}
               />
             }
-            label="Do you have a previous trade license?"
+            label={t('forms.tradeLicense.previousLicense')}
           />
         </Grid>
         {formData.previousLicense && (
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Previous License Number"
+              label={t('forms.tradeLicense.previousLicenseNumber')}
               value={formData.previousLicenseNumber || ''}
               onChange={(e) => updateFormData({ previousLicenseNumber: e.target.value })}
             />
@@ -444,24 +446,24 @@ const TradeLicenseForm = () => {
   const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => (
     <Paper elevation={2} sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Required Documents
+        {t('forms.tradeLicense.requiredDocuments')}
       </Typography>
       <Alert severity="info" sx={{ mb: 3 }}>
-        Please upload the following documents (PDF, JPG, PNG format, max 5MB each):
+        {t('forms.tradeLicense.uploadInfo')}
       </Alert>
       
       <Box sx={{ mb: 3 }}>
         <Typography variant="subtitle2" gutterBottom>
-          Required Documents:
+          {t('forms.tradeLicense.requiredDocuments')}:
         </Typography>
         <ul>
-          <li>Aadhaar Card of Applicant</li>
-          <li>Business Address Proof (Rent Agreement/Property Documents)</li>
-          <li>Business Plan/Project Report</li>
-          <li>Partnership Deed (if applicable)</li>
-          <li>NOC from Fire Department (if required)</li>
-          <li>Pollution Clearance Certificate (if applicable)</li>
-          <li>Previous License Copy (if renewal)</li>
+          <li>{t('forms.tradeLicense.aadhaarCard')}</li>
+          <li>{t('forms.tradeLicense.addressProof')}</li>
+          <li>{t('forms.tradeLicense.businessPlan')}</li>
+          <li>{t('forms.tradeLicense.partnershipDeed')}</li>
+          <li>{t('forms.tradeLicense.fireNOC')}</li>
+          <li>{t('forms.tradeLicense.pollutionClearance')}</li>
+          <li>{t('forms.tradeLicense.previousLicenseCopy')}</li>
         </ul>
       </Box>
 
@@ -478,7 +480,7 @@ const TradeLicenseForm = () => {
 
   return (
     <MultiStepForm
-      serviceName="Trade License Application"
+      serviceName={t('forms.tradeLicense.title')}
       serviceType="trade-license"
       steps={steps}
       validationRules={validationRules}

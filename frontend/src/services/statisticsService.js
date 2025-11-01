@@ -135,7 +135,10 @@ export const getAllStatistics = async () => {
  * @returns {Promise<Object>} User statistics object
  */
 export const getUserStatistics = async (userId) => {
+  console.log('📊 getUserStatistics called with userId:', userId);
+  
   if (!userId) {
+    console.log('❌ No userId provided');
     return {
       totalApplications: 0,
       pendingApplications: 0,
@@ -156,14 +159,19 @@ export const getUserStatistics = async (userId) => {
       where('user_id', '==', userId)
     );
     
+    console.log('🔍 Querying applications for userId:', userId);
     const [snapshot1, snapshot2] = await Promise.all([
       getDocs(userQuery1),
       getDocs(userQuery2)
     ]);
     
+    console.log('📊 Query results - userId field:', snapshot1.size, 'user_id field:', snapshot2.size);
+    
     // Combine results from both queries
     const allDocs = [...snapshot1.docs, ...snapshot2.docs];
     const snapshot = { docs: allDocs, empty: allDocs.length === 0 };
+    
+    console.log('📊 Total applications found:', allDocs.length);
     
     if (snapshot.empty) {
       return {
@@ -179,15 +187,19 @@ export const getUserStatistics = async (userId) => {
     let completedApplications = 0;
     let totalAmountPaid = 0;
 
-    snapshot.forEach((doc) => {
+    snapshot.docs.forEach((doc) => {
       const data = doc.data();
+      console.log('📄 Application data:', { id: doc.id, status: data.status, userId: data.userId, user_id: data.user_id });
       totalApplications++;
       
       switch (data.status) {
         case 'pending':
+        case 'submitted':
+        case 'under_review':
           pendingApplications++;
           break;
         case 'completed':
+        case 'approved':
           completedApplications++;
           break;
       }
@@ -198,12 +210,15 @@ export const getUserStatistics = async (userId) => {
       }
     });
 
-    return {
+    const result = {
       totalApplications,
       pendingApplications,
       completedApplications,
       totalAmountPaid: Math.round(totalAmountPaid) // Round to nearest rupee
     };
+    
+    console.log('📊 Final user statistics:', result);
+    return result;
 
   } catch (error) {
     console.error('Error fetching user statistics:', error);
@@ -223,63 +238,96 @@ export const getUserStatistics = async (userId) => {
  * @returns {Promise<Array>} Array of recent applications
  */
 export const getRecentApplications = async (userId, limitCount = 5) => {
+  console.log('🔍 getRecentApplications called with userId:', userId, 'limit:', limitCount);
+  
   if (!userId) {
+    console.log('❌ No userId provided to getRecentApplications');
     return [];
   }
 
   try {
     const applicationsCollection = collection(db, 'applications');
-    // Try both field names to support different data structures
-    let snapshot;
-    try {
-      const recentQuery = query(
-        applicationsCollection,
-        where('userId', '==', userId),
-        orderBy('createdAt', 'desc'),
-        limit(limitCount)
-      );
-      snapshot = await getDocs(recentQuery);
-    } catch (error) {
-      // Fallback to user_id and submitted_at
-      const recentQuery = query(
-        applicationsCollection,
-        where('user_id', '==', userId),
-        orderBy('submitted_at', 'desc'),
-        limit(limitCount)
-      );
-      snapshot = await getDocs(recentQuery);
-    }
     
-    if (snapshot.empty) {
+    // Query 1: Try with 'userId' field
+    console.log('📋 Trying query with userId field...');
+    const query1 = query(applicationsCollection, where('userId', '==', userId));
+    const snapshot1 = await getDocs(query1);
+    console.log('📊 Query 1 result (userId):', snapshot1.size, 'documents found');
+    
+    // Query 2: Try with 'user_id' field (alternative naming)
+    console.log('📋 Trying query with user_id field...');
+    const query2 = query(applicationsCollection, where('user_id', '==', userId));
+    const snapshot2 = await getDocs(query2);
+    console.log('📊 Query 2 result (user_id):', snapshot2.size, 'documents found');
+    
+    // Combine results from both queries and remove duplicates
+    const allDocs = [...snapshot1.docs, ...snapshot2.docs];
+    const uniqueDocs = allDocs.filter((doc, index, self) => 
+      index === self.findIndex(d => d.id === doc.id)
+    );
+    
+    console.log('📊 Total unique applications found:', uniqueDocs.length);
+    
+    if (uniqueDocs.length === 0) {
+      console.log('📊 No applications found for user:', userId);
       return [];
     }
 
     const applications = [];
-    snapshot.forEach((doc) => {
+    uniqueDocs.forEach((doc) => {
       const data = doc.data();
+      console.log('📄 Processing recent application:', doc.id, {
+        serviceType: data.serviceType,
+        service_id: data.service_id,
+        status: data.status,
+        submittedAt: data.submittedAt,
+        createdAt: data.createdAt
+      });
       
-      // Calculate estimated completion (handle both date formats)
-      const submittedDate = data.submittedAt ? new Date(data.submittedAt) : 
-                           data.submitted_at?.toDate ? data.submitted_at.toDate() : 
-                           data.createdAt ? new Date(data.createdAt) : new Date();
+      // Handle different timestamp field names and formats
+      const submittedDate = data.submittedAt?.toDate ? data.submittedAt.toDate() : 
+                           data.submitted_at?.toDate ? data.submitted_at.toDate() :
+                           data.createdAt?.toDate ? data.createdAt.toDate() :
+                           new Date();
+      
       const estimatedCompletion = new Date(submittedDate.getTime() + 10 * 24 * 60 * 60 * 1000);
+      
+      // Use serviceType (new format) or service_id (old format)
+      const serviceId = data.serviceType || data.service_id || 'unknown';
       
       applications.push({
         id: doc.id,
-        applicationId: data.application_id,
-        serviceId: data.service_id,
-        serviceName: getServiceDisplayName(data.service_id),
-        status: data.status,
+        applicationId: data.applicationId || data.application_id || doc.id,
+        serviceId: serviceId,
+        serviceName: getServiceDisplayName(serviceId),
+        status: data.status || 'pending',
         applicationDate: submittedDate.toISOString(),
+        submittedAt: submittedDate, // Add for sorting
         estimatedCompletion: estimatedCompletion.toISOString(),
-        statusColor: getStatusColor(data.status)
+        statusColor: getStatusColor(data.status || 'pending')
       });
     });
 
-    return applications;
+    // Sort by submittedAt in JavaScript (most recent first)
+    applications.sort((a, b) => b.submittedAt - a.submittedAt);
+    
+    // Apply limit
+    const limitedApplications = applications.slice(0, limitCount);
+    
+    console.log('✅ Returning', limitedApplications.length, 'recent applications for user:', userId);
+    limitedApplications.forEach((app, index) => {
+      console.log(`📄 Recent Application ${index + 1}:`, {
+        id: app.id,
+        serviceName: app.serviceName,
+        status: app.status,
+        applicationDate: app.applicationDate
+      });
+    });
+
+    return limitedApplications;
 
   } catch (error) {
-    console.error('Error fetching recent applications:', error);
+    console.error('❌ Error fetching recent applications:', error);
     return [];
   }
 };
@@ -291,6 +339,30 @@ export const getRecentApplications = async (userId, limitCount = 5) => {
  */
 const getServiceDisplayName = (serviceId) => {
   const serviceNames = {
+    // New format (with hyphens)
+    'birth-certificate': 'Birth Certificate',
+    'death-certificate': 'Death Certificate',
+    'marriage-certificate': 'Marriage Certificate',
+    'water-connection': 'Water Connection',
+    'trade-license': 'Trade License',
+    'building-permission': 'Building Permission',
+    'income-certificate': 'Income Certificate',
+    'caste-certificate': 'Caste Certificate',
+    'domicile-certificate': 'Domicile Certificate',
+    'bpl-certificate': 'BPL Certificate',
+    'agricultural-subsidy': 'Agricultural Subsidy',
+    'crop-insurance': 'Crop Insurance',
+    'school-transfer-certificate': 'School Transfer Certificate',
+    'scholarship': 'Scholarship Application',
+    'vaccination-certificate': 'Vaccination Certificate',
+    'health-certificate': 'Health Certificate',
+    'street-light-installation': 'Street Light Installation',
+    'drainage-connection': 'Drainage Connection',
+    'property-tax-payment': 'Property Tax Payment',
+    'property-tax-assessment': 'Property Tax Assessment',
+    'water-tax-payment': 'Water Tax Payment',
+    
+    // Old format (with underscores) - for backward compatibility
     'birth_certificate': 'Birth Certificate',
     'death_certificate': 'Death Certificate',
     'marriage_certificate': 'Marriage Certificate',
@@ -304,10 +376,17 @@ const getServiceDisplayName = (serviceId) => {
     'agricultural_subsidy': 'Agricultural Subsidy',
     'crop_insurance': 'Crop Insurance',
     'school_transfer_certificate': 'School Transfer Certificate',
-    'scholarship_application': 'Scholarship Application'
+    'scholarship_application': 'Scholarship Application',
+    'vaccination_certificate': 'Vaccination Certificate',
+    'health_certificate': 'Health Certificate'
   };
   
-  return serviceNames[serviceId] || serviceId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  if (serviceNames[serviceId]) {
+    return serviceNames[serviceId];
+  }
+  
+  // Fallback: convert serviceId to readable format
+  return serviceId.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
 /**
@@ -337,7 +416,10 @@ const getStatusColor = (status) => {
  * @returns {function} Unsubscribe function
  */
 export const subscribeToUserStatistics = (userId, callback) => {
+  console.log('🔄 subscribeToUserStatistics called with userId:', userId);
+  
   if (!userId) {
+    console.log('❌ No userId provided to subscription');
     callback({
       totalApplications: 0,
       pendingApplications: 0,
@@ -348,21 +430,18 @@ export const subscribeToUserStatistics = (userId, callback) => {
   }
 
   const applicationsCollection = collection(db, 'applications');
-  // Use userId first (for new applications), fallback handled in getUserStatistics
-  const userQuery = query(
-    applicationsCollection,
-    where('userId', '==', userId)
-  );
   
-  // Listen to user's applications changes
+  // Listen to the entire applications collection and filter in callback
+  // This ensures we catch all applications regardless of field name
   const unsubscribe = onSnapshot(
-    userQuery,
+    applicationsCollection,
     () => {
-      // When user applications change, recalculate statistics
+      console.log('🔄 Applications collection changed, recalculating stats for user:', userId);
+      // When applications change, recalculate statistics
       getUserStatistics(userId).then(callback);
     },
     (error) => {
-      console.error('Error in user applications listener:', error);
+      console.error('❌ Error in applications listener:', error);
       callback({
         totalApplications: 0,
         pendingApplications: 0,
@@ -373,6 +452,7 @@ export const subscribeToUserStatistics = (userId, callback) => {
   );
   
   // Initial data fetch
+  console.log('🔄 Initial data fetch for user:', userId);
   getUserStatistics(userId).then(callback);
   
   return unsubscribe;

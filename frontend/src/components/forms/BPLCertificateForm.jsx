@@ -26,9 +26,11 @@ import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import MultiStepForm from './MultiStepForm';
 import DocumentUpload from '../common/DocumentUpload';
 import { calculateAge } from '../../utils/formValidation';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 // Step Components
 const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     const updates = { [field]: value };
     
@@ -42,28 +44,28 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Personal Information
+        {t('forms.bplCertificate.personalInfo')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Please provide personal details of the head of family
+        {t('forms.bplCertificate.provideHeadDetails')}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Full Name of Head of Family *"
+            label={t('forms.bplCertificate.headOfFamily')}
             value={formData.fullName || ''}
             onChange={(e) => handleChange('fullName', e.target.value)}
             error={!!errors.fullName}
-            helperText={errors.fullName || 'As per Aadhaar card'}
+            helperText={errors.fullName || t('forms.bplCertificate.headOfFamilyHelper')}
           />
         </Grid>
         
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Father's/Husband's Name *"
+            label={t('forms.bplCertificate.fatherHusbandName')}
             value={formData.fatherName || ''}
             onChange={(e) => handleChange('fatherName', e.target.value)}
             error={!!errors.fatherName}
@@ -74,7 +76,7 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={4}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DatePicker
-              label="Date of Birth *"
+              label={t('forms.common.dateOfBirth')}
               value={formData.dateOfBirth || null}
               onChange={(value) => handleChange('dateOfBirth', value)}
               renderInput={(params) => (
@@ -93,60 +95,60 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={4}>
           <TextField
             fullWidth
-            label="Age"
+            label={t('forms.common.age')}
             value={formData.age || ''}
             InputProps={{ readOnly: true }}
-            helperText="Auto-calculated"
+            helperText={t('forms.bplCertificate.autoCalculated')}
           />
         </Grid>
 
         <Grid item xs={12} md={4}>
           <FormControl fullWidth error={!!errors.gender}>
-            <InputLabel>Gender *</InputLabel>
+            <InputLabel>{t('forms.common.gender')}</InputLabel>
             <Select
               value={formData.gender || ''}
               onChange={(e) => handleChange('gender', e.target.value)}
-              label="Gender *"
+              label={t('forms.common.gender')}
             >
-              <MenuItem value="Male">Male</MenuItem>
-              <MenuItem value="Female">Female</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
+              <MenuItem value="Male">{t('forms.common.male')}</MenuItem>
+              <MenuItem value="Female">{t('forms.common.female')}</MenuItem>
+              <MenuItem value="Other">{t('forms.common.other')}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.caste}>
-            <InputLabel>Caste *</InputLabel>
+            <InputLabel>{t('forms.bplCertificate.caste')}</InputLabel>
             <Select
               value={formData.caste || ''}
               onChange={(e) => handleChange('caste', e.target.value)}
-              label="Caste *"
+              label={t('forms.bplCertificate.caste')}
             >
-              <MenuItem value="General">General</MenuItem>
-              <MenuItem value="SC">SC (Scheduled Caste)</MenuItem>
-              <MenuItem value="ST">ST (Scheduled Tribe)</MenuItem>
-              <MenuItem value="OBC">OBC (Other Backward Class)</MenuItem>
-              <MenuItem value="EWS">EWS (Economically Weaker Section)</MenuItem>
+              <MenuItem value="General">{t('forms.common.general')}</MenuItem>
+              <MenuItem value="SC">{t('forms.common.sc')}</MenuItem>
+              <MenuItem value="ST">{t('forms.common.st')}</MenuItem>
+              <MenuItem value="OBC">{t('forms.common.obc')}</MenuItem>
+              <MenuItem value="EWS">{t('forms.common.ews')}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.religion}>
-            <InputLabel>Religion *</InputLabel>
+            <InputLabel>{t('forms.incomeCertificate.religion')}</InputLabel>
             <Select
               value={formData.religion || ''}
               onChange={(e) => handleChange('religion', e.target.value)}
-              label="Religion *"
+              label={t('forms.incomeCertificate.religion')}
             >
-              <MenuItem value="Hindu">Hindu</MenuItem>
-              <MenuItem value="Muslim">Muslim</MenuItem>
-              <MenuItem value="Christian">Christian</MenuItem>
-              <MenuItem value="Sikh">Sikh</MenuItem>
-              <MenuItem value="Buddhist">Buddhist</MenuItem>
-              <MenuItem value="Jain">Jain</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
+              <MenuItem value="Hindu">{t('forms.common.hindu')}</MenuItem>
+              <MenuItem value="Muslim">{t('forms.common.muslim')}</MenuItem>
+              <MenuItem value="Christian">{t('forms.common.christian')}</MenuItem>
+              <MenuItem value="Sikh">{t('forms.common.sikh')}</MenuItem>
+              <MenuItem value="Buddhist">{t('forms.common.buddhist')}</MenuItem>
+              <MenuItem value="Jain">{t('forms.common.jain')}</MenuItem>
+              <MenuItem value="Other">{t('forms.common.other')}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -154,11 +156,11 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Mobile Number *"
+            label={t('forms.common.mobile')}
             value={formData.mobile || ''}
             onChange={(e) => handleChange('mobile', e.target.value)}
             error={!!errors.mobile}
-            helperText={errors.mobile || '10-digit mobile number'}
+            helperText={errors.mobile || t('forms.casteCertificate.mobileHelper')}
             inputProps={{ maxLength: 10 }}
           />
         </Grid>
@@ -166,23 +168,23 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Email ID"
+            label={t('forms.common.email')}
             type="email"
             value={formData.email || ''}
             onChange={(e) => handleChange('email', e.target.value)}
             error={!!errors.email}
-            helperText={errors.email || 'Optional'}
+            helperText={errors.email || t('forms.incomeCertificate.emailHelper')}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Aadhaar Number *"
+            label={t('forms.common.aadhaar')}
             value={formData.aadhaar || ''}
             onChange={(e) => handleChange('aadhaar', e.target.value)}
             error={!!errors.aadhaar}
-            helperText={errors.aadhaar || '12-digit Aadhaar number'}
+            helperText={errors.aadhaar || t('forms.incomeCertificate.aadhaarHelper')}
             inputProps={{ maxLength: 12 }}
           />
         </Grid>
@@ -192,6 +194,7 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
 };
 
 const AddressDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     updateFormData({ [field]: value });
   };
@@ -199,10 +202,10 @@ const AddressDetailsStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Address Details
+        {t('forms.bplCertificate.addressDetails')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Provide complete address information
+        {t('forms.bplCertificate.provideCompleteAddress')}
       </Typography>
 
       <Grid container spacing={3}>
@@ -211,11 +214,11 @@ const AddressDetailsStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={3}
-            label="Permanent Address *"
+            label={t('forms.bplCertificate.permanentAddressLabel')}
             value={formData.permanentAddress || ''}
             onChange={(e) => handleChange('permanentAddress', e.target.value)}
             error={!!errors.permanentAddress}
-            helperText={errors.permanentAddress || 'House No., Street, Area, Landmark'}
+            helperText={errors.permanentAddress || t('forms.bplCertificate.permanentAddressHelper')}
           />
         </Grid>
 
@@ -224,17 +227,17 @@ const AddressDetailsStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={3}
-            label="Present Address"
+            label={t('forms.bplCertificate.presentAddress')}
             value={formData.presentAddress || ''}
             onChange={(e) => handleChange('presentAddress', e.target.value)}
-            helperText="Leave blank if same as permanent address"
+            helperText={t('forms.bplCertificate.presentAddressHelper')}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Village/Ward *"
+            label={t('forms.bplCertificate.villageWard')}
             value={formData.village || ''}
             onChange={(e) => handleChange('village', e.target.value)}
             error={!!errors.village}
@@ -245,7 +248,7 @@ const AddressDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="District *"
+            label={t('forms.common.district')}
             value={formData.district || ''}
             onChange={(e) => handleChange('district', e.target.value)}
             error={!!errors.district}
@@ -256,7 +259,7 @@ const AddressDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="State *"
+            label={t('forms.common.state')}
             value={formData.state || ''}
             onChange={(e) => handleChange('state', e.target.value)}
             error={!!errors.state}
@@ -267,11 +270,11 @@ const AddressDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="PIN Code *"
+            label={t('forms.common.pincode')}
             value={formData.pincode || ''}
             onChange={(e) => handleChange('pincode', e.target.value)}
             error={!!errors.pincode}
-            helperText={errors.pincode || '6-digit PIN code'}
+            helperText={errors.pincode || t('forms.bplCertificate.pincodeHelper')}
             inputProps={{ maxLength: 6 }}
           />
         </Grid>
@@ -281,6 +284,7 @@ const AddressDetailsStep = ({ formData, updateFormData, errors }) => {
 };
 
 const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     updateFormData({ [field]: value });
   };
@@ -317,17 +321,17 @@ const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Family Details
+        {t('forms.bplCertificate.familyDetails')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Provide details of all family members
+        {t('forms.bplCertificate.provideAllFamilyMembers')}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Total Number of Family Members *"
+            label={t('forms.bplCertificate.totalFamilyMembers')}
             type="number"
             value={formData.totalFamilyMembers || ''}
             onChange={(e) => handleChange('totalFamilyMembers', e.target.value)}
@@ -339,7 +343,7 @@ const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Number of Earning Members *"
+            label={t('forms.bplCertificate.earningMembers')}
             type="number"
             value={formData.earningMembers || ''}
             onChange={(e) => handleChange('earningMembers', e.target.value)}
@@ -350,13 +354,13 @@ const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="subtitle1">Family Members Details</Typography>
+            <Typography variant="subtitle1">{t('forms.bplCertificate.familyMembersDetails')}</Typography>
             <Button
               variant="outlined"
               startIcon={<AddIcon />}
               onClick={addFamilyMember}
             >
-              Add Member
+              {t('forms.bplCertificate.addMember')}
             </Button>
           </Box>
 
@@ -365,13 +369,13 @@ const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell>Relation</TableCell>
-                    <TableCell>Age</TableCell>
-                    <TableCell>Occupation</TableCell>
-                    <TableCell>Education</TableCell>
-                    <TableCell>Monthly Income (₹)</TableCell>
-                    <TableCell>Action</TableCell>
+                    <TableCell>{t('forms.bplCertificate.name')}</TableCell>
+                    <TableCell>{t('forms.bplCertificate.relation')}</TableCell>
+                    <TableCell>{t('forms.common.age')}</TableCell>
+                    <TableCell>{t('forms.bplCertificate.occupation')}</TableCell>
+                    <TableCell>{t('forms.bplCertificate.education')}</TableCell>
+                    <TableCell>{t('forms.bplCertificate.monthlyIncome')}</TableCell>
+                    <TableCell>{t('forms.bplCertificate.action')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -382,7 +386,7 @@ const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
                           size="small"
                           value={member.name}
                           onChange={(e) => updateFamilyMember(member.id, 'name', e.target.value)}
-                          placeholder="Full Name"
+                          placeholder={t('forms.bplCertificate.fullName')}
                         />
                       </TableCell>
                       <TableCell>
@@ -390,7 +394,7 @@ const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
                           size="small"
                           value={member.relation}
                           onChange={(e) => updateFamilyMember(member.id, 'relation', e.target.value)}
-                          placeholder="Relation"
+                          placeholder={t('forms.bplCertificate.relation')}
                         />
                       </TableCell>
                       <TableCell>
@@ -399,7 +403,7 @@ const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
                           type="number"
                           value={member.age}
                           onChange={(e) => updateFamilyMember(member.id, 'age', e.target.value)}
-                          placeholder="Age"
+                          placeholder={t('forms.common.age')}
                         />
                       </TableCell>
                       <TableCell>
@@ -407,7 +411,7 @@ const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
                           size="small"
                           value={member.occupation}
                           onChange={(e) => updateFamilyMember(member.id, 'occupation', e.target.value)}
-                          placeholder="Occupation"
+                          placeholder={t('forms.bplCertificate.occupation')}
                         />
                       </TableCell>
                       <TableCell>
@@ -415,7 +419,7 @@ const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
                           size="small"
                           value={member.education}
                           onChange={(e) => updateFamilyMember(member.id, 'education', e.target.value)}
-                          placeholder="Education"
+                          placeholder={t('forms.bplCertificate.education')}
                         />
                       </TableCell>
                       <TableCell>
@@ -424,7 +428,7 @@ const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
                           type="number"
                           value={member.income}
                           onChange={(e) => updateFamilyMember(member.id, 'income', e.target.value)}
-                          placeholder="Income"
+                          placeholder={t('forms.incomeCertificate.income')}
                         />
                       </TableCell>
                       <TableCell>
@@ -449,6 +453,7 @@ const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
 };
 
 const EconomicDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     updateFormData({ [field]: value });
   };
@@ -456,22 +461,22 @@ const EconomicDetailsStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Economic Details
+        {t('forms.bplCertificate.economicDetails')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Provide complete income and asset information
+        {t('forms.bplCertificate.provideIncomeAssets')}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Annual Family Income from All Sources *"
+            label={t('forms.bplCertificate.annualFamilyIncome')}
             type="number"
             value={formData.annualIncome || ''}
             onChange={(e) => handleChange('annualIncome', e.target.value)}
             error={!!errors.annualIncome}
-            helperText={errors.annualIncome || 'Total annual income in rupees'}
+            helperText={errors.annualIncome || t('forms.bplCertificate.annualIncomeHelper')}
             InputProps={{
               startAdornment: <InputAdornment position="start">₹</InputAdornment>
             }}
@@ -480,39 +485,39 @@ const EconomicDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.primaryOccupation}>
-            <InputLabel>Primary Occupation *</InputLabel>
+            <InputLabel>{t('forms.bplCertificate.primaryOccupation')}</InputLabel>
             <Select
               value={formData.primaryOccupation || ''}
               onChange={(e) => handleChange('primaryOccupation', e.target.value)}
-              label="Primary Occupation *"
+              label={t('forms.bplCertificate.primaryOccupation')}
             >
-              <MenuItem value="Agriculture">Agriculture</MenuItem>
-              <MenuItem value="Daily Wage Labor">Daily Wage Labor</MenuItem>
-              <MenuItem value="Small Business">Small Business</MenuItem>
-              <MenuItem value="Government Service">Government Service</MenuItem>
-              <MenuItem value="Private Service">Private Service</MenuItem>
-              <MenuItem value="Unemployed">Unemployed</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
+              <MenuItem value="Agriculture">{t('forms.bplCertificate.agriculture')}</MenuItem>
+              <MenuItem value="Daily Wage Labor">{t('forms.bplCertificate.dailyWageLabor')}</MenuItem>
+              <MenuItem value="Small Business">{t('forms.bplCertificate.smallBusiness')}</MenuItem>
+              <MenuItem value="Government Service">{t('forms.bplCertificate.governmentService')}</MenuItem>
+              <MenuItem value="Private Service">{t('forms.bplCertificate.privateService')}</MenuItem>
+              <MenuItem value="Unemployed">{t('forms.bplCertificate.unemployed')}</MenuItem>
+              <MenuItem value="Other">{t('forms.common.other')}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom>
-            Agricultural Land Details (if applicable)
+            {t('forms.bplCertificate.agriculturalLandDetails')}
           </Typography>
         </Grid>
 
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Agricultural Land Area"
+            label={t('forms.bplCertificate.agriculturalLandArea')}
             type="number"
             value={formData.agriculturalLand || ''}
             onChange={(e) => handleChange('agriculturalLand', e.target.value)}
-            helperText="Area in acres"
+            helperText={t('forms.bplCertificate.areaInAcres')}
             InputProps={{
-              endAdornment: <InputAdornment position="end">Acres</InputAdornment>
+              endAdornment: <InputAdornment position="end">{t('forms.bplCertificate.acres')}</InputAdornment>
             }}
           />
         </Grid>
@@ -520,11 +525,11 @@ const EconomicDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Annual Agricultural Income"
+            label={t('forms.bplCertificate.annualAgriculturalIncome')}
             type="number"
             value={formData.agriculturalIncome || ''}
             onChange={(e) => handleChange('agriculturalIncome', e.target.value)}
-            helperText="Income from agriculture"
+            helperText={t('forms.bplCertificate.incomeFromAgriculture')}
             InputProps={{
               startAdornment: <InputAdornment position="start">₹</InputAdornment>
             }}
@@ -533,7 +538,7 @@ const EconomicDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom>
-            Assets and Property Details
+            {t('forms.bplCertificate.assetsPropertyDetails')}
           </Typography>
         </Grid>
 
@@ -542,10 +547,10 @@ const EconomicDetailsStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={3}
-            label="Details of Other Assets/Property"
+            label={t('forms.bplCertificate.otherAssetsProperty')}
             value={formData.otherAssets || ''}
             onChange={(e) => handleChange('otherAssets', e.target.value)}
-            helperText="House, vehicle, livestock, etc."
+            helperText={t('forms.bplCertificate.houseVehicleLivestock')}
           />
         </Grid>
 
@@ -554,21 +559,21 @@ const EconomicDetailsStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={2}
-            label="Employment Details"
+            label={t('forms.bplCertificate.employmentDetails')}
             value={formData.employmentDetails || ''}
             onChange={(e) => handleChange('employmentDetails', e.target.value)}
-            helperText="Current employment status and details"
+            helperText={t('forms.bplCertificate.currentEmploymentStatus')}
           />
         </Grid>
 
         <Grid item xs={12}>
           <TextField
             fullWidth
-            label="Purpose for BPL Certificate *"
+            label={t('forms.bplCertificate.purposeForBPL')}
             value={formData.purpose || ''}
             onChange={(e) => handleChange('purpose', e.target.value)}
             error={!!errors.purpose}
-            helperText={errors.purpose || 'Why do you need this certificate?'}
+            helperText={errors.purpose || t('forms.bplCertificate.whyNeedCertificate')}
           />
         </Grid>
       </Grid>
@@ -577,27 +582,28 @@ const EconomicDetailsStep = ({ formData, updateFormData, errors }) => {
 };
 
 const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
+  const { t } = useLanguage();
   const requiredDocuments = [
-    'Identity proof (Aadhaar/Voter ID/PAN)',
-    'Address proof (Ration card/Electricity bill)',
-    'Income certificate/salary slip',
-    'Employment certificate',
-    'Agricultural documents (if farmer)',
-    'Caste certificate (if applicable)',
-    'Bank passbook copy',
-    'Passport size photographs',
-    'Self-declaration affidavit',
-    'Family members\' identity proofs'
+    t('forms.bplCertificate.identityProof'),
+    t('forms.bplCertificate.addressProof'),
+    t('forms.bplCertificate.incomeCertificate'),
+    t('forms.bplCertificate.employmentCertificate'),
+    t('forms.bplCertificate.agriculturalDocuments'),
+    t('forms.bplCertificate.casteCertificate'),
+    t('forms.bplCertificate.bankPassbook'),
+    t('forms.bplCertificate.passportPhotos'),
+    t('forms.bplCertificate.selfDeclarationAffidavit'),
+    t('forms.bplCertificate.familyMembersIdentity')
   ];
 
 
   return (
     <Box>
       <Typography variant="h6" gutterBottom color="primary">
-        Document Upload
+        {t('forms.bplCertificate.documentUpload')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Please upload all required documents for BPL certificate verification
+        {t('forms.bplCertificate.uploadAllDocuments')}
       </Typography>
 
       <DocumentUpload
@@ -611,7 +617,7 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
       
       <Box sx={{ mt: 3 }}>
         <Typography variant="subtitle2" gutterBottom>
-          Required Documents:
+          {t('forms.bplCertificate.requiredDocuments')}
         </Typography>
         <ul style={{ margin: 0, paddingLeft: 20 }}>
           {requiredDocuments.map((doc, index) => (
@@ -625,12 +631,13 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
 
 // Main Form Component
 const BPLCertificateForm = () => {
+  const { t } = useLanguage();
   const steps = [
-    { id: 'personal', title: 'Personal Information', icon: 'Person' },
-    { id: 'address', title: 'Address Details', icon: 'Home' },
-    { id: 'family', title: 'Family Details', icon: 'Group' },
-    { id: 'economic', title: 'Economic Details', icon: 'MonetizationOn' },
-    { id: 'documents', title: 'Documents', icon: 'Description' }
+    { id: 'personal', title: t('forms.bplCertificate.step1'), icon: 'Person' },
+    { id: 'address', title: t('forms.bplCertificate.step2'), icon: 'Home' },
+    { id: 'family', title: t('forms.bplCertificate.step3'), icon: 'Group' },
+    { id: 'economic', title: t('forms.bplCertificate.step4'), icon: 'MonetizationOn' },
+    { id: 'documents', title: t('forms.bplCertificate.step5'), icon: 'Description' }
   ];
 
   const validationRules = {
@@ -664,7 +671,7 @@ const BPLCertificateForm = () => {
 
   return (
     <MultiStepForm
-      serviceName="BPL (Below Poverty Line) Certificate Application"
+      serviceName={t('forms.bplCertificate.title')}
       serviceType="bpl_certificate"
       steps={steps}
       validationRules={validationRules}

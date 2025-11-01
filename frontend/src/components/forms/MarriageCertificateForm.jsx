@@ -20,9 +20,11 @@ import MultiStepForm from './MultiStepForm';
 import DocumentUpload from '../common/DocumentUpload';
 import { calculateAge, validateField, autoCorrect, validateMarriageAge } from '../../utils/formValidation';
 import { getStates, getDistrictsByState } from '../../data/stateDistrictData';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 // Bride Information Step
 const BrideInformationStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     let correctedValue = value;
     
@@ -55,21 +57,21 @@ const BrideInformationStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Bride Information
+        {t('forms.marriageCertificate.brideInformation')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Please provide complete details of the bride
+        {t('forms.marriageCertificate.provideBrideDetails')}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Bride's Full Name *"
+            label={t('forms.marriageCertificate.brideFullName')}
             value={formData.brideName || ''}
             onChange={(e) => handleChange('brideName', e.target.value)}
             error={!!errors.brideName}
-            helperText={errors.brideName || 'Full name as per ID proof'}
+            helperText={errors.brideName}
             inputProps={{ maxLength: 50, pattern: '[A-Za-z\\s\']{2,50}' }}
           />
         </Grid>
@@ -77,7 +79,7 @@ const BrideInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Bride's Father Name *"
+            label={t('forms.marriageCertificate.brideFatherName')}
             value={formData.brideFatherName || ''}
             onChange={(e) => handleChange('brideFatherName', e.target.value)}
             error={!!errors.brideFatherName}
@@ -89,7 +91,7 @@ const BrideInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DatePicker
-              label="Bride's Date of Birth *"
+              label={t('forms.marriageCertificate.brideDateOfBirth')}
               value={formData.brideDateOfBirth || null}
               onChange={(value) => handleChange('brideDateOfBirth', value)}
               renderInput={(params) => (
@@ -109,21 +111,21 @@ const BrideInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Bride's Age"
+            label={t('forms.marriageCertificate.brideAge')}
             value={formData.brideAge || ''}
             InputProps={{ readOnly: true }}
-            helperText="Auto-calculated from date of birth"
+            helperText={t('forms.deathCertificate.autoCalculated')}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Bride's Mobile Number *"
+            label={t('forms.marriageCertificate.brideMobile')}
             value={formData.brideMobile || ''}
             onChange={(e) => handleChange('brideMobile', e.target.value)}
             error={!!errors.brideMobile}
-            helperText={errors.brideMobile || '10-digit mobile number'}
+            helperText={errors.brideMobile}
             inputProps={{ maxLength: 10, pattern: '[6-9][0-9]{9}' }}
           />
         </Grid>
@@ -131,11 +133,11 @@ const BrideInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Bride's Aadhaar Number *"
+            label={t('forms.marriageCertificate.brideAadhaar')}
             value={formData.brideAadhaar || ''}
             onChange={(e) => handleChange('brideAadhaar', e.target.value)}
             error={!!errors.brideAadhaar}
-            helperText={errors.brideAadhaar || '12-digit Aadhaar number'}
+            helperText={errors.brideAadhaar}
             inputProps={{ maxLength: 12, pattern: '[0-9]{12}' }}
           />
         </Grid>
@@ -145,11 +147,11 @@ const BrideInformationStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={2}
-            label="Bride's Address *"
+            label={t('forms.marriageCertificate.brideAddress')}
             value={formData.brideAddress || ''}
             onChange={(e) => handleChange('brideAddress', e.target.value)}
             error={!!errors.brideAddress}
-            helperText={errors.brideAddress || 'Complete address of bride'}
+            helperText={errors.brideAddress}
             inputProps={{ minLength: 10, maxLength: 200 }}
           />
         </Grid>
@@ -160,6 +162,7 @@ const BrideInformationStep = ({ formData, updateFormData, errors }) => {
 
 // Groom Information Step
 const GroomInformationStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     let correctedValue = value;
     
@@ -192,21 +195,21 @@ const GroomInformationStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Groom Information
+        {t('forms.marriageCertificate.groomInformation')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Please provide complete details of the groom
+        {t('forms.marriageCertificate.provideGroomDetails')}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Groom's Full Name *"
+            label={t('forms.marriageCertificate.groomFullName')}
             value={formData.groomName || ''}
             onChange={(e) => handleChange('groomName', e.target.value)}
             error={!!errors.groomName}
-            helperText={errors.groomName || 'Full name as per ID proof'}
+            helperText={errors.groomName}
             inputProps={{ maxLength: 50, pattern: '[A-Za-z\\s\']{2,50}' }}
           />
         </Grid>
@@ -214,7 +217,7 @@ const GroomInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Groom's Father Name *"
+            label={t('forms.marriageCertificate.groomFatherName')}
             value={formData.groomFatherName || ''}
             onChange={(e) => handleChange('groomFatherName', e.target.value)}
             error={!!errors.groomFatherName}
@@ -226,7 +229,7 @@ const GroomInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DatePicker
-              label="Groom's Date of Birth *"
+              label={t('forms.marriageCertificate.groomDateOfBirth')}
               value={formData.groomDateOfBirth || null}
               onChange={(value) => handleChange('groomDateOfBirth', value)}
               renderInput={(params) => (
@@ -246,21 +249,21 @@ const GroomInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Groom's Age"
+            label={t('forms.marriageCertificate.groomAge')}
             value={formData.groomAge || ''}
             InputProps={{ readOnly: true }}
-            helperText="Auto-calculated from date of birth"
+            helperText={t('forms.deathCertificate.autoCalculated')}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Groom's Mobile Number *"
+            label={t('forms.marriageCertificate.groomMobile')}
             value={formData.groomMobile || ''}
             onChange={(e) => handleChange('groomMobile', e.target.value)}
             error={!!errors.groomMobile}
-            helperText={errors.groomMobile || '10-digit mobile number'}
+            helperText={errors.groomMobile}
             inputProps={{ maxLength: 10, pattern: '[6-9][0-9]{9}' }}
           />
         </Grid>
@@ -268,11 +271,11 @@ const GroomInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Groom's Aadhaar Number *"
+            label={t('forms.marriageCertificate.groomAadhaar')}
             value={formData.groomAadhaar || ''}
             onChange={(e) => handleChange('groomAadhaar', e.target.value)}
             error={!!errors.groomAadhaar}
-            helperText={errors.groomAadhaar || '12-digit Aadhaar number'}
+            helperText={errors.groomAadhaar}
             inputProps={{ maxLength: 12, pattern: '[0-9]{12}' }}
           />
         </Grid>
@@ -282,11 +285,11 @@ const GroomInformationStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={2}
-            label="Groom's Address *"
+            label={t('forms.marriageCertificate.groomAddress')}
             value={formData.groomAddress || ''}
             onChange={(e) => handleChange('groomAddress', e.target.value)}
             error={!!errors.groomAddress}
-            helperText={errors.groomAddress || 'Complete address of groom'}
+            helperText={errors.groomAddress}
             inputProps={{ minLength: 10, maxLength: 200 }}
           />
         </Grid>
@@ -297,6 +300,7 @@ const GroomInformationStep = ({ formData, updateFormData, errors }) => {
 
 // Marriage Details Step
 const MarriageDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const states = getStates();
   const districts = formData.marriageState ? getDistrictsByState(formData.marriageState) : [];
 
@@ -334,17 +338,17 @@ const MarriageDetailsStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Marriage Details
+        {t('forms.marriageCertificate.marriageDetails')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Provide details about the marriage ceremony
+        {t('forms.marriageCertificate.provideMarriageDetails')}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DatePicker
-              label="Date of Marriage *"
+              label={t('forms.marriageCertificate.dateOfMarriage')}
               value={formData.marriageDate || null}
               onChange={(value) => handleChange('marriageDate', value)}
               renderInput={(params) => (
@@ -363,21 +367,21 @@ const MarriageDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Place of Marriage *"
+            label={t('forms.marriageCertificate.placeOfMarriage')}
             value={formData.marriagePlace || ''}
             onChange={(e) => handleChange('marriagePlace', e.target.value)}
             error={!!errors.marriagePlace}
-            helperText={errors.marriagePlace || 'Venue where marriage took place'}
+            helperText={errors.marriagePlace || t('forms.marriageCertificate.exactPlace')}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.marriageState}>
-            <InputLabel>State of Marriage *</InputLabel>
+            <InputLabel>{t('forms.marriageCertificate.stateOfMarriage')}</InputLabel>
             <Select
               value={formData.marriageState || ''}
               onChange={(e) => handleChange('marriageState', e.target.value)}
-              label="State of Marriage *"
+              label={t('forms.marriageCertificate.stateOfMarriage')}
             >
               {states.map(state => (
                 <MenuItem key={state} value={state}>{state}</MenuItem>
@@ -388,11 +392,11 @@ const MarriageDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.marriageDistrict}>
-            <InputLabel>District of Marriage *</InputLabel>
+            <InputLabel>{t('forms.marriageCertificate.districtOfMarriage')}</InputLabel>
             <Select
               value={formData.marriageDistrict || ''}
               onChange={(e) => handleChange('marriageDistrict', e.target.value)}
-              label="District of Marriage *"
+              label={t('forms.marriageCertificate.districtOfMarriage')}
               disabled={!formData.marriageState}
             >
               {districts.map(district => (
@@ -404,7 +408,7 @@ const MarriageDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom>
-            Type of Marriage *
+            {t('forms.marriageCertificate.marriageType')}
           </Typography>
           <RadioGroup
             value={formData.marriageType || ''}
@@ -422,7 +426,7 @@ const MarriageDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12}>
           <TextField
             fullWidth
-            label="Witness 1 Name *"
+            label={t('forms.marriageCertificate.witness1Name')}
             value={formData.witness1Name || ''}
             onChange={(e) => handleChange('witness1Name', e.target.value)}
             error={!!errors.witness1Name}
@@ -434,7 +438,7 @@ const MarriageDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12}>
           <TextField
             fullWidth
-            label="Witness 2 Name *"
+            label={t('forms.marriageCertificate.witness2Name')}
             value={formData.witness2Name || ''}
             onChange={(e) => handleChange('witness2Name', e.target.value)}
             error={!!errors.witness2Name}
@@ -449,6 +453,7 @@ const MarriageDetailsStep = ({ formData, updateFormData, errors }) => {
 
 // Documents Step
 const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
+  const { t } = useLanguage();
   const requiredDocuments = [
     'Marriage invitation card',
     'Marriage photographs',
@@ -466,10 +471,10 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
   return (
     <Box>
       <Typography variant="h6" gutterBottom color="primary">
-        Document Upload
+        {t('forms.marriageCertificate.documentUpload')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Please upload all required documents for marriage certificate
+        {t('forms.marriageCertificate.uploadAllDocs')}
       </Typography>
 
       <DocumentUpload
@@ -483,7 +488,7 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
       
       <Box sx={{ mt: 3 }}>
         <Typography variant="subtitle2" gutterBottom>
-          Required Documents:
+          {t('forms.common.requiredDocuments')}:
         </Typography>
         <ul style={{ margin: 0, paddingLeft: 20 }}>
           {requiredDocuments.map((doc, index) => (
@@ -497,11 +502,12 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
 
 // Main Form Component
 const MarriageCertificateForm = () => {
+  const { t } = useLanguage();
   const steps = [
-    { id: 'bride', title: 'Bride Information', icon: 'Person' },
-    { id: 'groom', title: 'Groom Information', icon: 'Person' },
-    { id: 'marriage', title: 'Marriage Details', icon: 'Favorite' },
-    { id: 'documents', title: 'Documents', icon: 'Description' }
+    { id: 'bride', title: t('forms.marriageCertificate.step1'), icon: 'Person' },
+    { id: 'groom', title: t('forms.marriageCertificate.step2'), icon: 'Person' },
+    { id: 'marriage', title: t('forms.marriageCertificate.step3'), icon: 'Favorite' },
+    { id: 'documents', title: t('forms.marriageCertificate.step4'), icon: 'Description' }
   ];
 
   const validationRules = {
@@ -533,7 +539,7 @@ const MarriageCertificateForm = () => {
 
   return (
     <MultiStepForm
-      serviceName="Marriage Certificate Application"
+      serviceName={t('forms.marriageCertificate.title')}
       serviceType="marriage_certificate"
       steps={steps}
       validationRules={validationRules}

@@ -101,6 +101,168 @@ export const SERVICE_CATEGORIES = {
     fee: 2000,
     priority: PRIORITY_LEVELS.MEDIUM,
     requiredDocuments: ['Site Plan', 'Building Plan', 'Land Documents', 'NOC']
+  },
+  'water-connection': { 
+    category: 'Utilities', 
+    processingDays: 21, 
+    fee: 1500,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Property Documents', 'ID Proof', 'Address Proof', 'Site Plan', 'NOC from Society']
+  },
+  'street-light-installation': { 
+    category: 'Infrastructure', 
+    processingDays: 30, 
+    fee: 0,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Location Photos', 'Site Sketch', 'Resident Approval', 'Safety Assessment']
+  },
+  'domicile-certificate': { 
+    category: 'Civil Registration', 
+    processingDays: 15, 
+    fee: 50,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Birth Certificate', 'School Records', 'Residence Proof', 'Affidavit']
+  },
+  // Additional service types with underscore naming
+  'birth_certificate': { 
+    category: 'Civil Registration', 
+    processingDays: 7, 
+    fee: 50,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Hospital Certificate', 'Parent ID Proof', 'Address Proof']
+  },
+  'death_certificate': { 
+    category: 'Civil Registration', 
+    processingDays: 5, 
+    fee: 50,
+    priority: PRIORITY_LEVELS.HIGH,
+    requiredDocuments: ['Death Certificate from Hospital', 'ID Proof', 'Address Proof']
+  },
+  'marriage_certificate': { 
+    category: 'Civil Registration', 
+    processingDays: 10, 
+    fee: 100,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Marriage Proof', 'Age Proof', 'Witness Documents']
+  },
+  'income_certificate': { 
+    category: 'Social Welfare', 
+    processingDays: 15, 
+    fee: 30,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Salary Certificate', 'Bank Statements', 'ID Proof']
+  },
+  'caste_certificate': { 
+    category: 'Social Welfare', 
+    processingDays: 30, 
+    fee: 30,
+    priority: PRIORITY_LEVELS.LOW,
+    requiredDocuments: ['Parent Caste Certificate', 'School Records', 'Community Verification']
+  },
+  'bpl_certificate': { 
+    category: 'Social Welfare', 
+    processingDays: 30, 
+    fee: 0,
+    priority: PRIORITY_LEVELS.HIGH,
+    requiredDocuments: ['Income Proof', 'Asset Declaration', 'Family Details']
+  },
+  'domicile_certificate': { 
+    category: 'Civil Registration', 
+    processingDays: 15, 
+    fee: 50,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Birth Certificate', 'School Records', 'Residence Proof', 'Affidavit']
+  },
+  'agricultural_subsidy': { 
+    category: 'Agriculture', 
+    processingDays: 60, 
+    fee: 0,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Land Records', 'Farmer ID', 'Bank Details', 'Project Report']
+  },
+  'building_permission': { 
+    category: 'Business Services', 
+    processingDays: 45, 
+    fee: 2000,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Site Plan', 'Building Plan', 'Land Documents', 'NOC']
+  },
+  'street_light_installation': { 
+    category: 'Infrastructure', 
+    processingDays: 30, 
+    fee: 0,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Location Photos', 'Site Sketch', 'Resident Approval', 'Safety Assessment']
+  },
+  'health-certificate': { 
+    category: 'Health Services', 
+    processingDays: 10, 
+    fee: 100,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Medical Records', 'ID Proof', 'Address Proof', 'Medical Test Reports']
+  },
+  'vaccination_certificate': { 
+    category: 'Health Services', 
+    processingDays: 7, 
+    fee: 50,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Vaccination Records', 'ID Proof', 'Medical History']
+  },
+  'trade-license': { 
+    category: 'Business Services', 
+    processingDays: 30, 
+    fee: 1000,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Business Plan', 'Property Documents', 'ID Proof', 'NOC']
+  },
+  'scholarship': { 
+    category: 'Education', 
+    processingDays: 45, 
+    fee: 0,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Academic Records', 'Income Certificate', 'Caste Certificate', 'Bank Details']
+  },
+  'school_transfer_certificate': { 
+    category: 'Education', 
+    processingDays: 15, 
+    fee: 100,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Previous School Records', 'Transfer Request', 'ID Proof', 'Address Proof']
+  },
+  'property_tax_payment': { 
+    category: 'Revenue', 
+    processingDays: 1, 
+    fee: 0,
+    priority: PRIORITY_LEVELS.HIGH,
+    requiredDocuments: ['Property Documents', 'Previous Tax Receipts', 'ID Proof']
+  },
+  'property_tax_assessment': { 
+    category: 'Revenue', 
+    processingDays: 21, 
+    fee: 500,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Property Documents', 'Construction Details', 'Site Plan', 'Ownership Proof']
+  },
+  'water_tax_payment': { 
+    category: 'Utilities', 
+    processingDays: 1, 
+    fee: 0,
+    priority: PRIORITY_LEVELS.HIGH,
+    requiredDocuments: ['Water Connection Details', 'Previous Bills', 'ID Proof']
+  },
+  'drainage_connection': { 
+    category: 'Utilities', 
+    processingDays: 30, 
+    fee: 2000,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Property Documents', 'Site Plan', 'NOC', 'Technical Drawings']
+  },
+  'crop_insurance': { 
+    category: 'Agriculture', 
+    processingDays: 30, 
+    fee: 0,
+    priority: PRIORITY_LEVELS.MEDIUM,
+    requiredDocuments: ['Land Records', 'Crop Details', 'Farmer ID', 'Bank Details']
   }
 };
 
@@ -165,8 +327,9 @@ export const submitApplication = async (applicationData, userId, serviceType) =>
       applicantEmail: applicationData.email || '',
       applicantPhone: applicationData.mobile || applicationData.phone || '',
       
-      // Application Data
-      formData: applicationData,
+      // Application Data - Store in both fields for compatibility
+      applicationData: applicationData, // Primary field for new applications
+      formData: applicationData,        // Backup field for compatibility
       status: APPLICATION_STATUS.SUBMITTED,
       priority: serviceConfig.priority,
       
@@ -216,11 +379,12 @@ export const submitApplication = async (applicationData, userId, serviceType) =>
     await updateApplicationStats(serviceType, 'submitted');
     
     // Send confirmation notification
-    await sendNotification(userId, {
+    await sendNotification({
+      userId,
       title: 'Application Submitted Successfully',
       message: `Your ${getServiceDisplayName(serviceType)} application has been submitted. Application ID: ${applicationId}`,
       type: 'success',
-      applicationId
+      metadata: { applicationId }
     });
 
     // Auto-assign to appropriate department/staff
@@ -247,34 +411,93 @@ export const getUserApplications = async (userId) => {
   try {
     console.log('🔍 getUserApplications called with userId:', userId);
     
-    // Try query without orderBy first to avoid index issues
-    const applicationsQuery = query(
-      collection(db, 'applications'),
-      where('userId', '==', userId)
-    );
-
-    console.log('📋 Executing Firestore query...');
-    const snapshot = await getDocs(applicationsQuery);
-    console.log('📊 Query result:', snapshot.size, 'documents found');
+    if (!userId) {
+      console.log('❌ No userId provided');
+      return [];
+    }
     
-    const applications = snapshot.docs.map(doc => {
+    // Try multiple query approaches to handle different data structures
+    const applicationsCollection = collection(db, 'applications');
+    
+    // Query 1: Try with 'userId' field
+    console.log('📋 Trying query with userId field...');
+    const query1 = query(applicationsCollection, where('userId', '==', userId));
+    const snapshot1 = await getDocs(query1);
+    console.log('📊 Query 1 result (userId):', snapshot1.size, 'documents found');
+    
+    // Query 2: Try with 'user_id' field (alternative naming)
+    console.log('📋 Trying query with user_id field...');
+    const query2 = query(applicationsCollection, where('user_id', '==', userId));
+    const snapshot2 = await getDocs(query2);
+    console.log('📊 Query 2 result (user_id):', snapshot2.size, 'documents found');
+    
+    // Combine results from both queries and remove duplicates
+    const allDocs = [...snapshot1.docs, ...snapshot2.docs];
+    const uniqueDocs = allDocs.filter((doc, index, self) => 
+      index === self.findIndex(d => d.id === doc.id)
+    );
+    
+    console.log('📊 Total unique applications found:', uniqueDocs.length);
+    
+    if (uniqueDocs.length === 0) {
+      console.log('📊 No applications found for user:', userId);
+      return [];
+    }
+    
+    const applications = uniqueDocs.map(doc => {
       const data = doc.data();
-      console.log('📄 Application doc:', doc.id, data);
+      console.log('📄 Processing application doc:', doc.id, {
+        serviceType: data.serviceType,
+        status: data.status,
+        userId: data.userId,
+        user_id: data.user_id,
+        hasApplicationData: !!data.applicationData,
+        hasFormData: !!data.formData,
+        createdAt: data.createdAt,
+        submittedAt: data.submittedAt
+      });
+      
       return {
         id: doc.id,
         ...data,
-        submittedAt: data.submittedAt?.toDate() || new Date(),
-        expectedCompletion: data.expectedCompletion?.toDate() || new Date(),
-        actualCompletion: data.actualCompletion?.toDate() || null,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date()
+        // Handle different timestamp field names and formats
+        submittedAt: data.submittedAt?.toDate ? data.submittedAt.toDate() : 
+                    data.submitted_at?.toDate ? data.submitted_at.toDate() :
+                    data.createdAt?.toDate ? data.createdAt.toDate() :
+                    new Date(),
+        expectedCompletion: data.expectedCompletion?.toDate ? data.expectedCompletion.toDate() : 
+                           data.expected_completion?.toDate ? data.expected_completion.toDate() :
+                           new Date(),
+        actualCompletion: data.actualCompletion?.toDate ? data.actualCompletion.toDate() : 
+                         data.actual_completion?.toDate ? data.actual_completion.toDate() :
+                         null,
+        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : 
+                  data.created_at?.toDate ? data.created_at.toDate() :
+                  new Date(),
+        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : 
+                  data.updated_at?.toDate ? data.updated_at.toDate() :
+                  new Date(),
+        // Ensure we have the application data in a consistent format
+        applicationData: data.applicationData || data.formData || data.form_data || {},
+        // Ensure we have a consistent status format
+        status: data.status || 'pending'
       };
     });
 
     // Sort by submittedAt in JavaScript instead of Firestore
     applications.sort((a, b) => b.submittedAt - a.submittedAt);
     
-    console.log('✅ Returning', applications.length, 'applications');
+    console.log('✅ Returning', applications.length, 'applications for user:', userId);
+    applications.forEach((app, index) => {
+      console.log(`📄 Application ${index + 1}:`, {
+        id: app.id,
+        serviceType: app.serviceType,
+        status: app.status,
+        submittedAt: app.submittedAt,
+        hasApplicationData: !!app.applicationData && Object.keys(app.applicationData).length > 0
+      });
+    });
+    
     return applications;
   } catch (error) {
     console.error('❌ Error fetching user applications:', error);
@@ -393,11 +616,12 @@ export const updateApplicationStatus = async (applicationId, newStatus, updatedB
     const userId = currentData.userId || currentData.applicantId;
     if (userId) {
       try {
-        await sendNotification(userId, {
+        await sendNotification({
+          userId,
           title: `Application ${newStatus.replace('_', ' ').toUpperCase()}`,
           message: `Your ${currentData.serviceName || currentData.serviceType} application status has been updated to ${newStatus}. ${remarks}`,
           type: getNotificationType(newStatus),
-          applicationId: currentData.applicationId || applicationId
+          metadata: { applicationId: currentData.applicationId || applicationId }
         });
       } catch (notifError) {
         console.error('Error sending notification:', notifError);
@@ -448,11 +672,12 @@ const autoAssignApplication = async (applicationDocId, serviceType, category) =>
       });
 
       // Notify assigned staff
-      await sendNotification(randomStaff.id, {
+      await sendNotification({
+        userId: randomStaff.id,
         title: 'New Application Assigned',
         message: `A new ${getServiceDisplayName(serviceType)} application has been assigned to you.`,
         type: 'info',
-        applicationId: applicationDocId
+        metadata: { applicationId: applicationDocId }
       });
     }
   } catch (error) {

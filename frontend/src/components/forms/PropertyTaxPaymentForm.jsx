@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Grid,
@@ -14,61 +14,67 @@ import {
   RadioGroup,
   Alert,
   Chip,
-  Divider
-} from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import MultiStepForm from './MultiStepForm';
-import DocumentUpload from '../common/DocumentUpload';
-import { validateField, autoCorrect } from '../../utils/formValidation';
-import { getStates, getDistrictsByState } from '../../data/stateDistrictData';
+  Divider,
+} from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import MultiStepForm from "./MultiStepForm";
+import DocumentUpload from "../common/DocumentUpload";
+import { validateField, autoCorrect } from "../../utils/formValidation";
+import { getStates, getDistrictsByState } from "../../data/stateDistrictData";
+import { useLanguage } from "../../i18n/LanguageProvider";
 
 // Property Details Step
 const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
+
   const handleChange = (field, value) => {
     let correctedValue = value;
-    
-    if (field === 'propertyId') {
+
+    if (field === "propertyId") {
       correctedValue = value.toUpperCase();
-    } else if (field === 'ownerName') {
+    } else if (field === "ownerName") {
       correctedValue = autoCorrect.name(value);
     }
-    
+
     updateFormData({ [field]: correctedValue });
   };
 
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Property Information
+        {t("forms.propertyTaxPayment.propertyInfo.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Enter your property details for tax payment
+        {t("forms.propertyTaxPayment.propertyInfo.subtitle")}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Property ID/Assessment Number *"
-            value={formData.propertyId || ''}
-            onChange={(e) => handleChange('propertyId', e.target.value)}
+            label={t("forms.propertyTaxPayment.propertyInfo.propertyNumber")}
+            value={formData.propertyId || ""}
+            onChange={(e) => handleChange("propertyId", e.target.value)}
             error={!!errors.propertyId}
-            helperText={errors.propertyId || 'Property assessment number from tax records'}
-            inputProps={{ maxLength: 20, pattern: '[A-Za-z0-9\\-]{5,20}' }}
+            helperText={
+              errors.propertyId ||
+              t("forms.propertyTaxPayment.propertyInfo.propertyNumberHelper")
+            }
+            inputProps={{ maxLength: 20, pattern: "[A-Za-z0-9\\-]{5,20}" }}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Property Owner Name *"
-            value={formData.ownerName || ''}
-            onChange={(e) => handleChange('ownerName', e.target.value)}
+            label={t("forms.propertyTaxPayment.propertyInfo.ownerName")}
+            value={formData.ownerName || ""}
+            onChange={(e) => handleChange("ownerName", e.target.value)}
             error={!!errors.ownerName}
-            helperText={errors.ownerName || 'Name as per property documents'}
-            inputProps={{ maxLength: 50, pattern: '[A-Za-z\\s\']{2,50}' }}
+            helperText={errors.ownerName}
+            inputProps={{ maxLength: 50, pattern: "[A-Za-z\\s']{2,50}" }}
           />
         </Grid>
 
@@ -77,28 +83,38 @@ const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={3}
-            label="Property Address *"
-            value={formData.propertyAddress || ''}
-            onChange={(e) => handleChange('propertyAddress', e.target.value)}
+            label={t("forms.propertyTaxPayment.propertyInfo.propertyAddress")}
+            value={formData.propertyAddress || ""}
+            onChange={(e) => handleChange("propertyAddress", e.target.value)}
             error={!!errors.propertyAddress}
-            helperText={errors.propertyAddress || 'Complete property address'}
+            helperText={errors.propertyAddress}
             inputProps={{ minLength: 10, maxLength: 200 }}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.propertyType}>
-            <InputLabel>Property Type *</InputLabel>
+            <InputLabel>{t("forms.waterConnection.propertyType")}</InputLabel>
             <Select
-              value={formData.propertyType || ''}
-              onChange={(e) => handleChange('propertyType', e.target.value)}
-              label="Property Type *"
+              value={formData.propertyType || ""}
+              onChange={(e) => handleChange("propertyType", e.target.value)}
+              label={t("forms.waterConnection.propertyType")}
             >
-              <MenuItem value="Residential">Residential</MenuItem>
-              <MenuItem value="Commercial">Commercial</MenuItem>
-              <MenuItem value="Industrial">Industrial</MenuItem>
-              <MenuItem value="Agricultural">Agricultural</MenuItem>
-              <MenuItem value="Vacant Land">Vacant Land</MenuItem>
+              <MenuItem value="Residential">
+                {t("forms.waterConnection.residential")}
+              </MenuItem>
+              <MenuItem value="Commercial">
+                {t("forms.waterConnection.commercial")}
+              </MenuItem>
+              <MenuItem value="Industrial">
+                {t("forms.waterConnection.industrial")}
+              </MenuItem>
+              <MenuItem value="Agricultural">
+                {t("forms.waterConnection.agricultural")}
+              </MenuItem>
+              <MenuItem value="Vacant Land">
+                {t("forms.waterConnection.vacantLand")}
+              </MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -106,24 +122,30 @@ const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Built-up Area (sq ft) *"
+            label={t("forms.propertyTaxPayment.propertyInfo.builtUpArea")}
             type="number"
-            value={formData.builtUpArea || ''}
-            onChange={(e) => handleChange('builtUpArea', e.target.value)}
+            value={formData.builtUpArea || ""}
+            onChange={(e) => handleChange("builtUpArea", e.target.value)}
             error={!!errors.builtUpArea}
-            helperText={errors.builtUpArea || 'Total built-up area in square feet'}
-            inputProps={{ min: 1, max: 999999, pattern: '^\\d{1,6}(\\.\\d{1,2})?$' }}
+            helperText={
+              errors.builtUpArea || t("forms.propertyTaxPayment.propertyInfo.builtUpAreaHelper")
+            }
+            inputProps={{
+              min: 1,
+              max: 999999,
+              pattern: "^\\d{1,6}(\\.\\d{1,2})?$",
+            }}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Plot Area (sq ft)"
+            label={t("forms.propertyTaxPayment.propertyInfo.plotArea")}
             type="number"
-            value={formData.plotArea || ''}
-            onChange={(e) => handleChange('plotArea', e.target.value)}
-            helperText="Total plot area in square feet"
+            value={formData.plotArea || ""}
+            onChange={(e) => handleChange("plotArea", e.target.value)}
+            helperText={t("forms.propertyTaxPayment.propertyInfo.plotAreaHelper")}
             inputProps={{ min: 1, max: 999999 }}
           />
         </Grid>
@@ -131,11 +153,11 @@ const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Number of Floors"
+            label={t("forms.propertyTaxPayment.propertyInfo.numberOfFloors")}
             type="number"
-            value={formData.numberOfFloors || ''}
-            onChange={(e) => handleChange('numberOfFloors', e.target.value)}
-            helperText="Total number of floors"
+            value={formData.numberOfFloors || ""}
+            onChange={(e) => handleChange("numberOfFloors", e.target.value)}
+            helperText={t("forms.propertyTaxPayment.propertyInfo.numberOfFloorsHelper")}
             inputProps={{ min: 1, max: 50 }}
           />
         </Grid>
@@ -146,6 +168,8 @@ const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
 
 // Tax Calculation Step
 const TaxCalculationStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
+
   const [taxDetails, setTaxDetails] = React.useState({
     basicTax: 0,
     waterTax: 0,
@@ -153,7 +177,7 @@ const TaxCalculationStep = ({ formData, updateFormData, errors }) => {
     lightingTax: 0,
     educationCess: 0,
     penalty: 0,
-    total: 0
+    total: 0,
   });
 
   React.useEffect(() => {
@@ -163,16 +187,16 @@ const TaxCalculationStep = ({ formData, updateFormData, errors }) => {
       let ratePerSqFt = 0;
 
       switch (formData.propertyType) {
-        case 'Residential':
+        case "Residential":
           ratePerSqFt = 2;
           break;
-        case 'Commercial':
+        case "Commercial":
           ratePerSqFt = 5;
           break;
-        case 'Industrial':
+        case "Industrial":
           ratePerSqFt = 8;
           break;
-        case 'Agricultural':
+        case "Agricultural":
           ratePerSqFt = 1;
           break;
         default:
@@ -185,7 +209,13 @@ const TaxCalculationStep = ({ formData, updateFormData, errors }) => {
       const lightingTax = basicTax * 0.03;
       const educationCess = basicTax * 0.02;
       const penalty = formData.isDelayed ? basicTax * 0.1 : 0;
-      const total = basicTax + waterTax + sewerageTax + lightingTax + educationCess + penalty;
+      const total =
+        basicTax +
+        waterTax +
+        sewerageTax +
+        lightingTax +
+        educationCess +
+        penalty;
 
       const calculated = {
         basicTax: Math.round(basicTax),
@@ -194,7 +224,7 @@ const TaxCalculationStep = ({ formData, updateFormData, errors }) => {
         lightingTax: Math.round(lightingTax),
         educationCess: Math.round(educationCess),
         penalty: Math.round(penalty),
-        total: Math.round(total)
+        total: Math.round(total),
       };
 
       setTaxDetails(calculated);
@@ -209,20 +239,20 @@ const TaxCalculationStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Tax Calculation
+        {t("forms.propertyTaxPayment.taxDetails.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Review your property tax calculation
+        {t("forms.propertyTaxPayment.taxDetails.subtitle")}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.financialYear}>
-            <InputLabel>Financial Year *</InputLabel>
+            <InputLabel>{t("forms.propertyTaxPayment.taxDetails.financialYear")}</InputLabel>
             <Select
-              value={formData.financialYear || ''}
-              onChange={(e) => handleChange('financialYear', e.target.value)}
-              label="Financial Year *"
+              value={formData.financialYear || ""}
+              onChange={(e) => handleChange("financialYear", e.target.value)}
+              label={t("forms.propertyTaxPayment.taxDetails.financialYear")}
             >
               <MenuItem value="2023-24">2023-24</MenuItem>
               <MenuItem value="2024-25">2024-25</MenuItem>
@@ -233,67 +263,85 @@ const TaxCalculationStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12} md={6}>
           <Typography variant="subtitle1" gutterBottom>
-            Is this a delayed payment? *
+            {t("forms.propertyTaxPayment.taxDetails.isDelayedPayment")}
           </Typography>
           <RadioGroup
-            value={formData.isDelayed || 'no'}
-            onChange={(e) => handleChange('isDelayed', e.target.value === 'yes')}
+            value={formData.isDelayed || "no"}
+            onChange={(e) =>
+              handleChange("isDelayed", e.target.value === "yes")
+            }
             row
           >
-            <FormControlLabel value="no" control={<Radio />} label="No" />
-            <FormControlLabel value="yes" control={<Radio />} label="Yes (Penalty applicable)" />
+            <FormControlLabel value="no" control={<Radio />} label={t("common.no")} />
+            <FormControlLabel
+              value="yes"
+              control={<Radio />}
+              label={t("forms.propertyTaxPayment.taxDetails.yesWithPenalty")}
+            />
           </RadioGroup>
         </Grid>
 
         <Grid item xs={12}>
           <Paper variant="outlined" sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>
-              Tax Breakdown
+              {t("forms.propertyTaxPayment.taxDetails.taxBreakdown")}
             </Typography>
-            
+
             <Grid container spacing={2}>
               <Grid item xs={6}>
-                <Typography>Basic Property Tax:</Typography>
+                <Typography>{t("forms.propertyTaxPayment.taxDetails.basicPropertyTax")}:</Typography>
               </Grid>
               <Grid item xs={6}>
-                <Typography align="right">₹{taxDetails.basicTax.toLocaleString()}</Typography>
-              </Grid>
-
-              <Grid item xs={6}>
-                <Typography>Water Tax (10%):</Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography align="right">₹{taxDetails.waterTax.toLocaleString()}</Typography>
+                <Typography align="right">
+                  ₹{taxDetails.basicTax.toLocaleString()}
+                </Typography>
               </Grid>
 
               <Grid item xs={6}>
-                <Typography>Sewerage Tax (5%):</Typography>
+                <Typography>{t("forms.propertyTaxPayment.taxDetails.waterTax")}:</Typography>
               </Grid>
               <Grid item xs={6}>
-                <Typography align="right">₹{taxDetails.sewerageTax.toLocaleString()}</Typography>
-              </Grid>
-
-              <Grid item xs={6}>
-                <Typography>Street Lighting Tax (3%):</Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography align="right">₹{taxDetails.lightingTax.toLocaleString()}</Typography>
+                <Typography align="right">
+                  ₹{taxDetails.waterTax.toLocaleString()}
+                </Typography>
               </Grid>
 
               <Grid item xs={6}>
-                <Typography>Education Cess (2%):</Typography>
+                <Typography>{t("forms.propertyTaxPayment.taxDetails.sewerageTax")}:</Typography>
               </Grid>
               <Grid item xs={6}>
-                <Typography align="right">₹{taxDetails.educationCess.toLocaleString()}</Typography>
+                <Typography align="right">
+                  ₹{taxDetails.sewerageTax.toLocaleString()}
+                </Typography>
+              </Grid>
+
+              <Grid item xs={6}>
+                <Typography>{t("forms.propertyTaxPayment.taxDetails.lightingTax")}:</Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography align="right">
+                  ₹{taxDetails.lightingTax.toLocaleString()}
+                </Typography>
+              </Grid>
+
+              <Grid item xs={6}>
+                <Typography>{t("forms.propertyTaxPayment.taxDetails.educationCess")}:</Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography align="right">
+                  ₹{taxDetails.educationCess.toLocaleString()}
+                </Typography>
               </Grid>
 
               {formData.isDelayed && (
                 <>
                   <Grid item xs={6}>
-                    <Typography color="error">Penalty (10%):</Typography>
+                    <Typography color="error">{t("forms.propertyTaxPayment.taxDetails.penalty")}:</Typography>
                   </Grid>
                   <Grid item xs={6}>
-                    <Typography align="right" color="error">₹{taxDetails.penalty.toLocaleString()}</Typography>
+                    <Typography align="right" color="error">
+                      ₹{taxDetails.penalty.toLocaleString()}
+                    </Typography>
                   </Grid>
                 </>
               )}
@@ -303,7 +351,9 @@ const TaxCalculationStep = ({ formData, updateFormData, errors }) => {
               </Grid>
 
               <Grid item xs={6}>
-                <Typography variant="h6" color="primary">Total Amount:</Typography>
+                <Typography variant="h6" color="primary">
+                  {t("forms.propertyTaxPayment.taxDetails.totalAmount")}:
+                </Typography>
               </Grid>
               <Grid item xs={6}>
                 <Typography variant="h6" color="primary" align="right">
@@ -318,7 +368,7 @@ const TaxCalculationStep = ({ formData, updateFormData, errors }) => {
           <Grid item xs={12}>
             <Alert severity="warning">
               <Typography variant="body2">
-                <strong>Late Payment Penalty:</strong> A penalty of 10% has been added to your tax amount due to delayed payment.
+                <strong>{t("forms.propertyTaxPayment.taxDetails.delayedPaymentPenalty")}:</strong> {t("forms.propertyTaxPayment.taxDetails.penaltyMessage")}
               </Typography>
             </Alert>
           </Grid>
@@ -330,81 +380,83 @@ const TaxCalculationStep = ({ formData, updateFormData, errors }) => {
 
 // Payment Details Step
 const PaymentDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
+
   const handleChange = (field, value) => {
     let correctedValue = value;
-    
-    if (field === 'payerName') {
+
+    if (field === "payerName") {
       correctedValue = autoCorrect.name(value);
-    } else if (field === 'mobile') {
+    } else if (field === "mobile") {
       correctedValue = autoCorrect.mobile(value);
     }
-    
+
     updateFormData({ [field]: correctedValue });
   };
 
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Payment Information
+        {t("forms.propertyTaxPayment.paymentDetails.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Provide payment details and contact information
+        {t("forms.propertyTaxPayment.paymentDetails.subtitle")}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Payer Name *"
-            value={formData.payerName || ''}
-            onChange={(e) => handleChange('payerName', e.target.value)}
+            label={t("forms.propertyTaxPayment.paymentDetails.payerName")}
+            value={formData.payerName || ""}
+            onChange={(e) => handleChange("payerName", e.target.value)}
             error={!!errors.payerName}
-            helperText={errors.payerName || 'Name of person making payment'}
-            inputProps={{ maxLength: 50, pattern: '[A-Za-z\\s\']{2,50}' }}
+            helperText={errors.payerName || t("forms.propertyTaxPayment.paymentDetails.payerNameHelper")}
+            inputProps={{ maxLength: 50, pattern: "[A-Za-z\\s']{2,50}" }}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Mobile Number *"
-            value={formData.mobile || ''}
-            onChange={(e) => handleChange('mobile', e.target.value)}
+            label={t("common.mobile")}
+            value={formData.mobile || ""}
+            onChange={(e) => handleChange("mobile", e.target.value)}
             error={!!errors.mobile}
-            helperText={errors.mobile || '10-digit mobile number'}
-            inputProps={{ maxLength: 10, pattern: '[6-9][0-9]{9}' }}
+            helperText={errors.mobile || t("common.mobileHelper")}
+            inputProps={{ maxLength: 10, pattern: "[6-9][0-9]{9}" }}
           />
         </Grid>
 
         <Grid item xs={12}>
           <FormControl fullWidth error={!!errors.paymentMethod}>
-            <InputLabel>Payment Method *</InputLabel>
+            <InputLabel>{t("forms.propertyTaxPayment.paymentDetails.paymentMethod")}</InputLabel>
             <Select
-              value={formData.paymentMethod || ''}
-              onChange={(e) => handleChange('paymentMethod', e.target.value)}
-              label="Payment Method *"
+              value={formData.paymentMethod || ""}
+              onChange={(e) => handleChange("paymentMethod", e.target.value)}
+              label={t("forms.propertyTaxPayment.paymentDetails.paymentMethod")}
             >
-              <MenuItem value="Online">Online Payment</MenuItem>
-              <MenuItem value="Cash">Cash Payment</MenuItem>
-              <MenuItem value="Cheque">Cheque Payment</MenuItem>
-              <MenuItem value="DD">Demand Draft</MenuItem>
+              <MenuItem value="Online">{t("forms.propertyTaxPayment.paymentDetails.onlinePayment")}</MenuItem>
+              <MenuItem value="Cash">{t("forms.propertyTaxPayment.paymentDetails.cashPayment")}</MenuItem>
+              <MenuItem value="Cheque">{t("forms.propertyTaxPayment.paymentDetails.chequePayment")}</MenuItem>
+              <MenuItem value="DD">{t("forms.propertyTaxPayment.paymentDetails.demandDraft")}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
         <Grid item xs={12}>
-          <Paper variant="outlined" sx={{ p: 2, bgcolor: 'primary.50' }}>
+          <Paper variant="outlined" sx={{ p: 2, bgcolor: "primary.50" }}>
             <Typography variant="h6" color="primary" gutterBottom>
-              Payment Summary
+              {t("forms.propertyTaxPayment.paymentDetails.paymentSummary")}
             </Typography>
             <Typography variant="body1">
-              Property ID: <strong>{formData.propertyId}</strong>
+              {t("forms.propertyTaxPayment.paymentDetails.propertyId")}: <strong>{formData.propertyId}</strong>
             </Typography>
             <Typography variant="body1">
-              Financial Year: <strong>{formData.financialYear}</strong>
+              {t("forms.propertyTaxPayment.taxDetails.financialYear")}: <strong>{formData.financialYear}</strong>
             </Typography>
             <Typography variant="h5" color="primary" sx={{ mt: 2 }}>
-              Total Amount: ₹{(formData.totalAmount || 0).toLocaleString()}
+              {t("forms.propertyTaxPayment.taxDetails.totalAmount")}: ₹{(formData.totalAmount || 0).toLocaleString()}
             </Typography>
           </Paper>
         </Grid>
@@ -412,8 +464,7 @@ const PaymentDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12}>
           <Alert severity="info">
             <Typography variant="body2">
-              <strong>Note:</strong> After successful payment, you will receive a payment receipt. 
-              Please keep this receipt for your records and future reference.
+              <strong>{t("forms.propertyTaxPayment.paymentDetails.note")}:</strong> {t("forms.propertyTaxPayment.paymentDetails.receiptMessage")}
             </Typography>
           </Alert>
         </Grid>
@@ -424,37 +475,38 @@ const PaymentDetailsStep = ({ formData, updateFormData, errors }) => {
 
 // Documents Step
 const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
-  const requiredDocuments = [
-    'Property ownership documents',
-    'Previous year tax receipt',
-    'Property assessment certificate',
-    'Identity proof of payer',
-    'Address proof',
-    'Power of attorney (if applicable)'
-  ];
+  const { t } = useLanguage();
 
+  const requiredDocuments = [
+    t("forms.propertyTaxPayment.documents.propertyOwnershipDocs"),
+    t("forms.propertyTaxPayment.documents.previousYearReceipt"),
+    t("forms.propertyTaxPayment.documents.propertyAssessmentCert"),
+    t("forms.propertyTaxPayment.documents.payerIdProof"),
+    t("forms.propertyTaxPayment.documents.addressProof"),
+    t("forms.propertyTaxPayment.documents.powerOfAttorney"),
+  ];
 
   return (
     <Box>
       <Typography variant="h6" gutterBottom color="primary">
-        Document Upload
+        {t("forms.propertyTaxPayment.documents.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Please upload supporting documents for property tax payment
+        {t("forms.propertyTaxPayment.documents.subtitle")}
       </Typography>
 
       <DocumentUpload
         documents={formData.documents || []}
         onDocumentsChange={(docs) => updateFormData({ documents: docs })}
         maxFiles={10}
-        acceptedTypes={['application/pdf', 'image/jpeg', 'image/png']}
+        acceptedTypes={["application/pdf", "image/jpeg", "image/png"]}
         maxSize={5 * 1024 * 1024} // 5MB
         applicationId={tempApplicationId}
       />
-      
+
       <Box sx={{ mt: 3 }}>
         <Typography variant="subtitle2" gutterBottom>
-          Required Documents:
+          {t("common.requiredDocuments")}:
         </Typography>
         <ul style={{ margin: 0, paddingLeft: 20 }}>
           {requiredDocuments.map((doc, index) => (
@@ -468,33 +520,51 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
 
 // Main Form Component
 const PropertyTaxPaymentForm = () => {
+  const { t } = useLanguage();
+
   const steps = [
-    { id: 'property', title: 'Property Details', icon: 'Home' },
-    { id: 'calculation', title: 'Tax Calculation', icon: 'Calculate' },
-    { id: 'payment', title: 'Payment Details', icon: 'Payment' },
-    { id: 'documents', title: 'Documents', icon: 'Description' }
+    {
+      id: "property",
+      title: t("forms.propertyTaxPayment.step1"),
+      icon: "Home",
+    },
+    {
+      id: "calculation",
+      title: t("forms.propertyTaxPayment.step2"),
+      icon: "Calculate",
+    },
+    {
+      id: "payment",
+      title: t("forms.propertyTaxPayment.step3"),
+      icon: "Payment",
+    },
+    {
+      id: "documents",
+      title: t("forms.propertyTaxPayment.step4"),
+      icon: "Description",
+    },
   ];
 
   const validationRules = {
     // Property Details
-    propertyId: { type: 'propertyId', required: true },
-    ownerName: { type: 'name', required: true },
-    propertyAddress: { type: 'address', required: true },
-    propertyType: { type: 'text', required: true },
-    builtUpArea: { type: 'builtUpArea', required: true },
-    
+    propertyId: { type: "propertyId", required: true },
+    ownerName: { type: "name", required: true },
+    propertyAddress: { type: "address", required: true },
+    propertyType: { type: "text", required: true },
+    builtUpArea: { type: "builtUpArea", required: true },
+
     // Tax Calculation
-    financialYear: { type: 'text', required: true },
-    
+    financialYear: { type: "text", required: true },
+
     // Payment Details
-    payerName: { type: 'name', required: true },
-    mobile: { type: 'mobile', required: true },
-    paymentMethod: { type: 'text', required: true }
+    payerName: { type: "name", required: true },
+    mobile: { type: "mobile", required: true },
+    paymentMethod: { type: "text", required: true },
   };
 
   return (
     <MultiStepForm
-      serviceName="Property Tax Payment"
+      serviceName={t("forms.propertyTaxPayment.title")}
       serviceType="property_tax_payment"
       steps={steps}
       validationRules={validationRules}

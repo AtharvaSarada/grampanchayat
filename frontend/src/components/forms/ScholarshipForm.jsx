@@ -29,9 +29,12 @@ import MultiStepForm from './MultiStepForm';
 import DocumentUpload from '../common/DocumentUpload';
 import { calculateAge, validateField, autoCorrect } from '../../utils/formValidation';
 import { getStates, getDistrictsByState } from '../../data/stateDistrictData';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 // Student Information Step
 const StudentInformationStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
+  
   const handleChange = (field, value) => {
     let correctedValue = value;
     
@@ -57,21 +60,21 @@ const StudentInformationStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Student Information
+        {t("forms.scholarshipApplication.studentInfo.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Please provide complete details of the student
+        {t("forms.scholarshipApplication.studentInfo.subtitle")}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Student's Full Name *"
+            label={t("forms.scholarshipApplication.studentInfo.fullName")}
             value={formData.studentName || ''}
             onChange={(e) => handleChange('studentName', e.target.value)}
             error={!!errors.studentName}
-            helperText={errors.studentName || 'Full name as per school records'}
+            helperText={errors.studentName || t("forms.scholarshipApplication.studentInfo.fullNameHelper")}
             inputProps={{ maxLength: 50, pattern: '[A-Za-z\\s\']{2,50}' }}
           />
         </Grid>
@@ -79,7 +82,7 @@ const StudentInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Father's Name *"
+            label={t("forms.scholarshipApplication.studentInfo.fatherName")}
             value={formData.fatherName || ''}
             onChange={(e) => handleChange('fatherName', e.target.value)}
             error={!!errors.fatherName}
@@ -91,7 +94,7 @@ const StudentInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Mother's Name *"
+            label={t("forms.scholarshipApplication.studentInfo.motherName")}
             value={formData.motherName || ''}
             onChange={(e) => handleChange('motherName', e.target.value)}
             error={!!errors.motherName}
@@ -103,7 +106,7 @@ const StudentInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DatePicker
-              label="Date of Birth *"
+              label={t("forms.scholarshipApplication.studentInfo.dateOfBirth")}
               value={formData.dateOfBirth || null}
               onChange={(value) => handleChange('dateOfBirth', value)}
               renderInput={(params) => (
@@ -123,41 +126,43 @@ const StudentInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={4}>
           <TextField
             fullWidth
-            label="Age"
+            label={t("forms.scholarshipApplication.studentInfo.age")}
             value={formData.age || ''}
             InputProps={{ readOnly: true }}
-            helperText="Auto-calculated from date of birth"
+            helperText={t("forms.scholarshipApplication.studentInfo.ageHelper")}
           />
         </Grid>
 
         <Grid item xs={12} md={4}>
           <FormControl fullWidth error={!!errors.gender}>
-            <InputLabel>Gender *</InputLabel>
+            <InputLabel>{t("common.gender")} *</InputLabel>
             <Select
               value={formData.gender || ''}
               onChange={(e) => handleChange('gender', e.target.value)}
-              label="Gender *"
+              label={t("common.gender") + " *"}
             >
-              <MenuItem value="Male">Male</MenuItem>
-              <MenuItem value="Female">Female</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
+              <MenuItem value="Male">{t("common.male")}</MenuItem>
+              <MenuItem value="Female">{t("common.female")}</MenuItem>
+              <MenuItem value="Other">{t("common.other")}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
         <Grid item xs={12} md={4}>
           <FormControl fullWidth error={!!errors.category}>
-            <InputLabel>Category *</InputLabel>
+            <InputLabel>{t("common.category")} *</InputLabel>
             <Select
               value={formData.category || ''}
               onChange={(e) => handleChange('category', e.target.value)}
-              label="Category *"
+              label={t("common.category") + " *"}
             >
-              <MenuItem value="General">General</MenuItem>
-              <MenuItem value="SC">SC</MenuItem>
-              <MenuItem value="ST">ST</MenuItem>
-              <MenuItem value="OBC">OBC</MenuItem>
-              <MenuItem value="EWS">EWS</MenuItem>
+              <MenuItem value="General">{t("common.general")}</MenuItem>
+              <MenuItem value="OBC">{t("common.obc")}</MenuItem>
+              <MenuItem value="SC">{t("common.sc")}</MenuItem>
+              <MenuItem value="ST">{t("common.st")}</MenuItem>
+              <MenuItem value="NT">{t("common.nt")}</MenuItem>
+              <MenuItem value="SBC">{t("common.sbc")}</MenuItem>
+              <MenuItem value="Other">{t("common.other")}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -165,11 +170,11 @@ const StudentInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Mobile Number *"
+            label={t("common.mobile")}
             value={formData.mobile || ''}
             onChange={(e) => handleChange('mobile', e.target.value)}
             error={!!errors.mobile}
-            helperText={errors.mobile || '10-digit mobile number'}
+            helperText={errors.mobile || t("common.mobileHelper")}
             inputProps={{ maxLength: 10, pattern: '[6-9][0-9]{9}' }}
           />
         </Grid>
@@ -177,23 +182,23 @@ const StudentInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Email ID *"
+            label={t("common.email")}
             type="email"
             value={formData.email || ''}
             onChange={(e) => handleChange('email', e.target.value)}
             error={!!errors.email}
-            helperText={errors.email || 'Valid email address required'}
+            helperText={errors.email || t("common.emailHelper")}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Aadhaar Number *"
+            label={t("common.aadhaar")}
             value={formData.aadhaar || ''}
             onChange={(e) => handleChange('aadhaar', e.target.value)}
             error={!!errors.aadhaar}
-            helperText={errors.aadhaar || '12-digit Aadhaar number'}
+            helperText={errors.aadhaar || t("common.aadhaarHelper")}
             inputProps={{ maxLength: 12, pattern: '[0-9]{12}' }}
           />
         </Grid>
@@ -203,11 +208,11 @@ const StudentInformationStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={2}
-            label="Current Address *"
+            label={t("forms.scholarshipApplication.studentInfo.currentAddress")}
             value={formData.currentAddress || ''}
             onChange={(e) => handleChange('currentAddress', e.target.value)}
             error={!!errors.currentAddress}
-            helperText={errors.currentAddress || 'Complete current address'}
+            helperText={errors.currentAddress || t("forms.scholarshipApplication.studentInfo.currentAddressHelper")}
             inputProps={{ minLength: 10, maxLength: 200 }}
           />
         </Grid>
@@ -218,6 +223,8 @@ const StudentInformationStep = ({ formData, updateFormData, errors }) => {
 
 // Academic Details Step
 const AcademicDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
+  
   const handleChange = (field, value) => {
     let correctedValue = value;
     
@@ -231,37 +238,37 @@ const AcademicDetailsStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Academic Details
+        {t("forms.scholarshipApplication.academicDetails.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Provide current academic information
+        {t("forms.scholarshipApplication.academicDetails.subtitle")}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.currentClass}>
-            <InputLabel>Current Class/Course *</InputLabel>
+            <InputLabel>{t("forms.scholarshipApplication.academicDetails.currentClass")}</InputLabel>
             <Select
               value={formData.currentClass || ''}
               onChange={(e) => handleChange('currentClass', e.target.value)}
-              label="Current Class/Course *"
+              label={t("forms.scholarshipApplication.academicDetails.currentClass")}
             >
-              <MenuItem value="1st">1st Standard</MenuItem>
-              <MenuItem value="2nd">2nd Standard</MenuItem>
-              <MenuItem value="3rd">3rd Standard</MenuItem>
-              <MenuItem value="4th">4th Standard</MenuItem>
-              <MenuItem value="5th">5th Standard</MenuItem>
-              <MenuItem value="6th">6th Standard</MenuItem>
-              <MenuItem value="7th">7th Standard</MenuItem>
-              <MenuItem value="8th">8th Standard</MenuItem>
-              <MenuItem value="9th">9th Standard</MenuItem>
-              <MenuItem value="10th">10th Standard</MenuItem>
-              <MenuItem value="11th">11th Standard</MenuItem>
-              <MenuItem value="12th">12th Standard</MenuItem>
-              <MenuItem value="Graduation">Graduation</MenuItem>
-              <MenuItem value="Post Graduation">Post Graduation</MenuItem>
-              <MenuItem value="Diploma">Diploma</MenuItem>
-              <MenuItem value="ITI">ITI</MenuItem>
+              <MenuItem value="1st">{t("forms.scholarshipApplication.academicDetails.classes.class1")}</MenuItem>
+              <MenuItem value="2nd">{t("forms.scholarshipApplication.academicDetails.classes.class2")}</MenuItem>
+              <MenuItem value="3rd">{t("forms.scholarshipApplication.academicDetails.classes.class3")}</MenuItem>
+              <MenuItem value="4th">{t("forms.scholarshipApplication.academicDetails.classes.class4")}</MenuItem>
+              <MenuItem value="5th">{t("forms.scholarshipApplication.academicDetails.classes.class5")}</MenuItem>
+              <MenuItem value="6th">{t("forms.scholarshipApplication.academicDetails.classes.class6")}</MenuItem>
+              <MenuItem value="7th">{t("forms.scholarshipApplication.academicDetails.classes.class7")}</MenuItem>
+              <MenuItem value="8th">{t("forms.scholarshipApplication.academicDetails.classes.class8")}</MenuItem>
+              <MenuItem value="9th">{t("forms.scholarshipApplication.academicDetails.classes.class9")}</MenuItem>
+              <MenuItem value="10th">{t("forms.scholarshipApplication.academicDetails.classes.class10")}</MenuItem>
+              <MenuItem value="11th">{t("forms.scholarshipApplication.academicDetails.classes.class11")}</MenuItem>
+              <MenuItem value="12th">{t("forms.scholarshipApplication.academicDetails.classes.class12")}</MenuItem>
+              <MenuItem value="Graduation">{t("forms.scholarshipApplication.academicDetails.classes.graduation")}</MenuItem>
+              <MenuItem value="Post Graduation">{t("forms.scholarshipApplication.academicDetails.classes.postGraduation")}</MenuItem>
+              <MenuItem value="Diploma">{t("forms.scholarshipApplication.academicDetails.classes.diploma")}</MenuItem>
+              <MenuItem value="ITI">{t("forms.scholarshipApplication.academicDetails.classes.vocational")}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -269,11 +276,11 @@ const AcademicDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Roll Number/Registration Number *"
+            label={t("forms.scholarshipApplication.academicDetails.rollNumber")}
             value={formData.rollNumber || ''}
             onChange={(e) => handleChange('rollNumber', e.target.value)}
             error={!!errors.rollNumber}
-            helperText={errors.rollNumber || 'Student roll/registration number'}
+            helperText={errors.rollNumber || t("forms.scholarshipApplication.academicDetails.rollNumberHelper")}
             inputProps={{ maxLength: 15, pattern: '[A-Za-z0-9]{5,15}' }}
           />
         </Grid>
@@ -281,11 +288,11 @@ const AcademicDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12}>
           <TextField
             fullWidth
-            label="School/College Name *"
+            label={t("forms.scholarshipApplication.academicDetails.institutionName")}
             value={formData.institutionName || ''}
             onChange={(e) => handleChange('institutionName', e.target.value)}
             error={!!errors.institutionName}
-            helperText={errors.institutionName || 'Full name of educational institution'}
+            helperText={errors.institutionName || t("forms.scholarshipApplication.academicDetails.institutionNameHelper")}
           />
         </Grid>
 
@@ -294,11 +301,11 @@ const AcademicDetailsStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={2}
-            label="Institution Address *"
+            label={t("forms.scholarshipApplication.academicDetails.institutionAddress")}
             value={formData.institutionAddress || ''}
             onChange={(e) => handleChange('institutionAddress', e.target.value)}
             error={!!errors.institutionAddress}
-            helperText={errors.institutionAddress || 'Complete address of institution'}
+            helperText={errors.institutionAddress || t("forms.scholarshipApplication.academicDetails.institutionAddressHelper")}
             inputProps={{ minLength: 10, maxLength: 200 }}
           />
         </Grid>
@@ -306,45 +313,45 @@ const AcademicDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Previous Year Percentage/CGPA *"
+            label={t("forms.scholarshipApplication.academicDetails.previousPercentage")}
             value={formData.previousPercentage || ''}
             onChange={(e) => handleChange('previousPercentage', e.target.value)}
             error={!!errors.previousPercentage}
-            helperText={errors.previousPercentage || 'Marks in previous class/semester'}
+            helperText={errors.previousPercentage || t("forms.scholarshipApplication.academicDetails.previousPercentageHelper")}
             inputProps={{ pattern: '^(100(\\.0{1,2})?|[1-9]?\\d(\\.\\d{1,2})?)$' }}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth>
-            <InputLabel>Board/University</InputLabel>
+            <InputLabel>{t("forms.scholarshipApplication.academicDetails.boardUniversity")}</InputLabel>
             <Select
               value={formData.board || ''}
               onChange={(e) => handleChange('board', e.target.value)}
-              label="Board/University"
+              label={t("forms.scholarshipApplication.academicDetails.boardUniversity")}
             >
-              <MenuItem value="CBSE">CBSE</MenuItem>
-              <MenuItem value="ICSE">ICSE</MenuItem>
-              <MenuItem value="State Board">State Board</MenuItem>
-              <MenuItem value="University">University</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
+              <MenuItem value="CBSE">{t("forms.scholarshipApplication.academicDetails.boards.cbse")}</MenuItem>
+              <MenuItem value="ICSE">{t("forms.scholarshipApplication.academicDetails.boards.icse")}</MenuItem>
+              <MenuItem value="State Board">{t("forms.scholarshipApplication.academicDetails.boards.stateBoard")}</MenuItem>
+              <MenuItem value="University">{t("forms.scholarshipApplication.academicDetails.boards.university")}</MenuItem>
+              <MenuItem value="Other">{t("common.other")}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom>
-            Type of Scholarship Applied For *
+            {t("forms.scholarshipApplication.academicDetails.scholarshipType")}
           </Typography>
           <RadioGroup
             value={formData.scholarshipType || ''}
             onChange={(e) => handleChange('scholarshipType', e.target.value)}
             row
           >
-            <FormControlLabel value="merit" control={<Radio />} label="Merit Based" />
-            <FormControlLabel value="need" control={<Radio />} label="Need Based" />
-            <FormControlLabel value="minority" control={<Radio />} label="Minority" />
-            <FormControlLabel value="sports" control={<Radio />} label="Sports" />
+            <FormControlLabel value="merit" control={<Radio />} label={t("forms.scholarshipApplication.academicDetails.meritBased")} />
+            <FormControlLabel value="need" control={<Radio />} label={t("forms.scholarshipApplication.academicDetails.needBased")} />
+            <FormControlLabel value="minority" control={<Radio />} label={t("forms.scholarshipApplication.academicDetails.minority")} />
+            <FormControlLabel value="sports" control={<Radio />} label={t("forms.scholarshipApplication.academicDetails.sports")} />
           </RadioGroup>
         </Grid>
       </Grid>
@@ -354,6 +361,7 @@ const AcademicDetailsStep = ({ formData, updateFormData, errors }) => {
 
 // Family Income Step
 const FamilyIncomeStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const [incomeMembers, setIncomeMembers] = React.useState(formData.incomeMembers || [
     { name: '', relation: '', occupation: '', monthlyIncome: '' }
   ]);
@@ -382,22 +390,22 @@ const FamilyIncomeStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Family Income Details
+        {t("forms.scholarshipApplication.familyIncome.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Provide income details of all earning family members
+        {t("forms.scholarshipApplication.familyIncome.subtitle")}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Total Family Members *"
+            label={t("forms.scholarshipApplication.familyIncome.totalMembers")}
             type="number"
             value={formData.totalFamilyMembers || ''}
             onChange={(e) => updateFormData({ totalFamilyMembers: e.target.value })}
             error={!!errors.totalFamilyMembers}
-            helperText={errors.totalFamilyMembers}
+            helperText={errors.totalFamilyMembers || t("forms.scholarshipApplication.familyIncome.totalMembersHelper")}
             inputProps={{ min: 1, max: 50 }}
           />
         </Grid>
@@ -405,28 +413,28 @@ const FamilyIncomeStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Annual Family Income *"
+            label={t("forms.scholarshipApplication.familyIncome.annualIncome")}
             value={formData.annualIncome || ''}
             onChange={(e) => updateFormData({ annualIncome: e.target.value })}
             error={!!errors.annualIncome}
-            helperText={errors.annualIncome || 'Total annual family income'}
+            helperText={errors.annualIncome || t("forms.scholarshipApplication.familyIncome.annualIncomeHelper")}
             inputProps={{ pattern: '^\\d+(\\.\\d{1,2})?$' }}
           />
         </Grid>
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom>
-            Income Details of Earning Members
+            {t("forms.scholarshipApplication.familyIncome.familyMembersTable.title")}
           </Typography>
           <TableContainer component={Paper} variant="outlined">
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Relation</TableCell>
-                  <TableCell>Occupation</TableCell>
-                  <TableCell>Monthly Income</TableCell>
-                  <TableCell>Action</TableCell>
+                  <TableCell>{t("forms.scholarshipApplication.familyIncome.familyMembersTable.name")}</TableCell>
+                  <TableCell>{t("forms.scholarshipApplication.familyIncome.familyMembersTable.relation")}</TableCell>
+                  <TableCell>{t("forms.scholarshipApplication.familyIncome.familyMembersTable.occupation")}</TableCell>
+                  <TableCell>{t("forms.scholarshipApplication.familyIncome.familyMembersTable.monthlyIncome")}</TableCell>
+                  <TableCell>{t("forms.scholarshipApplication.familyIncome.familyMembersTable.actions")}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -437,7 +445,7 @@ const FamilyIncomeStep = ({ formData, updateFormData, errors }) => {
                         size="small"
                         value={member.name}
                         onChange={(e) => handleIncomeChange(index, 'name', e.target.value)}
-                        placeholder="Full Name"
+                        placeholder={t("common.fullName")}
                       />
                     </TableCell>
                     <TableCell>
@@ -446,12 +454,12 @@ const FamilyIncomeStep = ({ formData, updateFormData, errors }) => {
                           value={member.relation}
                           onChange={(e) => handleIncomeChange(index, 'relation', e.target.value)}
                         >
-                          <MenuItem value="Father">Father</MenuItem>
-                          <MenuItem value="Mother">Mother</MenuItem>
-                          <MenuItem value="Brother">Brother</MenuItem>
-                          <MenuItem value="Sister">Sister</MenuItem>
-                          <MenuItem value="Self">Self</MenuItem>
-                          <MenuItem value="Other">Other</MenuItem>
+                          <MenuItem value="Father">{t("common.father")}</MenuItem>
+                          <MenuItem value="Mother">{t("common.mother")}</MenuItem>
+                          <MenuItem value="Brother">{t("common.brother")}</MenuItem>
+                          <MenuItem value="Sister">{t("common.sister")}</MenuItem>
+                          <MenuItem value="Self">{t("common.self")}</MenuItem>
+                          <MenuItem value="Other">{t("common.other")}</MenuItem>
                         </Select>
                       </FormControl>
                     </TableCell>
@@ -460,7 +468,7 @@ const FamilyIncomeStep = ({ formData, updateFormData, errors }) => {
                         size="small"
                         value={member.occupation}
                         onChange={(e) => handleIncomeChange(index, 'occupation', e.target.value)}
-                        placeholder="Occupation"
+                        placeholder={t("common.occupation")}
                       />
                     </TableCell>
                     <TableCell>
@@ -469,7 +477,7 @@ const FamilyIncomeStep = ({ formData, updateFormData, errors }) => {
                         type="number"
                         value={member.monthlyIncome}
                         onChange={(e) => handleIncomeChange(index, 'monthlyIncome', e.target.value)}
-                        placeholder="Amount"
+                        placeholder={t("common.amount")}
                       />
                     </TableCell>
                     <TableCell>
@@ -491,13 +499,13 @@ const FamilyIncomeStep = ({ formData, updateFormData, errors }) => {
             onClick={addIncomeMember}
             sx={{ mt: 2 }}
           >
-            Add Income Member
+            {t("forms.scholarshipApplication.familyIncome.familyMembersTable.addMember")}
           </Button>
         </Grid>
 
         <Grid item xs={12}>
           <Typography variant="h6" color="primary">
-            Total Monthly Income: ₹{totalIncome.toLocaleString()}
+            {t("common.totalMonthlyIncome")}: ₹{totalIncome.toLocaleString()}
           </Typography>
         </Grid>
       </Grid>
@@ -507,17 +515,19 @@ const FamilyIncomeStep = ({ formData, updateFormData, errors }) => {
 
 // Documents Step
 const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
+  const { t } = useLanguage();
+  
   const requiredDocuments = [
-    'Student\'s Aadhaar card',
-    'School/College ID card',
-    'Previous year mark sheet',
-    'Income certificate',
-    'Caste certificate (if applicable)',
-    'Bank account passbook',
-    'Passport size photographs',
-    'Fee receipt/admission letter',
-    'Parent\'s income proof',
-    'Domicile certificate'
+    t("forms.scholarshipApplication.documents.aadhaarCard"),
+    t("forms.scholarshipApplication.documents.schoolIdCard"),
+    t("forms.scholarshipApplication.documents.previousMarksheet"),
+    t("forms.scholarshipApplication.documents.incomeCertificate"),
+    t("forms.scholarshipApplication.documents.casteCertificate"),
+    t("forms.scholarshipApplication.documents.bankPassbook"),
+    t("forms.scholarshipApplication.documents.studentPhoto"),
+    t("forms.scholarshipApplication.documents.feePaidReceipt"),
+    t("forms.scholarshipApplication.documents.bonafideCertificate"),
+    t("forms.scholarshipApplication.documents.domicileCertificate")
   ];
 
   const handleDocumentsChange = (documents) => {
@@ -527,10 +537,10 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
   return (
     <Box>
       <Typography variant="h6" gutterBottom color="primary">
-        Document Upload
+        {t("forms.scholarshipApplication.documents.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Please upload all required documents for scholarship application
+        {t("forms.scholarshipApplication.documents.uploadInfo")}
       </Typography>
 
       <DocumentUpload
@@ -546,11 +556,13 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
 
 // Main Form Component
 const ScholarshipForm = () => {
+  const { t } = useLanguage();
+  
   const steps = [
-    { id: 'student', title: 'Student Information', icon: 'Person' },
-    { id: 'academic', title: 'Academic Details', icon: 'School' },
-    { id: 'income', title: 'Family Income', icon: 'AttachMoney' },
-    { id: 'documents', title: 'Documents', icon: 'Description' }
+    { id: 'student', title: t("forms.scholarshipApplication.step1"), icon: 'Person' },
+    { id: 'academic', title: t("forms.scholarshipApplication.step2"), icon: 'School' },
+    { id: 'income', title: t("forms.scholarshipApplication.step3"), icon: 'AttachMoney' },
+    { id: 'documents', title: t("forms.scholarshipApplication.step4"), icon: 'Description' }
   ];
 
   const validationRules = {
@@ -581,7 +593,7 @@ const ScholarshipForm = () => {
 
   return (
     <MultiStepForm
-      serviceName="Scholarship Application"
+      serviceName={t("forms.scholarshipApplication.title")}
       serviceType="scholarship"
       steps={steps}
       validationRules={validationRules}

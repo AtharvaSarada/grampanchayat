@@ -14,11 +14,15 @@ import {
   Alert
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import MultiStepForm from './MultiStepForm';
 import DocumentUpload from '../common/DocumentUpload';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 const BirthCertificateForm = () => {
+  const { t } = useLanguage();
+  
   // Initial data structure - will be managed by MultiStepForm
   const initialFormData = {
     // Child Information
@@ -59,10 +63,10 @@ const BirthCertificateForm = () => {
   };
 
   const steps = [
-    { id: 'child', title: 'Child Information' },
-    { id: 'parents', title: 'Parents Information' },
-    { id: 'address', title: 'Address Details' },
-    { id: 'documents', title: 'Documents' }
+    { id: 'child', title: t('forms.birthCertificate.step1') },
+    { id: 'parents', title: t('forms.birthCertificate.step2') },
+    { id: 'address', title: t('forms.birthCertificate.step3') },
+    { id: 'documents', title: t('forms.birthCertificate.step4') }
   ];
 
   const validationRules = {
@@ -81,34 +85,38 @@ const BirthCertificateForm = () => {
   };
 
   const ChildInformationStep = ({ formData, updateFormData, errors }) => (
-    <Paper elevation={2} sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom color="primary">
-        Child Information
+    <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+      <Typography variant="h6" gutterBottom color="primary" sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+        {t('forms.birthCertificate.childInformation')}
       </Typography>
-      <Grid container spacing={3}>
+      <Grid container spacing={{ xs: 2, sm: 3 }}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Child's Full Name *"
+            label={t('forms.birthCertificate.childFullName')}
             value={formData.childName || ''}
             onChange={(e) => updateFormData({ childName: e.target.value })}
             error={!!errors.childName}
             helperText={errors.childName}
-            placeholder="Enter child's full name"
+            placeholder={t('forms.common.enterValid') + ' ' + t('forms.birthCertificate.childFullName')}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
         <Grid item xs={12} md={6}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DatePicker
-              label="Date of Birth *"
+              label={t('forms.common.dateOfBirth')}
               value={formData.dateOfBirth}
               onChange={(date) => updateFormData({ dateOfBirth: date })}
               renderInput={(params) => (
                 <TextField
                   {...params}
                   fullWidth
+                  size="small"
                   error={!!errors.dateOfBirth}
                   helperText={errors.dateOfBirth}
+                  sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
                 />
               )}
               maxDate={new Date()}
@@ -118,35 +126,40 @@ const BirthCertificateForm = () => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Time of Birth"
+            label={t('forms.birthCertificate.timeOfBirth')}
             type="time"
             value={formData.timeOfBirth || ''}
             onChange={(e) => updateFormData({ timeOfBirth: e.target.value })}
             InputLabelProps={{ shrink: true }}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Place of Birth *"
+            label={t('forms.birthCertificate.placeOfBirth')}
             value={formData.placeOfBirth || ''}
             onChange={(e) => updateFormData({ placeOfBirth: e.target.value })}
             error={!!errors.placeOfBirth}
             helperText={errors.placeOfBirth}
-            placeholder="Hospital/Home/City name"
+            placeholder={t('forms.birthCertificate.placeOfBirthPlaceholder')}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
         <Grid item xs={12} md={6}>
-          <FormControl fullWidth error={!!errors.gender}>
-            <InputLabel>Gender *</InputLabel>
+          <FormControl fullWidth error={!!errors.gender} size="small">
+            <InputLabel>{t('forms.common.gender')}</InputLabel>
             <Select
               value={formData.gender || ''}
               onChange={(e) => updateFormData({ gender: e.target.value })}
-              label="Gender *"
+              label={t('forms.common.gender')}
+              sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}
             >
-              <MenuItem value="Male">Male</MenuItem>
-              <MenuItem value="Female">Female</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
+              <MenuItem value="Male">{t('forms.common.male')}</MenuItem>
+              <MenuItem value="Female">{t('forms.common.female')}</MenuItem>
+              <MenuItem value="Other">{t('forms.common.other')}</MenuItem>
             </Select>
             {errors.gender && <FormHelperText>{errors.gender}</FormHelperText>}
           </FormControl>
@@ -154,12 +167,14 @@ const BirthCertificateForm = () => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Weight at Birth (kg)"
+            label={t('forms.birthCertificate.weightAtBirth')}
             type="number"
             value={formData.weight || ''}
             onChange={(e) => updateFormData({ weight: e.target.value })}
-            placeholder="e.g., 3.2"
+            placeholder="3.2"
             inputProps={{ step: 0.1, min: 0 }}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
       </Grid>
@@ -167,50 +182,58 @@ const BirthCertificateForm = () => {
   );
 
   const ParentsInformationStep = ({ formData, updateFormData, errors }) => (
-    <Paper elevation={2} sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom color="primary">
-        Parents Information
+    <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+      <Typography variant="h6" gutterBottom color="primary" sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+        {t('forms.birthCertificate.parentsInformation')}
       </Typography>
       
       {/* Father Information */}
-      <Typography variant="subtitle1" sx={{ mt: 2, mb: 2, fontWeight: 'bold' }}>
-        Father's Details
+      <Typography variant="subtitle1" sx={{ mt: 2, mb: 2, fontWeight: 'bold', fontSize: { xs: '0.95rem', sm: '1rem' } }}>
+        {t('forms.birthCertificate.fatherDetails')}
       </Typography>
-      <Grid container spacing={3}>
+      <Grid container spacing={{ xs: 2, sm: 3 }}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Father's Full Name *"
+            label={t('forms.birthCertificate.fatherFullName')}
             value={formData.fatherName || ''}
             onChange={(e) => updateFormData({ fatherName: e.target.value })}
             error={!!errors.fatherName}
             helperText={errors.fatherName}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Father's Age"
+            label={t('forms.birthCertificate.fatherAge')}
             type="number"
             value={formData.fatherAge || ''}
             onChange={(e) => updateFormData({ fatherAge: e.target.value })}
             inputProps={{ min: 18, max: 100 }}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Father's Occupation"
+            label={t('forms.birthCertificate.fatherOccupation')}
             value={formData.fatherOccupation || ''}
             onChange={(e) => updateFormData({ fatherOccupation: e.target.value })}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Father's Education"
+            label={t('forms.birthCertificate.fatherEducation')}
             value={formData.fatherEducation || ''}
             onChange={(e) => updateFormData({ fatherEducation: e.target.value })}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
       </Grid>
@@ -218,44 +241,52 @@ const BirthCertificateForm = () => {
       <Divider sx={{ my: 3 }} />
 
       {/* Mother Information */}
-      <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold' }}>
-        Mother's Details
+      <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold', fontSize: { xs: '0.95rem', sm: '1rem' } }}>
+        {t('forms.birthCertificate.motherDetails')}
       </Typography>
-      <Grid container spacing={3}>
+      <Grid container spacing={{ xs: 2, sm: 3 }}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Mother's Full Name *"
+            label={t('forms.birthCertificate.motherFullName')}
             value={formData.motherName || ''}
             onChange={(e) => updateFormData({ motherName: e.target.value })}
             error={!!errors.motherName}
             helperText={errors.motherName}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Mother's Age"
+            label={t('forms.birthCertificate.motherAge')}
             type="number"
             value={formData.motherAge || ''}
             onChange={(e) => updateFormData({ motherAge: e.target.value })}
             inputProps={{ min: 18, max: 100 }}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Mother's Occupation"
+            label={t('forms.birthCertificate.motherOccupation')}
             value={formData.motherOccupation || ''}
             onChange={(e) => updateFormData({ motherOccupation: e.target.value })}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Mother's Education"
+            label={t('forms.birthCertificate.motherEducation')}
             value={formData.motherEducation || ''}
             onChange={(e) => updateFormData({ motherEducation: e.target.value })}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
       </Grid>
@@ -263,56 +294,64 @@ const BirthCertificateForm = () => {
   );
 
   const AddressStep = ({ formData, updateFormData, errors }) => (
-    <Paper elevation={2} sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom color="primary">
-        Address & Contact Information
+    <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+      <Typography variant="h6" gutterBottom color="primary" sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+        {t('forms.birthCertificate.addressContactInfo')}
       </Typography>
-      <Grid container spacing={3}>
+      <Grid container spacing={{ xs: 2, sm: 3 }}>
         <Grid item xs={12}>
           <TextField
             fullWidth
-            label="Permanent Address *"
+            label={t('forms.birthCertificate.permanentAddress')}
             multiline
             rows={3}
             value={formData.permanentAddress || ''}
             onChange={(e) => updateFormData({ permanentAddress: e.target.value })}
             error={!!errors.permanentAddress}
             helperText={errors.permanentAddress}
-            placeholder="Enter complete permanent address"
+            placeholder={t('forms.birthCertificate.permanentAddressPlaceholder')}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Village/Town *"
+            label={t('forms.birthCertificate.villageTown')}
             value={formData.village || ''}
             onChange={(e) => updateFormData({ village: e.target.value })}
             error={!!errors.village}
             helperText={errors.village}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="District *"
+            label={t('forms.common.district')}
             value={formData.district || ''}
             onChange={(e) => updateFormData({ district: e.target.value })}
             error={!!errors.district}
             helperText={errors.district}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="State *"
+            label={t('forms.common.state')}
             value={formData.state || ''}
             onChange={(e) => updateFormData({ state: e.target.value })}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="PIN Code *"
+            label={t('forms.common.pincode')}
             value={formData.pincode || ''}
             onChange={(e) => {
               const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
@@ -321,28 +360,34 @@ const BirthCertificateForm = () => {
             error={!!errors.pincode}
             helperText={errors.pincode}
             inputProps={{ maxLength: 6, inputMode: 'numeric', pattern: '[0-9]*' }}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Mobile Number *"
+            label={t('forms.birthCertificate.mobileNumber')}
             value={formData.mobile || ''}
             onChange={(e) => updateFormData({ mobile: e.target.value })}
             error={!!errors.mobile}
             helperText={errors.mobile}
             inputProps={{ maxLength: 10 }}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Email Address"
+            label={t('forms.birthCertificate.emailAddress')}
             type="email"
             value={formData.email || ''}
             onChange={(e) => updateFormData({ email: e.target.value.toLowerCase() })}
             error={!!errors.email}
             helperText={errors.email}
+            size="small"
+            sx={{ '& .MuiInputBase-root': { fontSize: { xs: '0.9rem', sm: '1rem' } } }}
           />
         </Grid>
       </Grid>
@@ -350,23 +395,23 @@ const BirthCertificateForm = () => {
   );
 
   const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => (
-    <Paper elevation={2} sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom color="primary">
-        Required Documents
+    <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+      <Typography variant="h6" gutterBottom color="primary" sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+        {t('forms.birthCertificate.requiredDocuments')}
       </Typography>
-      <Alert severity="info" sx={{ mb: 3 }}>
-        Please upload the following documents (PDF, JPG, PNG format, max 5MB each):
+      <Alert severity="info" sx={{ mb: 3, fontSize: { xs: '0.85rem', sm: '0.875rem' } }}>
+        {t('forms.birthCertificate.uploadInfo')}
       </Alert>
       
       <Box sx={{ mb: 3 }}>
-        <Typography variant="subtitle2" gutterBottom>
-          Required Documents:
+        <Typography variant="subtitle2" gutterBottom sx={{ fontSize: { xs: '0.9rem', sm: '0.95rem' } }}>
+          {t('forms.birthCertificate.requiredDocuments')}:
         </Typography>
-        <ul>
-          <li>Hospital Birth Certificate / Delivery Certificate</li>
-          <li>Parents' ID Proof (Aadhaar/Voter ID/Passport)</li>
-          <li>Parents' Address Proof</li>
-          <li>Marriage Certificate of Parents (if available)</li>
+        <ul style={{ fontSize: '0.9rem', paddingLeft: '1.2rem' }}>
+          <li>{t('forms.birthCertificate.hospitalBirthCert')}</li>
+          <li>{t('forms.birthCertificate.parentsIdProof')}</li>
+          <li>{t('forms.birthCertificate.parentsAddressProof')}</li>
+          <li>{t('forms.birthCertificate.marriageCertificate')}</li>
         </ul>
       </Box>
 
@@ -383,7 +428,7 @@ const BirthCertificateForm = () => {
 
   return (
     <MultiStepForm
-      serviceName="Birth Certificate Application"
+      serviceName={t('forms.birthCertificate.title')}
       serviceType="birth-certificate"
       steps={steps}
       validationRules={validationRules}

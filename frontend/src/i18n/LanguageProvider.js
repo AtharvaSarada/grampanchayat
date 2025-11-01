@@ -35,8 +35,8 @@ export const LanguageProvider = ({ children }) => {
     }
   };
 
-  // Translation function - supports nested keys like "dashboard.admin.title"
-  const t = (key, defaultValue = '') => {
+  // Translation function - supports nested keys like "dashboard.admin.title" and interpolation
+  const t = (key, variables = {}, defaultValue = '') => {
     const keys = key.split('.');
     let value = translations[language];
 
@@ -48,7 +48,17 @@ export const LanguageProvider = ({ children }) => {
       }
     }
 
-    return value || defaultValue || key;
+    let result = value || defaultValue || key;
+
+    // Handle interpolation - replace {{variable}} with actual values
+    if (typeof result === 'string' && variables && typeof variables === 'object') {
+      Object.keys(variables).forEach(varKey => {
+        const regex = new RegExp(`{{${varKey}}}`, 'g');
+        result = result.replace(regex, variables[varKey]);
+      });
+    }
+
+    return result;
   };
 
   const value = {

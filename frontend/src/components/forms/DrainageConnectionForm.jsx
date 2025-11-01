@@ -23,9 +23,12 @@ import MultiStepForm from './MultiStepForm';
 import DocumentUpload from '../common/DocumentUpload';
 import { validateField, autoCorrect } from '../../utils/formValidation';
 import { getStates, getDistrictsByState } from '../../data/stateDistrictData';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 // Applicant Information Step
 const ApplicantInformationStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
+  
   const handleChange = (field, value) => {
     let correctedValue = value;
     
@@ -43,21 +46,21 @@ const ApplicantInformationStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Applicant Information
+        {t("forms.drainageConnection.applicantInfo")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Enter your personal details for drainage connection application
+        {t("forms.drainageConnection.applicantInfoSubtitle")}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Applicant Name *"
+            label={t("forms.drainageConnection.applicantName")}
             value={formData.applicantName || ''}
             onChange={(e) => handleChange('applicantName', e.target.value)}
             error={!!errors.applicantName}
-            helperText={errors.applicantName || 'Full name as per documents'}
+            helperText={errors.applicantName || t("forms.drainageConnection.applicantNameHelper")}
             inputProps={{ maxLength: 50, pattern: '[A-Za-z\\s\']{2,50}' }}
           />
         </Grid>
@@ -65,11 +68,11 @@ const ApplicantInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Property Owner Name"
+            label={t("forms.drainageConnection.ownerName")}
             value={formData.ownerName || ''}
             onChange={(e) => handleChange('ownerName', e.target.value)}
             error={!!errors.ownerName}
-            helperText={errors.ownerName || 'If different from applicant'}
+            helperText={errors.ownerName || t("forms.drainageConnection.ownerNameHelper")}
             inputProps={{ maxLength: 50, pattern: '[A-Za-z\\s\']{2,50}' }}
           />
         </Grid>
@@ -77,11 +80,11 @@ const ApplicantInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Mobile Number *"
+            label={t("forms.drainageConnection.mobile")}
             value={formData.mobile || ''}
             onChange={(e) => handleChange('mobile', e.target.value)}
             error={!!errors.mobile}
-            helperText={errors.mobile || '10-digit mobile number'}
+            helperText={errors.mobile || t("forms.drainageConnection.mobileHelper")}
             inputProps={{ maxLength: 10, pattern: '[6-9][0-9]{9}' }}
           />
         </Grid>
@@ -89,12 +92,12 @@ const ApplicantInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Email Address"
+            label={t("forms.drainageConnection.email")}
             type="email"
             value={formData.email || ''}
             onChange={(e) => handleChange('email', e.target.value)}
             error={!!errors.email}
-            helperText={errors.email || 'Optional email address'}
+            helperText={errors.email || t("forms.drainageConnection.emailHelper")}
           />
         </Grid>
 
@@ -103,27 +106,27 @@ const ApplicantInformationStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={3}
-            label="Applicant Address *"
+            label={t("forms.drainageConnection.applicantAddress")}
             value={formData.applicantAddress || ''}
             onChange={(e) => handleChange('applicantAddress', e.target.value)}
             error={!!errors.applicantAddress}
-            helperText={errors.applicantAddress || 'Complete address of applicant'}
+            helperText={errors.applicantAddress || t("forms.drainageConnection.applicantAddressHelper")}
             inputProps={{ minLength: 10, maxLength: 200 }}
           />
         </Grid>
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom color="primary">
-            Relationship to Property *
+            {t("forms.drainageConnection.relationshipToProperty")}
           </Typography>
           <RadioGroup
             value={formData.relationship || ''}
             onChange={(e) => handleChange('relationship', e.target.value)}
             row
           >
-            <FormControlLabel value="Owner" control={<Radio />} label="Owner" />
-            <FormControlLabel value="Tenant" control={<Radio />} label="Tenant" />
-            <FormControlLabel value="Authorized Representative" control={<Radio />} label="Authorized Representative" />
+            <FormControlLabel value="Owner" control={<Radio />} label={t("forms.drainageConnection.owner")} />
+            <FormControlLabel value="Tenant" control={<Radio />} label={t("forms.drainageConnection.tenant")} />
+            <FormControlLabel value="Authorized Representative" control={<Radio />} label={t("forms.drainageConnection.authorizedRepresentative")} />
           </RadioGroup>
         </Grid>
       </Grid>
@@ -133,6 +136,7 @@ const ApplicantInformationStep = ({ formData, updateFormData, errors }) => {
 
 // Property Details Step
 const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const [states] = React.useState(getStates());
   const [districts, setDistricts] = React.useState([]);
 
@@ -162,38 +166,38 @@ const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Property Details
+        {t("forms.drainageConnection.propertyDetails")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Provide details of the property for drainage connection
+        {t("forms.drainageConnection.propertyDetailsSubtitle")}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Property ID/Survey Number *"
+            label={t("forms.drainageConnection.propertyId")}
             value={formData.propertyId || ''}
             onChange={(e) => handleChange('propertyId', e.target.value)}
             error={!!errors.propertyId}
-            helperText={errors.propertyId || 'Property identification number'}
+            helperText={errors.propertyId || t("forms.drainageConnection.propertyIdHelper")}
             inputProps={{ maxLength: 20, pattern: '[A-Za-z0-9\\-]{5,20}' }}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.propertyType}>
-            <InputLabel>Property Type *</InputLabel>
+            <InputLabel>{t("forms.drainageConnection.propertyType")}</InputLabel>
             <Select
               value={formData.propertyType || ''}
               onChange={(e) => handleChange('propertyType', e.target.value)}
-              label="Property Type *"
+              label={t("forms.drainageConnection.propertyType")}
             >
-              <MenuItem value="Residential">Residential</MenuItem>
-              <MenuItem value="Commercial">Commercial</MenuItem>
-              <MenuItem value="Industrial">Industrial</MenuItem>
-              <MenuItem value="Mixed Use">Mixed Use</MenuItem>
-              <MenuItem value="Institutional">Institutional</MenuItem>
+              <MenuItem value="Residential">{t("forms.drainageConnection.residential")}</MenuItem>
+              <MenuItem value="Commercial">{t("forms.drainageConnection.commercial")}</MenuItem>
+              <MenuItem value="Industrial">{t("forms.drainageConnection.industrial")}</MenuItem>
+              <MenuItem value="Mixed Use">{t("forms.drainageConnection.mixedUse")}</MenuItem>
+              <MenuItem value="Institutional">{t("forms.drainageConnection.institutional")}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -203,22 +207,22 @@ const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={3}
-            label="Property Address *"
+            label={t("forms.drainageConnection.propertyAddress")}
             value={formData.propertyAddress || ''}
             onChange={(e) => handleChange('propertyAddress', e.target.value)}
             error={!!errors.propertyAddress}
-            helperText={errors.propertyAddress || 'Complete property address'}
+            helperText={errors.propertyAddress || t("forms.drainageConnection.propertyAddressHelper")}
             inputProps={{ minLength: 10, maxLength: 200 }}
           />
         </Grid>
 
         <Grid item xs={12} md={4}>
           <FormControl fullWidth error={!!errors.state}>
-            <InputLabel>State *</InputLabel>
+            <InputLabel>{t("forms.drainageConnection.state")}</InputLabel>
             <Select
               value={formData.state || ''}
               onChange={(e) => handleChange('state', e.target.value)}
-              label="State *"
+              label={t("forms.drainageConnection.state")}
             >
               {states.map((state) => (
                 <MenuItem key={state} value={state}>
@@ -231,11 +235,11 @@ const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12} md={4}>
           <FormControl fullWidth error={!!errors.district}>
-            <InputLabel>District *</InputLabel>
+            <InputLabel>{t("forms.drainageConnection.district")}</InputLabel>
             <Select
               value={formData.district || ''}
               onChange={(e) => handleChange('district', e.target.value)}
-              label="District *"
+              label={t("forms.drainageConnection.district")}
               disabled={!formData.state}
             >
               {districts.map((district) => (
@@ -250,7 +254,7 @@ const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={4}>
           <TextField
             fullWidth
-            label="PIN Code *"
+            label={t("forms.drainageConnection.pincode")}
             value={formData.pincode || ''}
             onChange={(e) => handleChange('pincode', e.target.value)}
             error={!!errors.pincode}
@@ -262,24 +266,12 @@ const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Built-up Area (sq ft) *"
+            label={t("forms.drainageConnection.builtUpArea")}
             type="number"
             value={formData.builtUpArea || ''}
             onChange={(e) => handleChange('builtUpArea', e.target.value)}
             error={!!errors.builtUpArea}
-            helperText={errors.builtUpArea || 'Total built-up area'}
-            inputProps={{ min: 1, max: 999999, pattern: '^\\d{1,6}(\\.\\d{1,2})?$' }}
-          />
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <TextField
-            fullWidth
-            label="Plot Area (sq ft)"
-            type="number"
-            value={formData.plotArea || ''}
-            onChange={(e) => handleChange('plotArea', e.target.value)}
-            helperText="Total plot area"
+            helperText={errors.builtUpArea || t("forms.drainageConnection.builtUpAreaHelper")}
             inputProps={{ min: 1, max: 999999 }}
           />
         </Grid>
@@ -287,7 +279,19 @@ const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Number of Floors *"
+            label={t("forms.drainageConnection.plotArea")}
+            type="number"
+            value={formData.plotArea || ''}
+            onChange={(e) => handleChange('plotArea', e.target.value)}
+            helperText={t("forms.drainageConnection.plotAreaHelper")}
+            inputProps={{ min: 1, max: 999999 }}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label={t("forms.drainageConnection.numberOfFloors")}
             type="number"
             value={formData.numberOfFloors || ''}
             onChange={(e) => handleChange('numberOfFloors', e.target.value)}
@@ -300,12 +304,12 @@ const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Number of Units *"
+            label={t("forms.drainageConnection.numberOfUnits")}
             type="number"
             value={formData.numberOfUnits || ''}
             onChange={(e) => handleChange('numberOfUnits', e.target.value)}
             error={!!errors.numberOfUnits}
-            helperText={errors.numberOfUnits || 'Residential/commercial units'}
+            helperText={errors.numberOfUnits || t("forms.drainageConnection.numberOfUnitsHelper")}
             inputProps={{ min: 1, max: 100 }}
           />
         </Grid>
@@ -316,6 +320,7 @@ const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
 
 // Connection Details Step
 const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const [connectionFee, setConnectionFee] = React.useState(0);
 
   React.useEffect(() => {
@@ -360,40 +365,40 @@ const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Connection Details
+        {t("forms.drainageConnection.connectionDetails")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Specify drainage connection requirements and preferences
+        {t("forms.drainageConnection.connectionDetailsSubtitle")}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.connectionType}>
-            <InputLabel>Connection Type *</InputLabel>
+            <InputLabel>{t("forms.drainageConnection.connectionType")}</InputLabel>
             <Select
               value={formData.connectionType || ''}
               onChange={(e) => handleChange('connectionType', e.target.value)}
-              label="Connection Type *"
+              label={t("forms.drainageConnection.connectionType")}
             >
-              <MenuItem value="New Connection">New Connection</MenuItem>
-              <MenuItem value="Additional Connection">Additional Connection</MenuItem>
-              <MenuItem value="Reconnection">Reconnection</MenuItem>
-              <MenuItem value="Modification">Modification</MenuItem>
+              <MenuItem value="New Connection">{t("forms.drainageConnection.newConnection")}</MenuItem>
+              <MenuItem value="Additional Connection">{t("forms.drainageConnection.additionalConnection")}</MenuItem>
+              <MenuItem value="Reconnection">{t("forms.drainageConnection.reconnection")}</MenuItem>
+              <MenuItem value="Modification">{t("forms.drainageConnection.modification")}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.drainageType}>
-            <InputLabel>Drainage Type *</InputLabel>
+            <InputLabel>{t("forms.drainageConnection.drainageType")}</InputLabel>
             <Select
               value={formData.drainageType || ''}
               onChange={(e) => handleChange('drainageType', e.target.value)}
-              label="Drainage Type *"
+              label={t("forms.drainageConnection.drainageType")}
             >
-              <MenuItem value="Storm Water">Storm Water Drainage</MenuItem>
-              <MenuItem value="Sewage">Sewage Drainage</MenuItem>
-              <MenuItem value="Combined">Combined Drainage</MenuItem>
+              <MenuItem value="Storm Water">{t("forms.drainageConnection.stormWater")}</MenuItem>
+              <MenuItem value="Sewage">{t("forms.drainageConnection.sewage")}</MenuItem>
+              <MenuItem value="Combined">{t("forms.drainageConnection.combined")}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -401,12 +406,12 @@ const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Pipe Diameter Required (inches) *"
+            label={t("forms.drainageConnection.pipeDiameter")}
             type="number"
             value={formData.pipeDiameter || ''}
             onChange={(e) => handleChange('pipeDiameter', e.target.value)}
             error={!!errors.pipeDiameter}
-            helperText={errors.pipeDiameter || 'Recommended pipe diameter'}
+            helperText={errors.pipeDiameter || t("forms.drainageConnection.pipeDiameterHelper")}
             inputProps={{ min: 4, max: 24, step: 2 }}
           />
         </Grid>
@@ -414,26 +419,26 @@ const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Connection Point Distance (meters)"
+            label={t("forms.drainageConnection.connectionDistance")}
             type="number"
             value={formData.connectionDistance || ''}
             onChange={(e) => handleChange('connectionDistance', e.target.value)}
-            helperText="Distance from main drainage line"
+            helperText={t("forms.drainageConnection.connectionDistanceHelper")}
             inputProps={{ min: 1, max: 500 }}
           />
         </Grid>
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom color="primary">
-            Existing Drainage Connection *
+            {t("forms.drainageConnection.existingConnection")}
           </Typography>
           <RadioGroup
             value={formData.existingConnection || ''}
             onChange={(e) => handleChange('existingConnection', e.target.value)}
             row
           >
-            <FormControlLabel value="Yes" control={<Radio />} label="Yes" />
-            <FormControlLabel value="No" control={<Radio />} label="No" />
+            <FormControlLabel value="Yes" control={<Radio />} label={t("forms.drainageConnection.yes")} />
+            <FormControlLabel value="No" control={<Radio />} label={t("forms.drainageConnection.no")} />
           </RadioGroup>
         </Grid>
 
@@ -443,11 +448,11 @@ const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
               fullWidth
               multiline
               rows={2}
-              label="Existing Connection Details *"
+              label={t("forms.drainageConnection.existingConnectionDetails")}
               value={formData.existingConnectionDetails || ''}
               onChange={(e) => handleChange('existingConnectionDetails', e.target.value)}
               error={!!errors.existingConnectionDetails}
-              helperText={errors.existingConnectionDetails || 'Details of existing drainage connection'}
+              helperText={errors.existingConnectionDetails || t("forms.drainageConnection.existingConnectionDetailsHelper")}
               inputProps={{ maxLength: 300 }}
             />
           </Grid>
@@ -456,14 +461,14 @@ const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DatePicker
-              label="Preferred Connection Date"
+              label={t("forms.drainageConnection.preferredDate")}
               value={formData.preferredDate || null}
               onChange={(date) => handleChange('preferredDate', date)}
               renderInput={(params) => (
                 <TextField
                   {...params}
                   fullWidth
-                  helperText="Preferred date for connection work"
+                  helperText={t("forms.drainageConnection.preferredDateHelper")}
                 />
               )}
               minDate={new Date()}
@@ -476,10 +481,10 @@ const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={3}
-            label="Special Requirements"
+            label={t("forms.drainageConnection.specialRequirements")}
             value={formData.specialRequirements || ''}
             onChange={(e) => handleChange('specialRequirements', e.target.value)}
-            helperText="Any special requirements or site conditions"
+            helperText={t("forms.drainageConnection.specialRequirementsHelper")}
             inputProps={{ maxLength: 500 }}
           />
         </Grid>
@@ -487,19 +492,19 @@ const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12}>
           <Paper variant="outlined" sx={{ p: 2, bgcolor: 'primary.50' }}>
             <Typography variant="h6" color="primary" gutterBottom>
-              Fee Calculation
+              {t("forms.drainageConnection.feeCalculation")}
             </Typography>
             
             <Grid container spacing={2}>
               <Grid item xs={6}>
-                <Typography>Connection Fee:</Typography>
+                <Typography>{t("forms.drainageConnection.connectionFee")}</Typography>
               </Grid>
               <Grid item xs={6}>
                 <Typography align="right">₹{(connectionFee - 500).toLocaleString()}</Typography>
               </Grid>
 
               <Grid item xs={6}>
-                <Typography>Processing Fee:</Typography>
+                <Typography>{t("forms.drainageConnection.processingFee")}</Typography>
               </Grid>
               <Grid item xs={6}>
                 <Typography align="right">₹500</Typography>
@@ -510,7 +515,7 @@ const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
               </Grid>
 
               <Grid item xs={6}>
-                <Typography variant="h6" color="primary">Total Fee:</Typography>
+                <Typography variant="h6" color="primary">{t("forms.drainageConnection.totalFee")}</Typography>
               </Grid>
               <Grid item xs={6}>
                 <Typography variant="h6" color="primary" align="right">
@@ -524,8 +529,7 @@ const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12}>
           <Alert severity="info">
             <Typography variant="body2">
-              <strong>Note:</strong> The connection fee is calculated based on property type and built-up area. 
-              Additional charges may apply for special requirements or site conditions.
+              <strong>{t("common.note")}:</strong> {t("forms.drainageConnection.feeNote")}
             </Typography>
           </Alert>
         </Grid>
@@ -536,27 +540,28 @@ const ConnectionDetailsStep = ({ formData, updateFormData, errors }) => {
 
 // Documents Step
 const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
+  const { t } = useLanguage();
+  
   const requiredDocuments = [
-    'Property ownership documents',
-    'Building plan approval',
-    'Site plan/layout',
-    'Identity proof of applicant',
-    'Address proof',
-    'Property tax receipt',
-    'NOC from society/association (if applicable)',
-    'Existing drainage connection certificate (if any)',
-    'Soil test report (if required)',
-    'Environmental clearance (for industrial properties)'
+    t("forms.drainageConnection.propertyOwnershipDocs"),
+    t("forms.drainageConnection.buildingPlanApproval"),
+    t("forms.drainageConnection.sitePlan"),
+    t("forms.drainageConnection.identityProof"),
+    t("forms.drainageConnection.addressProof"),
+    t("forms.drainageConnection.propertyTaxReceipt"),
+    t("forms.drainageConnection.nocFromSociety"),
+    t("forms.drainageConnection.existingDrainageCert"),
+    t("forms.drainageConnection.soilTestReport"),
+    t("forms.drainageConnection.environmentalClearance")
   ];
-
 
   return (
     <Box>
       <Typography variant="h6" gutterBottom color="primary">
-        Document Upload
+        {t("forms.drainageConnection.documentUpload")}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Please upload supporting documents for drainage connection application
+        {t("forms.drainageConnection.documentUploadSubtitle")}
       </Typography>
 
       <DocumentUpload
@@ -570,7 +575,7 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
       
       <Box sx={{ mt: 3 }}>
         <Typography variant="subtitle2" gutterBottom>
-          Required Documents:
+          {t("forms.drainageConnection.requiredDocuments")}
         </Typography>
         <ul style={{ margin: 0, paddingLeft: 20 }}>
           {requiredDocuments.map((doc, index) => (
@@ -584,11 +589,13 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
 
 // Main Form Component
 const DrainageConnectionForm = () => {
+  const { t } = useLanguage();
+  
   const steps = [
-    { id: 'applicant', title: 'Applicant Information', icon: 'Person' },
-    { id: 'property', title: 'Property Details', icon: 'Home' },
-    { id: 'connection', title: 'Connection Details', icon: 'Plumbing' },
-    { id: 'documents', title: 'Documents', icon: 'Description' }
+    { id: 'applicant', title: t("forms.drainageConnection.step1"), icon: 'Person' },
+    { id: 'property', title: t("forms.drainageConnection.step2"), icon: 'Home' },
+    { id: 'connection', title: t("forms.drainageConnection.step3"), icon: 'Plumbing' },
+    { id: 'documents', title: t("forms.drainageConnection.step4"), icon: 'Description' }
   ];
 
   const validationRules = {
@@ -619,7 +626,7 @@ const DrainageConnectionForm = () => {
 
   return (
     <MultiStepForm
-      serviceName="Drainage Connection Application"
+      serviceName={t("forms.drainageConnection.title")}
       serviceType="drainage_connection"
       steps={steps}
       validationRules={validationRules}

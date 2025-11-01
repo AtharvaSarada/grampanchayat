@@ -213,19 +213,53 @@ export const validateField = (value, type, required = false, options = {}) => {
 };
 
 // Calculate age from date of birth
-export const calculateAge = (dateOfBirth) => {
+export const calculateAge = (dateOfBirth, endDate = null) => {
   if (!dateOfBirth) return '';
   
-  const today = new Date();
+  const referenceDate = endDate ? new Date(endDate) : new Date();
   const birthDate = new Date(dateOfBirth);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
   
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
+  // Validate dates
+  if (isNaN(birthDate.getTime()) || isNaN(referenceDate.getTime())) {
+    return '';
   }
   
-  return age;
+  // Check if birth date is after reference date
+  if (birthDate > referenceDate) {
+    return '';
+  }
+  
+  let years = referenceDate.getFullYear() - birthDate.getFullYear();
+  let months = referenceDate.getMonth() - birthDate.getMonth();
+  let days = referenceDate.getDate() - birthDate.getDate();
+  
+  // Adjust for negative days
+  if (days < 0) {
+    months--;
+    const lastMonth = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 0);
+    days += lastMonth.getDate();
+  }
+  
+  // Adjust for negative months
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+  
+  // Format age based on years
+  if (years > 0) {
+    if (months > 0) {
+      return `${years} years ${months} months`;
+    }
+    return `${years} years`;
+  } else if (months > 0) {
+    if (days > 0) {
+      return `${months} months ${days} days`;
+    }
+    return `${months} months`;
+  } else {
+    return `${days} days`;
+  }
 };
 
 // Enhanced file validation
@@ -281,20 +315,33 @@ export const validateMarriageAge = (brideAge, groomAge, marriageDate) => {
 
 export const validateDateConsistency = (birthDate, deathDate, marriageDate) => {
   const errors = {};
-  const birth = new Date(birthDate);
+  
+  // Handle both Date objects and string dates
+  const birth = birthDate instanceof Date ? birthDate : new Date(birthDate);
+  
+  // Validate birth date
+  if (!birthDate || isNaN(birth.getTime())) {
+    return errors; // Skip validation if birth date is invalid
+  }
   
   if (deathDate) {
-    const death = new Date(deathDate);
-    if (death <= birth) {
+    const death = deathDate instanceof Date ? deathDate : new Date(deathDate);
+    
+    // Only validate if death date is valid
+    if (!isNaN(death.getTime()) && death <= birth) {
       errors.deathDate = VALIDATION_MESSAGES.INVALID_DEATH_DATE;
     }
   }
   
   if (marriageDate) {
-    const marriage = new Date(marriageDate);
-    const marriageAge = calculateAge(birthDate, marriage);
-    if (marriageAge < 18) {
-      errors.marriageDate = VALIDATION_MESSAGES.INVALID_MARRIAGE_DATE;
+    const marriage = marriageDate instanceof Date ? marriageDate : new Date(marriageDate);
+    
+    // Only validate if marriage date is valid
+    if (!isNaN(marriage.getTime())) {
+      const marriageAge = calculateAge(birthDate, marriage);
+      if (marriageAge && typeof marriageAge === 'string' && parseInt(marriageAge) < 18) {
+        errors.marriageDate = VALIDATION_MESSAGES.INVALID_MARRIAGE_DATE;
+      }
     }
   }
   

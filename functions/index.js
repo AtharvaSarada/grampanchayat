@@ -1,4 +1,11 @@
+// Load environment variables
 require('dotenv').config();
+
+// Set GEMINI_API_KEY if not already set (for Cloud Functions deployment)
+if (!process.env.GEMINI_API_KEY) {
+  process.env.GEMINI_API_KEY = 'AIzaSyARMDx05oHbYmuK762xVgU9cDvmBmkkI4o';
+}
+
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const express = require('express');
@@ -26,7 +33,8 @@ app.get('/health', (req, res) => {
     status: 'OK',
     message: 'Gram Panchayath Services API is running on Firebase Functions',
     timestamp: new Date().toISOString(),
-    version: '1.0.0'
+    version: '1.0.6',
+    gemini_key_present: !!process.env.GEMINI_API_KEY
   });
 });
 

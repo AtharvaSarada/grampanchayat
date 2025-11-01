@@ -1,0 +1,84 @@
+{
+  "forms": {
+    "agriculturalSubsidy": {
+      "title": "कृषी अनुदान अर्ज",
+      "step1": "वैयक्तिक माहिती",
+      "step2": "प्रकल्प तपशील",
+      "step3": "जमीन तपशील",
+      "step4": "आर्थिक माहिती",
+      "step5": "कागदपत्रे",
+      
+      "personalInfo": {
+        "title": "वैयक्तिक माहिती",
+        "subtitle": "कृपया अधिकृत कागदपत्रांनुसार तुमची वैयक्तिक माहिती प्रदान करा",
+        "applicantName": "अर्जदाराचे नाव *",
+        "fatherHusbandName": "वडिलांचे/पतीचे नाव *",
+        "gender": "लिंग *",
+        "dateOfBirth": "जन्मतारीख *",
+        "age": "वय",
+        "mobileNumber": "मोबाईल नंबर *",
+        "email": "ईमेल आयडी",
+        "aadhaarNumber": "आधार कार्ड नंबर *",
+        "category": "श्रेणी *",
+        "address": "पत्ता *"
+      },
+      
+      "projectInfo": {
+        "title": "प्रकल्प तपशील",
+        "subtitle": "कृपया तुमच्या कृषी प्रकल्पाबद्दल माहिती प्रदान करा",
+        "projectType": "प्रकल्पाचा प्रकार *",
+        "projectDescription": "प्रकल्पाचे तपशील *",
+        "projectStartDate": "प्रकल्प सुरू करण्याची तारीख *",
+        "projectArea": "एकूण क्षेत्रफळ (हेक्टर मध्ये) *",
+        "cropType": "पिकाचा प्रकार *",
+        "irrigationType": "सिंचन प्रकार *",
+        "expectedOutput": "अपेक्षित उत्पादन (क्विंटल मध्ये) *",
+        "previousSubsidy": "मागील वर्षी अनुदान मिळाले होते का? *"
+      },
+      
+      "landInfo": {
+        "title": "जमीन तपशील",
+        "subtitle": "कृपया तुमच्या जमिनीची माहिती प्रदान करा",
+        "landType": "जमिनीचा प्रकार *",
+        "landOwnership": "जमिनीचे मालकी हक्क *",
+        "landArea": "एकूण जमीन क्षेत्र (हेक्टर) *",
+        "cultivableArea": "लागवडीखालील क्षेत्र (हेक्टर) *",
+        "surveyNumber": "सर्वे नंबर *",
+        "village": "गाव *",
+        "taluka": "तालुका *",
+        "district": "जिल्हा *",
+        "pincode": "पिन कोड *"
+      },
+      
+      "financialInfo": {
+        "title": "आर्थिक माहिती",
+        "subtitle": "कृपया तुमची आर्थिक माहिती प्रदान करा",
+        "annualIncome": "वार्षिक उत्पन्न (₹ मध्ये) *",
+        "bankName": "बँकेचे नाव *",
+        "accountNumber": "बँक खाते क्रमांक *",
+        "ifscCode": "IFSC कोड *",
+        "branchName": "शाखेचे नाव *",
+        "subsidyAmount": "अनुदान रक्कम (₹ मध्ये) *",
+        "totalProjectCost": "एकूण प्रकल्प खर्च (₹ मध्ये) *",
+        "ownContribution": "स्वतःचे योगदान (₹ मध्ये) *",
+        "loanAmount": "कर्ज रक्कम (₹ मध्ये)",
+        "otherSources": "इतर स्रोत (₹ मध्ये)"
+      },
+      
+      "documents": {
+        "title": "कागदपत्रे अपलोड करा",
+        "subtitle": "कृपया कृषी अनुदान अर्जासाठी सर्व आवश्यक कागदपत्रे अपलोड करा",
+        "requiredDocuments": "आवश्यक कागदपत्रे:",
+        "aadhaarCard": "आधार कार्ड",
+        "landRecords": "७/१२ उतारा किंवा जमीन नोंद",
+        "bankPassbook": "बँक पासबुक प्रत",
+        "incomeCertificate": "उत्पन्न प्रमाणपत्र",
+        "casteCertificate": "जात प्रमाणपत्र (लागू असल्यास)",
+        "projectReport": "प्रकल्प अहवाल",
+        "quotation": "उपकरणांसाठी कोटेशन",
+        "landPossessionLetter": "जमिनीवरील ताब्याचे पत्र",
+        "photos": "जमिनीची आणि विद्यमान पिकांची छायाचित्रे"
+      }
+    }
+  }
+}

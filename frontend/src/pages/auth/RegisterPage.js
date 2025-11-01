@@ -28,8 +28,72 @@ import { auth, db } from '../../services/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { useLanguage } from '../../i18n/LanguageProvider';
+
+const translations = {
+  en: {
+    createAccount: "Create Account",
+    joinPlatform: "Join the Gram Panchayat E-Services platform",
+    firstName: "First Name",
+    lastName: "Last Name",
+    emailAddress: "Email Address",
+    phoneNumber: "Phone Number",
+    password: "Password",
+    confirmPassword: "Confirm Password",
+    creatingAccount: "Creating Account...",
+    alreadyHaveAccount: "Already have an account?",
+    signIn: "Sign In",
+    validation: {
+      required: "Please fill in all required fields",
+      alpha: "Names should contain only alphabetic characters",
+      email: "Please enter a valid email address",
+      phone: "Invalid phone number - must be exactly 10 digits",
+      passwordMatch: "Passwords do not match",
+      passwordLength: "Password must be at least 8 characters long",
+    },
+    registration: {
+      success: "Registration successful! Please login.",
+      failed: "Registration failed. Please try again.",
+      emailInUse: "An account with this email already exists.",
+      invalidEmail: "Invalid email address format.",
+      weakPassword: "Password is too weak. Please choose a stronger password.",
+      unexpected: "An unexpected error occurred.",
+    }
+  },
+  mr: {
+    createAccount: "खाते तयार करा",
+    joinPlatform: "ग्रामपंचायत ई-सेवा प्लॅटफॉर्मवर सामील व्हा",
+    firstName: "पहिले नाव",
+    lastName: "आडनाव",
+    emailAddress: "ईमेल पत्ता",
+    phoneNumber: "फोन नंबर",
+    password: "पासवर्ड",
+    confirmPassword: "पासवर्डची पुष्टी करा",
+    creatingAccount: "खाते तयार करत आहे...",
+    alreadyHaveAccount: "आधीपासूनच खाते आहे?",
+    signIn: "साइन इन करा",
+    validation: {
+      required: "कृपया सर्व आवश्यक फील्ड भरा",
+      alpha: "नावांमध्ये फक्त अक्षरे असावीत",
+      email: "कृपया वैध ईमेल पत्ता प्रविष्ट करा",
+      phone: "अवैध फोन नंबर - नक्की १० अंक असणे आवश्यक आहे",
+      passwordMatch: "पासवर्ड जुळत नाहीत",
+      passwordLength: "पासवर्ड किमान ८ अक्षरे लांब असणे आवश्यक आहे",
+    },
+    registration: {
+      success: "नोंदणी यशस्वी! कृपया लॉगिन करा.",
+      failed: "नोंदणी अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
+      emailInUse: "या ईमेलसह एक खाते आधीपासूनच अस्तित्वात आहे.",
+      invalidEmail: "अवैध ईमेल पत्ता स्वरूप.",
+      weakPassword: "पासवर्ड खूप कमकुवत आहे. कृपया एक मजबूत पासवर्ड निवडा.",
+      unexpected: "एक अनपेक्षित त्रुटी आली.",
+    }
+  }
+};
 
 const RegisterPage = () => {
+  const { language, t: translate } = useLanguage();
+  const t = (key) => translate(key, translations[language][key] || key);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: '',
@@ -46,43 +110,52 @@ const RegisterPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // For phoneNumber field, only allow numeric input
+    if (name === 'phoneNumber' && value !== '') {
+      // Replace any non-numeric characters and limit to 10 digits
+      const numericValue = value.replace(/\D/g, '').slice(0, 10);
+      setFormData(prev => ({
+        ...prev,
+        [name]: numericValue
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+    
     if (error) setError('');
   };
 
   const validateForm = () => {
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
-      setError('Please fill in all required fields');
+      setError(t('validation.required'));
       return false;
     }
 
-    // Validate names (alphabetic only)
     if (!/^[a-zA-Z\s]+$/.test(formData.firstName) || !/^[a-zA-Z\s]+$/.test(formData.lastName)) {
-      setError('Names should contain only alphabetic characters');
+      setError(t('validation.alpha'));
       return false;
     }
 
-    // Validate email format
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setError('Please enter a valid email address');
+      setError(t('validation.email'));
       return false;
     }
 
-    // Validate phone number (exactly 10 digits)
     if (formData.phoneNumber && !/^\d{10}$/.test(formData.phoneNumber)) {
-      setError('Invalid phone number - must be exactly 10 digits');
+      setError(t('validation.phone'));
       return false;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('validation.passwordMatch'));
       return false;
     }
     if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long');
+      setError(t('validation.passwordLength'));
       return false;
     }
     return true;
@@ -96,7 +169,6 @@ const RegisterPage = () => {
     setError('');
 
     try {
-      // Try to register via backend API first
       try {
         const response = await api.auth.register({
           email: formData.email,
@@ -107,8 +179,7 @@ const RegisterPage = () => {
         });
         
         if (response.data.success) {
-          // If API registration is successful, the backend should handle Firestore storage
-          toast.success('Registration successful! Please login.');
+          toast.success(t('registration.success'));
           navigate('/login');
           return;
         }
@@ -116,25 +187,22 @@ const RegisterPage = () => {
         console.log('API registration failed, trying Firebase directly');
       }
       
-      // Fallback to direct Firebase registration
       const userCredential = await createUserWithEmailAndPassword(
         auth, 
         formData.email, 
         formData.password
       );
       
-      // Update user display name in Firebase Auth
       await updateProfile(userCredential.user, {
         displayName: `${formData.firstName} ${formData.lastName}`
       });
       
-      // Store user profile data in Firebase Firestore
       const profileData = {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
-        name: `${formData.firstName.trim()} ${formData.lastName.trim()}`, // For backward compatibility
+        name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
         phoneNumber: formData.phoneNumber.trim(),
-        phone: formData.phoneNumber.trim(), // For consistency with admin form
+        phone: formData.phoneNumber.trim(),
         email: formData.email.trim().toLowerCase(),
         address: '',
         city: '',
@@ -142,7 +210,7 @@ const RegisterPage = () => {
         pincode: '',
         occupation: '',
         dateOfBirth: '',
-        role: 'user', // Changed from 'citizen' to 'user' for consistency
+        role: 'user',
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -150,25 +218,25 @@ const RegisterPage = () => {
       const userDocRef = doc(db, 'users', userCredential.user.uid);
       await setDoc(userDocRef, profileData);
       
-      toast.success('Registration successful! Please login.');
+      toast.success(t('registration.success'));
       navigate('/login');
       
     } catch (error) {
       console.error('Registration error:', error);
-      let errorMessage = 'Registration failed. Please try again.';
+      let errorMessage;
       
       switch (error.code) {
         case 'auth/email-already-in-use':
-          errorMessage = 'An account with this email already exists.';
+          errorMessage = t('registration.emailInUse');
           break;
         case 'auth/invalid-email':
-          errorMessage = 'Invalid email address format.';
+          errorMessage = t('registration.invalidEmail');
           break;
         case 'auth/weak-password':
-          errorMessage = 'Password is too weak. Please choose a stronger password.';
+          errorMessage = t('registration.weakPassword');
           break;
         default:
-          errorMessage = error.message || 'An unexpected error occurred.';
+          errorMessage = error.message || t('registration.unexpected');
       }
       
       setError(errorMessage);
@@ -190,25 +258,22 @@ const RegisterPage = () => {
     >
       <Container maxWidth="md">
         <Paper elevation={8} sx={{ p: 4, borderRadius: 3 }}>
-          {/* Header */}
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Business color="primary" sx={{ fontSize: 48, mb: 2 }} />
             <Typography variant="h4" component="h1" gutterBottom color="primary">
-              Create Account
+              {t('createAccount')}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Join the Gram Panchayat E-Services platform
+              {t('joinPlatform')}
             </Typography>
           </Box>
 
-          {/* Error Alert */}
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>
               {error}
             </Alert>
           )}
 
-          {/* Registration Form */}
           <Box component="form" onSubmit={handleSubmit}>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
@@ -216,7 +281,7 @@ const RegisterPage = () => {
                   required
                   fullWidth
                   name="firstName"
-                  label="First Name"
+                  label={t('firstName')}
                   value={formData.firstName}
                   onChange={handleInputChange}
                   disabled={loading}
@@ -235,7 +300,7 @@ const RegisterPage = () => {
                   required
                   fullWidth
                   name="lastName"
-                  label="Last Name"
+                  label={t('lastName')}
                   value={formData.lastName}
                   onChange={handleInputChange}
                   disabled={loading}
@@ -254,7 +319,7 @@ const RegisterPage = () => {
                   required
                   fullWidth
                   name="email"
-                  label="Email Address"
+                  label={t('emailAddress')}
                   type="email"
                   value={formData.email}
                   onChange={handleInputChange}
@@ -273,10 +338,15 @@ const RegisterPage = () => {
                 <TextField
                   fullWidth
                   name="phoneNumber"
-                  label="Phone Number"
+                  label={t('phoneNumber')}
                   value={formData.phoneNumber}
                   onChange={handleInputChange}
                   disabled={loading}
+                  inputProps={{
+                    maxLength: 10,
+                    pattern: "[0-9]*",
+                    inputMode: "numeric"
+                  }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -292,7 +362,7 @@ const RegisterPage = () => {
                   required
                   fullWidth
                   name="password"
-                  label="Password"
+                  label={t('password')}
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={handleInputChange}
@@ -322,7 +392,7 @@ const RegisterPage = () => {
                   required
                   fullWidth
                   name="confirmPassword"
-                  label="Confirm Password"
+                  label={t('confirmPassword')}
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
@@ -358,19 +428,19 @@ const RegisterPage = () => {
               {loading ? (
                 <>
                   <ChakraSpinner size="20px" />
-                  Creating Account...
+                  {t('creatingAccount')}
                 </>
               ) : (
-                'Create Account'
+                t('createAccount')
               )}
             </Button>
           </Box>
 
           <Box sx={{ textAlign: 'center', mt: 3 }}>
             <Typography variant="body2" color="text.secondary">
-              Already have an account?{' '}
+              {t('alreadyHaveAccount')}{' '}
               <Link component={RouterLink} to="/login" sx={{ textDecoration: 'none' }}>
-                Sign In
+                {t('signIn')}
               </Link>
             </Typography>
           </Box>

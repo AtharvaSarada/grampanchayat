@@ -239,32 +239,13 @@ const UniversalForm = ({
 
   // Handle form submission
   const handleSubmit = async () => {
-    // Perform a fresh validation of all steps from scratch
-    const newErrors = {};
+    // Validate all steps
     let isFormValid = true;
-    steps.forEach((stepFields) => {
-      stepFields.forEach(([fieldName, fieldConfig]) => {
-        const value = formData[fieldName];
-        
-        // Check for required fields
-        if (fieldConfig.required && (!value || value.length === 0)) {
-          newErrors[fieldName] = `${fieldConfig.label} is required`;
-          isFormValid = false;
-          return;
-        }
-
-        // Apply advanced validation rules
-        const rules = validationRules[fieldName] || [];
-        const error = validateField(value, rules);
-        if (error) {
-          newErrors[fieldName] = error;
-          isFormValid = false;
-        }
-      });
-    });
-
-    // Authoritatively set the new, complete error state
-    setErrors(newErrors);
+    for (let i = 0; i < steps.length; i++) {
+      if (!validateStep(i)) {
+        isFormValid = false;
+      }
+    }
 
     if (!isFormValid) {
       toast.error('Please fix all errors before submitting');
@@ -272,7 +253,7 @@ const UniversalForm = ({
     }
 
     try {
-      // Prepare submission data (this logic remains the same)
+      // Prepare submission data
       const submissionData = {
         formData,
         serviceType,
@@ -283,6 +264,7 @@ const UniversalForm = ({
 
       await onSubmit(submissionData);
       
+      // Clear draft after successful submission
       if (enableDraft && currentUser) {
         clearDraft(serviceType, currentUser.uid);
       }

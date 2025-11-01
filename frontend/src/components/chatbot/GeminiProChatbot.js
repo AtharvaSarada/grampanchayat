@@ -27,17 +27,19 @@ import {
   AutoAwesome as GeminiIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 // Use the deployed Firebase Functions URL
 const API_BASE_URL = 'https://api-vastrf6wqa-uc.a.run.app';
 
 const GeminiProChatbot = () => {
+  const { t, language, isMarathi } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
       id: 1,
       type: 'bot',
-      text: 'Hello! What can I help you with today? 😊',
+      text: t('chatbot.greeting', isMarathi ? 'नमस्कार! आज मी तुम्हाला कशात मदत करू शकतो/शकते? 😊' : 'Hello! What can I help you with today? 😊'),
       timestamp: new Date()
     }
   ]);
@@ -48,8 +50,25 @@ const GeminiProChatbot = () => {
   const navigate = useNavigate();
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   };
+
+  // Update the initial greeting if the user changes the site language before chatting
+  useEffect(() => {
+    setMessages(prev => {
+      if (prev.length === 1 && prev[0].type === 'bot') {
+        const cloned = [...prev];
+        cloned[0] = {
+          ...cloned[0],
+          text: t('chatbot.greeting', isMarathi ? 'नमस्कार! आज मी तुम्हाला कशात मदत करू शकतो/शकते? 😊' : 'Hello! What can I help you with today? 😊')
+        };
+        return cloned;
+      }
+      return prev;
+    });
+  }, [language, isMarathi, t]);
 
   useEffect(() => {
     scrollToBottom();
@@ -94,7 +113,8 @@ const GeminiProChatbot = () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          query: userMessage.text
+          query: userMessage.text,
+          lang: language
         })
       });
 
@@ -120,9 +140,9 @@ const GeminiProChatbot = () => {
         const botMessage = {
           id: Date.now() + 1,
           type: 'bot',
-          text: data.message || 'I\'m having trouble understanding your request. Could you try rephrasing it?',
+          text: data.message || t('chatbot.fallback', isMarathi ? 'मला तुमची विनंती समजण्यात अडचण येत आहे. कृपया पुन्हा स्पष्टपणे सांगा.' : "I'm having trouble understanding your request. Could you try rephrasing it?"),
           fallback: true,
-          suggestions: data.suggestions || [],
+          suggestions: data.suggestions || t('chatbot.quickSuggestions', []),
           timestamp: new Date()
         };
         setMessages(prev => [...prev, botMessage]);
@@ -138,16 +158,26 @@ const GeminiProChatbot = () => {
       const errorMessage = {
         id: Date.now() + 1,
         type: 'bot',
-        text: `I'm having trouble processing your request right now. Could you please tell me specifically what government service you need? For example, you could say 'I need a birth certificate' or 'I'm getting married, what do I need?' 🤔`,
+        text: t('chatbot.errorProcessing', isMarathi 
+          ? 'सध्या तुमची विनंती प्रक्रिया करण्यात अडचण येत आहे. कृपया तुम्हाला नेमकी कोणती सरकारी सेवा हवी आहे ते सांगा. उदाहरणार्थ, "मला जन्म प्रमाणपत्र हवे आहे" किंवा "माझे लग्न आहे, मला काय लागेल?" असे सांगा. 🤔'
+          : `I'm having trouble processing your request right now. Could you please tell me specifically what government service you need? For example, you could say 'I need a birth certificate' or 'I'm getting married, what do I need?' 🤔`
+        ),
         fallback: true,
-        suggestions: [
-          "I need a birth certificate",
-          "I'm getting married, what documents do I need?",
-          "How do I start a business?",
-          "I need water connection for my house",
-          "I want to build a house",
-          "I need income certificate"
-        ],
+        suggestions: t('chatbot.quickSuggestions', isMarathi ? [
+          'माझे लग्न पुढच्या महिन्यात आहे 💍',
+          'माझ्या बायकोला नुकताच बाळ झाला 👶',
+          'मला छोटा व्यवसाय सुरू करायचा आहे 🏪',
+          'मला घरासाठी पाणी कनेक्शन हवे आहे 💧',
+          'मला घर बांधायचे आहे 🏠',
+          'मला उत्पन्न प्रमाणपत्र हवे आहे 📄'
+        ] : [
+          "I'm getting married next month 💍",
+          "My wife just had a baby 👶",
+          "I want to start a small business 🏪",
+          "I need water connection 💧",
+          "I want to build a house 🏠",
+          "I need income certificate 📄"
+        ]),
         error: true,
         timestamp: new Date()
       };
@@ -262,12 +292,12 @@ const GeminiProChatbot = () => {
                   
                   <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                     <Chip 
-                      label={`💰 Fee: ${message.recommendedService.fee}`} 
+                      label={`💰 ${isMarathi ? 'शुल्क' : 'Fee'}: ${message.recommendedService.fee}`} 
                       size="small" 
                       variant="outlined"
                     />
                     <Chip 
-                      label={`⏱️ Time: ${message.recommendedService.processing_time}`} 
+                      label={`⏱️ ${isMarathi ? 'वेळ' : 'Time'}: ${message.recommendedService.processing_time}`} 
                       size="small" 
                       variant="outlined"
                     />
@@ -276,7 +306,7 @@ const GeminiProChatbot = () => {
                   {message.recommendedService.documents_required && message.recommendedService.documents_required.length > 0 && (
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="subtitle2" gutterBottom>
-                        📄 Required Documents:
+                        📄 {isMarathi ? 'आवश्यक कागदपत्रे:' : 'Required Documents:'}
                       </Typography>
                       <Box sx={{ pl: 1 }}>
                         {message.recommendedService.documents_required.map((doc, index) => (
@@ -300,17 +330,38 @@ const GeminiProChatbot = () => {
                     fullWidth
                     sx={{ mt: 1 }}
                   >
-                    Apply Now
+                    {t('services.applyNow', isMarathi ? 'आता अर्ज करा' : 'Apply Now')}
                   </Button>
                 </CardContent>
               </Card>
+            )}
+
+            {/* Fallback: Show apply links if present even when no structured service object */}
+            {!message.recommendedService && message.applicationLinks && message.applicationLinks.length > 0 && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  {t('services.applyNow', isMarathi ? 'आता अर्ज करा' : 'Apply Now')}
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {message.applicationLinks.slice(0, 3).map((link, idx) => (
+                    <Button
+                      key={idx}
+                      variant="contained"
+                      startIcon={<LaunchIcon />}
+                      onClick={() => handleServiceApply(link)}
+                    >
+                      {link}
+                    </Button>
+                  ))}
+                </Box>
+              </Box>
             )}
             
             {/* Fallback suggestions */}
             {message.fallback && message.suggestions && message.suggestions.length > 0 && (
               <Box sx={{ mt: 2 }}>
                 <Typography variant="caption" color="text.secondary" gutterBottom>
-                  Try asking:
+                  {t('chatbot.tryExamples', isMarathi ? 'ही उदाहरणे वापरून पाहा:' : 'Try these examples:')}
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
                   {message.suggestions.map((suggestion, index) => (
@@ -361,14 +412,21 @@ const GeminiProChatbot = () => {
     );
   };
 
-  const quickSuggestions = [
+  const quickSuggestions = t('chatbot.quickSuggestions', isMarathi ? [
+    'माझे लग्न पुढच्या महिन्यात आहे 💍',
+    'माझ्या बायकोला नुकताच बाळ झाला 👶',
+    'मला छोटा व्यवसाय सुरू करायचा आहे 🏪',
+    'मला पाणी कनेक्शन हवे आहे 💧',
+    'मला घर बांधायचे आहे 🏠',
+    'मला उत्पन्न प्रमाणपत्र हवे आहे 📄'
+  ] : [
     'I\'m getting married next month 💍',
     'My wife just had a baby 👶',
     'I want to start a small business 🏪',
     'I need water connection 💧',
     'I want to build a house 🏠',
     'I need income certificate 📄'
-  ];
+  ]);
 
   const getConnectionStatusColor = () => {
     switch (connectionStatus) {
@@ -381,9 +439,9 @@ const GeminiProChatbot = () => {
 
   const getConnectionStatusText = () => {
     switch (connectionStatus) {
-      case 'connected': return '🟢 Connected to Gemini Pro';
-      case 'sending': return '📡 Sending to AI...';
-      case 'error': return '🔴 Connection Error';
+      case 'connected': return t('chatbot.status.connected', isMarathi ? '🟢 जेमिनी प्रोशी कनेक्ट झाले' : '🟢 Connected to Gemini Pro');
+      case 'sending': return t('chatbot.status.sending', isMarathi ? '📡 एआयकडे पाठवत आहे...' : '📡 Sending to AI...');
+      case 'error': return t('chatbot.status.error', isMarathi ? '🔴 कनेक्शन त्रुटी' : '🔴 Connection Error');
       default: return 'Status Unknown';
     }
   };
@@ -517,7 +575,7 @@ const GeminiProChatbot = () => {
                 <Paper elevation={2} sx={{ p: 2, bgcolor: 'grey.50' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <ChakraSpinner size="20px" />
-                    <Typography variant="body2">Gemini Pro is thinking...</Typography>
+                    <Typography variant="body2">{t('chatbot.thinking', isMarathi ? 'जेमिनी प्रो विचार करत आहे...' : 'Gemini Pro is thinking...')}</Typography>
                   </Box>
                 </Paper>
               </Box>
@@ -530,7 +588,7 @@ const GeminiProChatbot = () => {
           {messages.length === 1 && (
             <Box sx={{ p: 2, bgcolor: 'background.paper' }}>
               <Typography variant="caption" color="text.secondary" gutterBottom>
-                Try these examples:
+                {t('chatbot.tryExamples', isMarathi ? 'ही उदाहरणे वापरून पाहा:' : 'Try these examples:')}
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
                 {quickSuggestions.map((suggestion, index) => (
@@ -561,7 +619,7 @@ const GeminiProChatbot = () => {
               <TextField
                 fullWidth
                 variant="outlined"
-                placeholder="Ask me about any government service..."
+                placeholder={t('chatbot.inputPlaceholder', isMarathi ? 'कोणत्याही सरकारी सेवेसंबंधी मला विचारा...' : 'Ask me about any government service...')}
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={handleKeyPress}

@@ -26,9 +26,11 @@ import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import MultiStepForm from './MultiStepForm';
 import DocumentUpload from '../common/DocumentUpload';
 import { calculateAge } from '../../utils/formValidation';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 // Step Components
 const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     const updates = { [field]: value };
     
@@ -42,28 +44,28 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Personal Information
+        {t('forms.incomeCertificate.personalInfo')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Please provide your personal details as per official documents
+        {t('forms.incomeCertificate.providePersonalDetails')}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Full Name *"
+            label={t('forms.incomeCertificate.fullName')}
             value={formData.fullName || ''}
             onChange={(e) => handleChange('fullName', e.target.value)}
             error={!!errors.fullName}
-            helperText={errors.fullName || 'Full name as per Aadhaar card'}
+            helperText={errors.fullName || t('forms.incomeCertificate.fullNameHelper')}
           />
         </Grid>
         
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Father's/Husband's Name *"
+            label={t('forms.incomeCertificate.fatherHusbandName')}
             value={formData.fatherName || ''}
             onChange={(e) => handleChange('fatherName', e.target.value)}
             error={!!errors.fatherName}
@@ -74,7 +76,7 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={4}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DatePicker
-              label="Date of Birth *"
+              label={t('forms.common.dateOfBirth')}
               value={formData.dateOfBirth || null}
               onChange={(value) => handleChange('dateOfBirth', value)}
               renderInput={(params) => (
@@ -93,60 +95,60 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={4}>
           <TextField
             fullWidth
-            label="Age"
+            label={t('forms.incomeCertificate.age')}
             value={formData.age || ''}
             InputProps={{ readOnly: true }}
-            helperText="Auto-calculated from date of birth"
+            helperText={t('forms.incomeCertificate.ageHelper')}
           />
         </Grid>
 
         <Grid item xs={12} md={4}>
           <FormControl fullWidth error={!!errors.gender}>
-            <InputLabel>Gender *</InputLabel>
+            <InputLabel>{t('forms.common.gender')}</InputLabel>
             <Select
               value={formData.gender || ''}
               onChange={(e) => handleChange('gender', e.target.value)}
-              label="Gender *"
+              label={t('forms.common.gender')}
             >
-              <MenuItem value="Male">Male</MenuItem>
-              <MenuItem value="Female">Female</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
+              <MenuItem value="Male">{t('forms.common.male')}</MenuItem>
+              <MenuItem value="Female">{t('forms.common.female')}</MenuItem>
+              <MenuItem value="Other">{t('forms.common.other')}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.caste}>
-            <InputLabel>Caste/Category *</InputLabel>
+            <InputLabel>{t('forms.incomeCertificate.casteCategory')}</InputLabel>
             <Select
               value={formData.caste || ''}
               onChange={(e) => handleChange('caste', e.target.value)}
-              label="Caste/Category *"
+              label={t('forms.incomeCertificate.casteCategory')}
             >
-              <MenuItem value="General">General</MenuItem>
-              <MenuItem value="SC">SC (Scheduled Caste)</MenuItem>
-              <MenuItem value="ST">ST (Scheduled Tribe)</MenuItem>
-              <MenuItem value="OBC">OBC (Other Backward Class)</MenuItem>
-              <MenuItem value="EWS">EWS (Economically Weaker Section)</MenuItem>
+              <MenuItem value="General">{t('forms.common.general')}</MenuItem>
+              <MenuItem value="SC">{t('forms.common.sc')}</MenuItem>
+              <MenuItem value="ST">{t('forms.common.st')}</MenuItem>
+              <MenuItem value="OBC">{t('forms.common.obc')}</MenuItem>
+              <MenuItem value="EWS">{t('forms.common.ews')}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.religion}>
-            <InputLabel>Religion *</InputLabel>
+            <InputLabel>{t('forms.incomeCertificate.religion')}</InputLabel>
             <Select
               value={formData.religion || ''}
               onChange={(e) => handleChange('religion', e.target.value)}
-              label="Religion *"
+              label={t('forms.incomeCertificate.religion')}
             >
-              <MenuItem value="Hindu">Hindu</MenuItem>
-              <MenuItem value="Muslim">Muslim</MenuItem>
-              <MenuItem value="Christian">Christian</MenuItem>
-              <MenuItem value="Sikh">Sikh</MenuItem>
-              <MenuItem value="Buddhist">Buddhist</MenuItem>
-              <MenuItem value="Jain">Jain</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
+              <MenuItem value="Hindu">{t('forms.common.hindu')}</MenuItem>
+              <MenuItem value="Muslim">{t('forms.common.muslim')}</MenuItem>
+              <MenuItem value="Christian">{t('forms.common.christian')}</MenuItem>
+              <MenuItem value="Sikh">{t('forms.common.sikh')}</MenuItem>
+              <MenuItem value="Buddhist">{t('forms.common.buddhist')}</MenuItem>
+              <MenuItem value="Jain">{t('forms.common.jain')}</MenuItem>
+              <MenuItem value="Other">{t('forms.common.other')}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -156,11 +158,11 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={3}
-            label="Permanent Address *"
+            label={t('forms.common.permanentAddress')}
             value={formData.permanentAddress || ''}
             onChange={(e) => handleChange('permanentAddress', e.target.value)}
             error={!!errors.permanentAddress}
-            helperText={errors.permanentAddress || 'Complete permanent address'}
+            helperText={errors.permanentAddress || t('forms.common.permanentAddressHelper')}
           />
         </Grid>
 
@@ -169,21 +171,21 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={3}
-            label="Current Address"
+            label={t('forms.incomeCertificate.currentAddress')}
             value={formData.currentAddress || ''}
             onChange={(e) => handleChange('currentAddress', e.target.value)}
-            helperText="Leave blank if same as permanent address"
+            helperText={t('forms.incomeCertificate.currentAddressHelper')}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Mobile Number *"
+            label={t('forms.common.mobile')}
             value={formData.mobile || ''}
             onChange={(e) => handleChange('mobile', e.target.value)}
             error={!!errors.mobile}
-            helperText={errors.mobile || '10-digit mobile number'}
+            helperText={errors.mobile || t('forms.common.mobileHelper')}
             inputProps={{ maxLength: 10 }}
           />
         </Grid>
@@ -191,23 +193,23 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Email ID"
+            label={t('forms.common.email')}
             type="email"
             value={formData.email || ''}
             onChange={(e) => handleChange('email', e.target.value)}
             error={!!errors.email}
-            helperText={errors.email || 'Optional but recommended'}
+            helperText={errors.email || t('forms.incomeCertificate.emailHelper')}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Aadhaar Number *"
+            label={t('forms.common.aadhaar')}
             value={formData.aadhaar || ''}
             onChange={(e) => handleChange('aadhaar', e.target.value)}
             error={!!errors.aadhaar}
-            helperText={errors.aadhaar || '12-digit Aadhaar number'}
+            helperText={errors.aadhaar || t('forms.incomeCertificate.aadhaarHelper')}
             inputProps={{ maxLength: 12 }}
           />
         </Grid>
@@ -217,6 +219,7 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
 };
 
 const IncomeDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     updateFormData({ [field]: value });
   };
@@ -251,31 +254,31 @@ const IncomeDetailsStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Income Details
+        {t('forms.incomeCertificate.incomeDetails')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Provide complete income information from all sources
+        {t('forms.incomeCertificate.provideIncomeInfo')}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.occupation}>
-            <InputLabel>Applicant's Occupation *</InputLabel>
+            <InputLabel>{t('forms.incomeCertificate.applicantOccupation')}</InputLabel>
             <Select
               value={formData.occupation || ''}
               onChange={(e) => handleChange('occupation', e.target.value)}
-              label="Applicant's Occupation *"
+              label={t('forms.incomeCertificate.applicantOccupation')}
             >
-              <MenuItem value="Agriculture">Agriculture</MenuItem>
-              <MenuItem value="Business">Business</MenuItem>
-              <MenuItem value="Government Service">Government Service</MenuItem>
-              <MenuItem value="Private Service">Private Service</MenuItem>
-              <MenuItem value="Daily Wage Labor">Daily Wage Labor</MenuItem>
-              <MenuItem value="Self Employed">Self Employed</MenuItem>
-              <MenuItem value="Unemployed">Unemployed</MenuItem>
-              <MenuItem value="Retired">Retired</MenuItem>
-              <MenuItem value="Student">Student</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
+              <MenuItem value="Agriculture">{t('forms.common.agriculture')}</MenuItem>
+              <MenuItem value="Business">{t('forms.common.business')}</MenuItem>
+              <MenuItem value="Government Service">{t('forms.common.governmentService')}</MenuItem>
+              <MenuItem value="Private Service">{t('forms.common.privateService')}</MenuItem>
+              <MenuItem value="Daily Wage Labor">{t('forms.common.dailyWageLabor')}</MenuItem>
+              <MenuItem value="Self Employed">{t('forms.common.selfEmployed')}</MenuItem>
+              <MenuItem value="Unemployed">{t('forms.common.unemployed')}</MenuItem>
+              <MenuItem value="Retired">{t('forms.common.retired')}</MenuItem>
+              <MenuItem value="Student">{t('forms.common.student')}</MenuItem>
+              <MenuItem value="Other">{t('forms.common.other')}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -283,12 +286,12 @@ const IncomeDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Monthly Income *"
+            label={t('forms.incomeCertificate.monthlyIncome')}
             type="number"
             value={formData.monthlyIncome || ''}
             onChange={(e) => handleChange('monthlyIncome', e.target.value)}
             error={!!errors.monthlyIncome}
-            helperText={errors.monthlyIncome || 'Personal monthly income'}
+            helperText={errors.monthlyIncome || t('forms.incomeCertificate.monthlyIncomeHelper')}
             InputProps={{
               startAdornment: <InputAdornment position="start">₹</InputAdornment>
             }}
@@ -298,12 +301,12 @@ const IncomeDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Annual Income *"
+            label={t('forms.incomeCertificate.annualIncome')}
             type="number"
             value={formData.annualIncome || ''}
             onChange={(e) => handleChange('annualIncome', e.target.value)}
             error={!!errors.annualIncome}
-            helperText={errors.annualIncome || 'Personal annual income'}
+            helperText={errors.annualIncome || t('forms.incomeCertificate.annualIncomeHelper')}
             InputProps={{
               startAdornment: <InputAdornment position="start">₹</InputAdornment>
             }}
@@ -313,12 +316,12 @@ const IncomeDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Total Family Income *"
+            label={t('forms.incomeCertificate.totalFamilyIncome')}
             type="number"
             value={formData.totalFamilyIncome || ''}
             onChange={(e) => handleChange('totalFamilyIncome', e.target.value)}
             error={!!errors.totalFamilyIncome}
-            helperText={errors.totalFamilyIncome || 'Combined family income'}
+            helperText={errors.totalFamilyIncome || t('forms.incomeCertificate.totalFamilyIncomeHelper')}
             InputProps={{
               startAdornment: <InputAdornment position="start">₹</InputAdornment>
             }}
@@ -327,20 +330,20 @@ const IncomeDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom>
-            Agricultural Income (if applicable)
+            {t('forms.incomeCertificate.agriculturalIncome')}
           </Typography>
         </Grid>
 
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Agricultural Land Area"
+            label={t('forms.incomeCertificate.agriculturalLandArea')}
             type="number"
             value={formData.agriculturalLandArea || ''}
             onChange={(e) => handleChange('agriculturalLandArea', e.target.value)}
-            helperText="Area in acres"
+            helperText={t('forms.incomeCertificate.landAreaHelper')}
             InputProps={{
-              endAdornment: <InputAdornment position="end">Acres</InputAdornment>
+              endAdornment: <InputAdornment position="end">{t('forms.common.acres')}</InputAdornment>
             }}
           />
         </Grid>
@@ -348,11 +351,11 @@ const IncomeDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Annual Agricultural Income"
+            label={t('forms.incomeCertificate.annualAgriculturalIncome')}
             type="number"
             value={formData.agriculturalIncome || ''}
             onChange={(e) => handleChange('agriculturalIncome', e.target.value)}
-            helperText="Income from agriculture"
+            helperText={t('forms.incomeCertificate.agricultureIncomeHelper')}
             InputProps={{
               startAdornment: <InputAdornment position="start">₹</InputAdornment>
             }}
@@ -361,28 +364,28 @@ const IncomeDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom>
-            Business Income (if applicable)
+            {t('forms.incomeCertificate.businessIncome')}
           </Typography>
         </Grid>
 
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Business Type"
+            label={t('forms.incomeCertificate.businessType')}
             value={formData.businessType || ''}
             onChange={(e) => handleChange('businessType', e.target.value)}
-            helperText="Type of business"
+            helperText={t('forms.incomeCertificate.businessTypeHelper')}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Annual Business Income"
+            label={t('forms.incomeCertificate.annualBusinessIncome')}
             type="number"
             value={formData.businessIncome || ''}
             onChange={(e) => handleChange('businessIncome', e.target.value)}
-            helperText="Income from business"
+            helperText={t('forms.incomeCertificate.businessIncomeHelper')}
             InputProps={{
               startAdornment: <InputAdornment position="start">₹</InputAdornment>
             }}
@@ -391,13 +394,13 @@ const IncomeDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="subtitle1">Additional Income Sources</Typography>
+            <Typography variant="subtitle1">{t('forms.incomeCertificate.additionalIncomeSources')}</Typography>
             <Button
               variant="outlined"
               startIcon={<AddIcon />}
               onClick={addIncomeSource}
             >
-              Add Source
+              {t('forms.incomeCertificate.addSource')}
             </Button>
           </Box>
 
@@ -406,11 +409,11 @@ const IncomeDetailsStep = ({ formData, updateFormData, errors }) => {
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Income Source</TableCell>
-                    <TableCell>Monthly Income (₹)</TableCell>
-                    <TableCell>Annual Income (₹)</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell>Action</TableCell>
+                    <TableCell>{t('forms.incomeCertificate.incomeSource')}</TableCell>
+                    <TableCell>{t('forms.incomeCertificate.monthlyIncome')}</TableCell>
+                    <TableCell>{t('forms.incomeCertificate.annualIncome')}</TableCell>
+                    <TableCell>{t('forms.common.description')}</TableCell>
+                    <TableCell>{t('forms.common.action')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -472,6 +475,7 @@ const IncomeDetailsStep = ({ formData, updateFormData, errors }) => {
 };
 
 const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const handleChange = (field, value) => {
     updateFormData({ [field]: value });
   };
@@ -508,17 +512,17 @@ const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Family Details
+        {t('forms.incomeCertificate.familyDetails')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Provide details of all family members and their income
+        {t('forms.incomeCertificate.provideFamilyDetails')}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Total Family Members *"
+            label={t('forms.incomeCertificate.totalFamilyMembers')}
             type="number"
             value={formData.totalFamilyMembers || ''}
             onChange={(e) => handleChange('totalFamilyMembers', e.target.value)}
@@ -530,7 +534,7 @@ const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Number of Earning Members *"
+            label={t('forms.incomeCertificate.earningMembers')}
             type="number"
             value={formData.earningMembers || ''}
             onChange={(e) => handleChange('earningMembers', e.target.value)}
@@ -541,13 +545,13 @@ const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="subtitle1">Family Members Details</Typography>
+            <Typography variant="subtitle1">{t('forms.incomeCertificate.familyMembersDetails')}</Typography>
             <Button
               variant="outlined"
               startIcon={<AddIcon />}
               onClick={addFamilyMember}
             >
-              Add Member
+              {t('forms.incomeCertificate.addMember')}
             </Button>
           </Box>
 
@@ -556,13 +560,13 @@ const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell>Relation</TableCell>
-                    <TableCell>Age</TableCell>
-                    <TableCell>Occupation</TableCell>
-                    <TableCell>Education</TableCell>
-                    <TableCell>Monthly Income (₹)</TableCell>
-                    <TableCell>Action</TableCell>
+                    <TableCell>{t('forms.common.name')}</TableCell>
+                    <TableCell>{t('forms.common.relation')}</TableCell>
+                    <TableCell>{t('forms.common.age')}</TableCell>
+                    <TableCell>{t('forms.common.occupation')}</TableCell>
+                    <TableCell>{t('forms.common.education')}</TableCell>
+                    <TableCell>{t('forms.incomeCertificate.monthlyIncome')}</TableCell>
+                    <TableCell>{t('forms.common.action')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -638,12 +642,12 @@ const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12}>
           <TextField
             fullWidth
-            label="Purpose for Income Certificate *"
+            label={t('forms.incomeCertificate.purposeForCertificate')}
             value={formData.purpose || ''}
             onChange={(e) => handleChange('purpose', e.target.value)}
             error={!!errors.purpose}
-            helperText={errors.purpose || 'Why do you need this certificate?'}
-            placeholder="e.g., Educational scholarship, Government scheme, Loan application"
+            helperText={errors.purpose || t('forms.incomeCertificate.purposeHelper')}
+            placeholder={t('forms.incomeCertificate.purposePlaceholder')}
           />
         </Grid>
       </Grid>
@@ -652,27 +656,28 @@ const FamilyDetailsStep = ({ formData, updateFormData, errors }) => {
 };
 
 const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
+  const { t } = useLanguage();
   const requiredDocuments = [
-    'Identity proof (Aadhaar/PAN/Voter ID)',
-    'Address proof (Ration card/Electricity bill)',
-    'Income proof (Salary slip/ITR/Bank statement)',
-    'Employment certificate',
-    'Agricultural documents (if farmer)',
-    'Business registration documents (if applicable)',
-    'Bank passbook/statements (last 6 months)',
-    'Affidavit declaring income details',
-    'Passport size photographs',
-    'Family members\' income proofs'
+    t('forms.incomeCertificate.identityProof'),
+    t('forms.incomeCertificate.addressProof'),
+    t('forms.incomeCertificate.incomeProof'),
+    t('forms.incomeCertificate.employmentCertificate'),
+    t('forms.incomeCertificate.agriculturalDocs'),
+    t('forms.incomeCertificate.businessRegistration'),
+    t('forms.incomeCertificate.bankPassbook'),
+    t('forms.incomeCertificate.affidavit'),
+    t('forms.incomeCertificate.photographs'),
+    t('forms.incomeCertificate.familyIncomeProofs')
   ];
 
 
   return (
     <Box>
       <Typography variant="h6" gutterBottom color="primary">
-        Document Upload
+        {t('forms.incomeCertificate.documentUpload')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Please upload all required documents for income certificate verification
+        {t('forms.incomeCertificate.uploadAllDocs')}
       </Typography>
 
       <DocumentUpload
@@ -686,7 +691,7 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
       
       <Box sx={{ mt: 3 }}>
         <Typography variant="subtitle2" gutterBottom>
-          Required Documents:
+          {t('forms.incomeCertificate.requiredDocuments')}
         </Typography>
         <ul style={{ margin: 0, paddingLeft: 20 }}>
           {requiredDocuments.map((doc, index) => (
@@ -700,11 +705,12 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
 
 // Main Form Component
 const IncomeCertificateForm = () => {
+  const { t } = useLanguage();
   const steps = [
-    { id: 'personal', title: 'Personal Information', icon: 'Person' },
-    { id: 'income', title: 'Income Details', icon: 'MonetizationOn' },
-    { id: 'family', title: 'Family Details', icon: 'Group' },
-    { id: 'documents', title: 'Documents', icon: 'Description' }
+    { id: 'personal', title: t('forms.incomeCertificate.step1'), icon: 'Person' },
+    { id: 'income', title: t('forms.incomeCertificate.step2'), icon: 'MonetizationOn' },
+    { id: 'family', title: t('forms.incomeCertificate.step3'), icon: 'Group' },
+    { id: 'documents', title: t('forms.incomeCertificate.step4'), icon: 'Description' }
   ];
 
   const validationRules = {
@@ -734,7 +740,7 @@ const IncomeCertificateForm = () => {
 
   return (
     <MultiStepForm
-      serviceName="Income Certificate Application"
+      serviceName={t('forms.incomeCertificate.title')}
       serviceType="income_certificate"
       steps={steps}
       validationRules={validationRules}

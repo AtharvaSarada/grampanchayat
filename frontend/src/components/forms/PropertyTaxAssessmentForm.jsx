@@ -23,9 +23,12 @@ import MultiStepForm from './MultiStepForm';
 import DocumentUpload from '../common/DocumentUpload';
 import { validateField, autoCorrect } from '../../utils/formValidation';
 import { getStates, getDistrictsByState } from '../../data/stateDistrictData';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 // Property Owner Information Step
 const PropertyOwnerStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
+  
   const handleChange = (field, value) => {
     let correctedValue = value;
     
@@ -43,21 +46,21 @@ const PropertyOwnerStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Property Owner Information
+        मालकाचे तपशील
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Enter property owner details for tax assessment
+        कर मूल्यांकनासाठी मालमत्ता मालकाचे तपशील प्रविष्ट करा
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Property Owner Name *"
+            label="मालमत्ता मालकाचे नाव *"
             value={formData.ownerName || ''}
             onChange={(e) => handleChange('ownerName', e.target.value)}
             error={!!errors.ownerName}
-            helperText={errors.ownerName || 'Name as per property documents'}
+            helperText={errors.ownerName || 'मालमत्ता कागदपत्रांनुसार नाव'}
             inputProps={{ maxLength: 50, pattern: '[A-Za-z\\s\']{2,50}' }}
           />
         </Grid>
@@ -65,11 +68,11 @@ const PropertyOwnerStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Applicant Name"
+            label="अर्जदाराचे नाव"
             value={formData.applicantName || ''}
             onChange={(e) => handleChange('applicantName', e.target.value)}
             error={!!errors.applicantName}
-            helperText={errors.applicantName || 'If different from owner'}
+            helperText={errors.applicantName || 'मालकापेक्षा वेगळे असल्यास'}
             inputProps={{ maxLength: 50, pattern: '[A-Za-z\\s\']{2,50}' }}
           />
         </Grid>
@@ -77,11 +80,11 @@ const PropertyOwnerStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Mobile Number *"
+            label="मोबाइल नंबर *"
             value={formData.mobile || ''}
             onChange={(e) => handleChange('mobile', e.target.value)}
             error={!!errors.mobile}
-            helperText={errors.mobile || '10-digit mobile number'}
+            helperText={errors.mobile || '10-अंकी मोबाइल नंबर'}
             inputProps={{ maxLength: 10, pattern: '[6-9][0-9]{9}' }}
           />
         </Grid>
@@ -89,12 +92,12 @@ const PropertyOwnerStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Email Address"
+            label="ईमेल पत्ता"
             type="email"
             value={formData.email || ''}
             onChange={(e) => handleChange('email', e.target.value)}
             error={!!errors.email}
-            helperText={errors.email || 'Optional email address'}
+            helperText={errors.email || 'पर्यायी ईमेल पत्ता'}
           />
         </Grid>
 
@@ -103,28 +106,28 @@ const PropertyOwnerStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={3}
-            label="Owner Address *"
+            label="मालकाचा पत्ता *"
             value={formData.ownerAddress || ''}
             onChange={(e) => handleChange('ownerAddress', e.target.value)}
             error={!!errors.ownerAddress}
-            helperText={errors.ownerAddress || 'Complete address of property owner'}
+            helperText={errors.ownerAddress || 'मालमत्ता मालकाचा संपूर्ण पत्ता'}
             inputProps={{ minLength: 10, maxLength: 200 }}
           />
         </Grid>
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom color="primary">
-            Relationship to Property *
+            मालमत्तेशी नाते *
           </Typography>
           <RadioGroup
             value={formData.relationship || ''}
             onChange={(e) => handleChange('relationship', e.target.value)}
             row
           >
-            <FormControlLabel value="Owner" control={<Radio />} label="Owner" />
-            <FormControlLabel value="Legal Heir" control={<Radio />} label="Legal Heir" />
-            <FormControlLabel value="Power of Attorney" control={<Radio />} label="Power of Attorney" />
-            <FormControlLabel value="Authorized Representative" control={<Radio />} label="Authorized Representative" />
+            <FormControlLabel value="Owner" control={<Radio />} label="मालक" />
+            <FormControlLabel value="Legal Heir" control={<Radio />} label="कायदेशीर वारस" />
+            <FormControlLabel value="Power of Attorney" control={<Radio />} label="मुख्तारनामा" />
+            <FormControlLabel value="Authorized Representative" control={<Radio />} label="अधिकृत प्रतिनिधी" />
           </RadioGroup>
         </Grid>
       </Grid>
@@ -163,21 +166,21 @@ const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Property Details
+        मालमत्ता तपशील
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Provide complete property information for assessment
+        मूल्यांकनासाठी संपूर्ण मालमत्ता माहिती प्रदान करा
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Property ID *"
+            label="मालमत्ता आयडी *"
             value={formData.propertyId || ''}
             onChange={(e) => handleChange('propertyId', e.target.value)}
             error={!!errors.propertyId}
-            helperText={errors.propertyId || 'Unique property identification number'}
+            helperText={errors.propertyId || 'अद्वितीय मालमत्ता ओळख क्रमांक'}
             inputProps={{ maxLength: 20, pattern: '[A-Za-z0-9\\-]{5,20}' }}
           />
         </Grid>
@@ -185,11 +188,11 @@ const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Survey Number *"
+            label="सर्वे नंबर *"
             value={formData.surveyNumber || ''}
             onChange={(e) => handleChange('surveyNumber', e.target.value)}
             error={!!errors.surveyNumber}
-            helperText={errors.surveyNumber || 'Government survey number'}
+            helperText={errors.surveyNumber || 'सरकारी सर्वे नंबर'}
             inputProps={{ maxLength: 20, pattern: '[A-Za-z0-9\\/\\-]{1,20}' }}
           />
         </Grid>
@@ -199,22 +202,22 @@ const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={3}
-            label="Property Address *"
+            label="मालमत्तेचा पत्ता *"
             value={formData.propertyAddress || ''}
             onChange={(e) => handleChange('propertyAddress', e.target.value)}
             error={!!errors.propertyAddress}
-            helperText={errors.propertyAddress || 'Complete property address'}
+            helperText={errors.propertyAddress || 'संपूर्ण मालमत्ता पत्ता'}
             inputProps={{ minLength: 10, maxLength: 200 }}
           />
         </Grid>
 
         <Grid item xs={12} md={4}>
           <FormControl fullWidth error={!!errors.state}>
-            <InputLabel>State *</InputLabel>
+            <InputLabel>राज्य *</InputLabel>
             <Select
               value={formData.state || ''}
               onChange={(e) => handleChange('state', e.target.value)}
-              label="State *"
+              label="राज्य *"
             >
               {states.map((state) => (
                 <MenuItem key={state} value={state}>
@@ -227,11 +230,11 @@ const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12} md={4}>
           <FormControl fullWidth error={!!errors.district}>
-            <InputLabel>District *</InputLabel>
+            <InputLabel>जिल्हा *</InputLabel>
             <Select
               value={formData.district || ''}
               onChange={(e) => handleChange('district', e.target.value)}
-              label="District *"
+              label="जिल्हा *"
               disabled={!formData.state}
             >
               {districts.map((district) => (
@@ -257,35 +260,35 @@ const PropertyDetailsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.propertyType}>
-            <InputLabel>Property Type *</InputLabel>
+            <InputLabel>मालमत्ता प्रकार *</InputLabel>
             <Select
               value={formData.propertyType || ''}
               onChange={(e) => handleChange('propertyType', e.target.value)}
-              label="Property Type *"
+              label="मालमत्ता प्रकार *"
             >
-              <MenuItem value="Residential">Residential</MenuItem>
-              <MenuItem value="Commercial">Commercial</MenuItem>
-              <MenuItem value="Industrial">Industrial</MenuItem>
-              <MenuItem value="Agricultural">Agricultural</MenuItem>
-              <MenuItem value="Vacant Land">Vacant Land</MenuItem>
-              <MenuItem value="Mixed Use">Mixed Use</MenuItem>
+              <MenuItem value="Residential">निवासी</MenuItem>
+              <MenuItem value="Commercial">व्यावसायिक</MenuItem>
+              <MenuItem value="Industrial">औद्योगिक</MenuItem>
+              <MenuItem value="Agricultural">शेती</MenuItem>
+              <MenuItem value="Vacant Land">रिकामी जमीन</MenuItem>
+              <MenuItem value="Mixed Use">मिश्र वापर</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.propertyUsage}>
-            <InputLabel>Current Usage *</InputLabel>
+            <InputLabel>सध्याचा वापर *</InputLabel>
             <Select
               value={formData.propertyUsage || ''}
               onChange={(e) => handleChange('propertyUsage', e.target.value)}
-              label="Current Usage *"
+              label="सध्याचा वापर *"
             >
-              <MenuItem value="Self Occupied">Self Occupied</MenuItem>
-              <MenuItem value="Rented">Rented</MenuItem>
-              <MenuItem value="Vacant">Vacant</MenuItem>
-              <MenuItem value="Under Construction">Under Construction</MenuItem>
-              <MenuItem value="Commercial Use">Commercial Use</MenuItem>
+              <MenuItem value="Self Occupied">स्वतःचा वापर</MenuItem>
+              <MenuItem value="Rented">भाड्याने दिलेले</MenuItem>
+              <MenuItem value="Vacant">रिकामे</MenuItem>
+              <MenuItem value="Under Construction">बांधकामाधीन</MenuItem>
+              <MenuItem value="Commercial Use">व्यावसायिक वापर</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -343,22 +346,22 @@ const PropertySpecificationsStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Property Specifications
+        मालमत्ता वैशिष्ट्ये
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Provide detailed property specifications for accurate assessment
+        अचूक मूल्यांकनासाठी तपशीलवार मालमत्ता वैशिष्ट्ये प्रदान करा
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Built-up Area (sq ft) *"
+            label="बांधकाम क्षेत्र (चौ फूट) *"
             type="number"
             value={formData.builtUpArea || ''}
             onChange={(e) => handleChange('builtUpArea', e.target.value)}
             error={!!errors.builtUpArea}
-            helperText={errors.builtUpArea || 'Total built-up area'}
+            helperText={errors.builtUpArea || 'एकूण बांधकाम क्षेत्र'}
             inputProps={{ min: 1, max: 999999, pattern: '^\\d{1,6}(\\.\\d{1,2})?$' }}
           />
         </Grid>
@@ -366,12 +369,12 @@ const PropertySpecificationsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Plot Area (sq ft) *"
+            label="प्लॉट क्षेत्र (चौ फूट) *"
             type="number"
             value={formData.plotArea || ''}
             onChange={(e) => handleChange('plotArea', e.target.value)}
             error={!!errors.plotArea}
-            helperText={errors.plotArea || 'Total plot area'}
+            helperText={errors.plotArea || 'एकूण प्लॉट क्षेत्र'}
             inputProps={{ min: 1, max: 999999 }}
           />
         </Grid>
@@ -379,7 +382,7 @@ const PropertySpecificationsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Number of Floors *"
+            label="मजल्यांची संख्या *"
             type="number"
             value={formData.numberOfFloors || ''}
             onChange={(e) => handleChange('numberOfFloors', e.target.value)}
@@ -392,11 +395,11 @@ const PropertySpecificationsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Property Age (years)"
+            label="मालमत्तेचे वय (वर्षे)"
             type="number"
             value={formData.propertyAge || ''}
             onChange={(e) => handleChange('propertyAge', e.target.value)}
-            helperText="Age of the property for depreciation calculation"
+            helperText="घसारा गणनेसाठी मालमत्तेचे वय"
             inputProps={{ min: 0, max: 100 }}
           />
         </Grid>
@@ -404,14 +407,14 @@ const PropertySpecificationsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DatePicker
-              label="Construction Date"
+              label="बांधकाम तारीख"
               value={formData.constructionDate || null}
               onChange={(date) => handleChange('constructionDate', date)}
               renderInput={(params) => (
                 <TextField
                   {...params}
                   fullWidth
-                  helperText="Date of construction completion"
+                  helperText="बांधकाम पूर्ण झाल्याची तारीख"
                 />
               )}
               maxDate={new Date()}
@@ -421,17 +424,17 @@ const PropertySpecificationsStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth>
-            <InputLabel>Construction Quality</InputLabel>
+            <InputLabel>बांधकाम गुणवत्ता</InputLabel>
             <Select
               value={formData.constructionQuality || ''}
               onChange={(e) => handleChange('constructionQuality', e.target.value)}
-              label="Construction Quality"
+              label="बांधकाम गुणवत्ता"
             >
-              <MenuItem value="Excellent">Excellent</MenuItem>
-              <MenuItem value="Good">Good</MenuItem>
-              <MenuItem value="Average">Average</MenuItem>
-              <MenuItem value="Below Average">Below Average</MenuItem>
-              <MenuItem value="Poor">Poor</MenuItem>
+              <MenuItem value="Excellent">उत्कृष्ट</MenuItem>
+              <MenuItem value="Good">चांगली</MenuItem>
+              <MenuItem value="Average">सरासरी</MenuItem>
+              <MenuItem value="Below Average">सरासरीपेक्षा कमी</MenuItem>
+              <MenuItem value="Poor">खराब</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -439,11 +442,11 @@ const PropertySpecificationsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Number of Rooms"
+            label="खोल्यांची संख्या"
             type="number"
             value={formData.numberOfRooms || ''}
             onChange={(e) => handleChange('numberOfRooms', e.target.value)}
-            helperText="Total number of rooms"
+            helperText="एकूण खोल्यांची संख्या"
             inputProps={{ min: 1, max: 50 }}
           />
         </Grid>
@@ -451,37 +454,44 @@ const PropertySpecificationsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Number of Bathrooms"
+            label="स्नानगृहांची संख्या"
             type="number"
             value={formData.numberOfBathrooms || ''}
             onChange={(e) => handleChange('numberOfBathrooms', e.target.value)}
-            helperText="Total number of bathrooms"
+            helperText="एकूण स्नानगृहांची संख्या"
             inputProps={{ min: 1, max: 20 }}
           />
         </Grid>
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom color="primary">
-            Amenities Available
+            उपलब्ध सुविधा
           </Typography>
           <Grid container spacing={1}>
-            {['Parking', 'Garden', 'Swimming Pool', 'Elevator', 'Generator', 'Security'].map((amenity) => (
-              <Grid item key={amenity}>
+            {[
+              { en: 'Parking', mr: 'पार्किंग' },
+              { en: 'Garden', mr: 'बाग' },
+              { en: 'Swimming Pool', mr: 'जलतरण तलाव' },
+              { en: 'Elevator', mr: 'लिफ्ट' },
+              { en: 'Generator', mr: 'जनरेटर' },
+              { en: 'Security', mr: 'सुरक्षा' }
+            ].map((amenity) => (
+              <Grid item key={amenity.en}>
                 <FormControlLabel
                   control={
                     <input
                       type="checkbox"
-                      checked={formData.amenities?.includes(amenity) || false}
+                      checked={formData.amenities?.includes(amenity.en) || false}
                       onChange={(e) => {
                         const currentAmenities = formData.amenities || [];
                         const updatedAmenities = e.target.checked
-                          ? [...currentAmenities, amenity]
-                          : currentAmenities.filter(a => a !== amenity);
+                          ? [...currentAmenities, amenity.en]
+                          : currentAmenities.filter(a => a !== amenity.en);
                         handleChange('amenities', updatedAmenities);
                       }}
                     />
                   }
-                  label={amenity}
+                  label={amenity.mr}
                 />
               </Grid>
             ))}
@@ -491,13 +501,13 @@ const PropertySpecificationsStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12}>
           <Paper variant="outlined" sx={{ p: 2, bgcolor: 'success.50' }}>
             <Typography variant="h6" color="success.main" gutterBottom>
-              Assessed Property Value
+              मूल्यांकित मालमत्ता मूल्य
             </Typography>
             <Typography variant="h4" color="success.main">
               ₹{assessedValue.toLocaleString()}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              *This is a preliminary assessment. Final assessment will be done by the revenue department.
+              *हे प्राथमिक मूल्यांकन आहे. अंतिम मूल्यांकन महसूल विभागाकडून केले जाईल.
             </Typography>
           </Paper>
         </Grid>
@@ -509,16 +519,16 @@ const PropertySpecificationsStep = ({ formData, updateFormData, errors }) => {
 // Documents Step
 const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
   const requiredDocuments = [
-    'Property ownership documents (Sale deed/Patta)',
-    'Survey settlement records',
-    'Building plan approval',
-    'Completion certificate',
-    'Previous tax assessment records',
-    'Identity proof of owner',
-    'Address proof',
-    'Property photographs (exterior and interior)',
-    'Utility bills (electricity/water)',
-    'NOC from society/association (if applicable)'
+    'मालमत्ता मालकी कागदपत्रे (विक्री खत/पट्टा)',
+    'सर्वे सेटलमेंट रेकॉर्ड',
+    'इमारत योजना मंजुरी',
+    'पूर्णता प्रमाणपत्र',
+    'मागील कर मूल्यांकन रेकॉर्ड',
+    'मालकाचा ओळख पुरावा',
+    'पत्ता पुरावा',
+    'मालमत्तेचे फोटो (बाहेरील आणि आतील)',
+    'युटिलिटी बिले (वीज/पाणी)',
+    'सोसायटी/संघटनेकडून अनापत्ती प्रमाणपत्र (लागू असल्यास)'
   ];
 
   const handleDocumentsChange = (documents) => {
@@ -528,10 +538,10 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
   return (
     <Box>
       <Typography variant="h6" gutterBottom color="primary">
-        Document Upload
+        कागदपत्र अपलोड
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Please upload supporting documents for property tax assessment
+        कृपया मालमत्ता कर मूल्यांकनासाठी सहायक कागदपत्रे अपलोड करा
       </Typography>
 
       <DocumentUpload
@@ -547,11 +557,13 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
 
 // Main Form Component
 const PropertyTaxAssessmentForm = () => {
+  const { t } = useLanguage();
+  
   const steps = [
-    { id: 'owner', title: 'Property Owner', icon: 'Person' },
-    { id: 'property', title: 'Property Details', icon: 'Home' },
-    { id: 'specifications', title: 'Specifications', icon: 'Architecture' },
-    { id: 'documents', title: 'Documents', icon: 'Description' }
+    { id: 'owner', title: 'मालक तपशील', icon: 'Person' },
+    { id: 'property', title: 'मालमत्ता माहिती', icon: 'Home' },
+    { id: 'specifications', title: 'मूल्यांकन तपशील', icon: 'Architecture' },
+    { id: 'documents', title: 'कागदपत्रे', icon: 'Description' }
   ];
 
   const validationRules = {
@@ -580,7 +592,7 @@ const PropertyTaxAssessmentForm = () => {
 
   return (
     <MultiStepForm
-      serviceName="Property Tax Assessment Application"
+      serviceName="मालमत्ता कर मूल्यांकन अर्ज"
       serviceType="property_tax_assessment"
       steps={steps}
       validationRules={validationRules}

@@ -29,6 +29,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../services/firebase';
+import { useLanguage } from '../../i18n/LanguageProvider';
 import { 
   collection, 
   query, 
@@ -45,10 +46,17 @@ import { formatDistanceToNow } from 'date-fns';
 const NotificationSystem = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [anchorEl, setAnchorEl] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  
+  // Safe translation helper to prevent rendering objects directly
+  const safeT = (key) => {
+    const translation = t(key);
+    return typeof translation === 'object' ? (translation.toString ? translation.toString() : '') : translation;
+  };
 
   useEffect(() => {
     if (!currentUser?.uid) return;
@@ -217,7 +225,7 @@ const NotificationSystem = () => {
         {/* Header */}
         <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6">
-            Notifications
+            {safeT('notifications.title') || 'Notifications'}
           </Typography>
           {unreadCount > 0 && (
             <Button
@@ -225,7 +233,7 @@ const NotificationSystem = () => {
               onClick={markAllAsRead}
               disabled={loading}
             >
-              Mark all read
+              {safeT('notifications.markAllRead') || 'Mark all read'}
             </Button>
           )}
         </Box>
@@ -237,7 +245,7 @@ const NotificationSystem = () => {
           <Box sx={{ p: 3, textAlign: 'center' }}>
             <Notifications sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
             <Typography variant="body2" color="text.secondary">
-              No notifications yet
+              {safeT('notifications.noNotifications') || 'No notifications yet'}
             </Typography>
           </Box>
         ) : (
@@ -308,7 +316,7 @@ const NotificationSystem = () => {
             <Divider />
             <Box sx={{ p: 1, textAlign: 'center' }}>
               <Button size="small" onClick={handleClose}>
-                View All Notifications
+                {safeT('notifications.viewAll') || 'View All Notifications'}
               </Button>
             </Box>
           </>

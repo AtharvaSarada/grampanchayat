@@ -48,21 +48,33 @@ const LoginPage = () => {
   // Redirect if user is already authenticated
   useEffect(() => {
     if (!authLoading && currentUser) {
+      // Detect if running on a mobile device
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
       // Redirect based on user role (officer is treated as admin)
       const role = currentUser.role === 'officer' ? 'admin' : currentUser.role;
       
-      switch (role) {
-        case 'admin':
-          navigate('/admin/dashboard', { replace: true });
-          break;
-        case 'staff':
-          navigate('/staff/dashboard', { replace: true });
-          break;
-        case 'user':
-        default:
-          navigate('/user/dashboard', { replace: true });
-          break;
-      }
+      const redirectWithDelay = async () => {
+        if (isMobile) {
+          // Add a small delay for mobile devices to ensure state is properly updated
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+        switch (role) {
+          case 'admin':
+            navigate('/admin/dashboard', { replace: true });
+            break;
+          case 'staff':
+            navigate('/staff/dashboard', { replace: true });
+            break;
+          case 'user':
+          default:
+            navigate('/user/dashboard', { replace: true });
+            break;
+        }
+      };
+      
+      redirectWithDelay();
     }
   }, [currentUser, authLoading, navigate]);
 

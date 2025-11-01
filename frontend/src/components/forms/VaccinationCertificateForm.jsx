@@ -31,9 +31,11 @@ import MultiStepForm from './MultiStepForm';
 import DocumentUpload from '../common/DocumentUpload';
 import { calculateAge, validateField, autoCorrect } from '../../utils/formValidation';
 import { getStates, getDistrictsByState } from '../../data/stateDistrictData';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 // Personal Information Step
 const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const [age, setAge] = React.useState(0);
 
   React.useEffect(() => {
@@ -63,21 +65,21 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Personal Information
+        {t('forms.vaccinationCertificate.personalDetails.title')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Enter patient's personal details for vaccination certificate
+        {t('forms.vaccinationCertificate.personalDetails.subtitle')}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Patient Name *"
+            label={t('forms.vaccinationCertificate.personalDetails.fullName')}
             value={formData.patientName || ''}
             onChange={(e) => handleChange('patientName', e.target.value)}
             error={!!errors.patientName}
-            helperText={errors.patientName || 'Full name as per ID proof'}
+            helperText={errors.patientName || t('forms.common.fullNameHelper')}
             inputProps={{ maxLength: 50, pattern: '[A-Za-z\\s\']{2,50}' }}
           />
         </Grid>
@@ -85,7 +87,7 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DatePicker
-              label="Date of Birth *"
+              label={t('forms.vaccinationCertificate.personalDetails.dateOfBirth')}
               value={formData.dateOfBirth || null}
               onChange={(date) => handleChange('dateOfBirth', date)}
               renderInput={(params) => (
@@ -105,25 +107,25 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Age"
-              value={`${age} years`}
+              label={t('forms.vaccinationCertificate.personalDetails.age')}
+              value={`${age} ${t('forms.common.ageYears')}`}
               disabled
-              helperText="Calculated from date of birth"
+              helperText={t('forms.vaccinationCertificate.personalDetails.ageHelper')}
             />
           </Grid>
         )}
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.gender}>
-            <InputLabel>Gender *</InputLabel>
+            <InputLabel>{t('forms.vaccinationCertificate.personalDetails.gender')}</InputLabel>
             <Select
               value={formData.gender || ''}
               onChange={(e) => handleChange('gender', e.target.value)}
-              label="Gender *"
+              label={t('forms.vaccinationCertificate.personalDetails.gender')}
             >
-              <MenuItem value="Male">Male</MenuItem>
-              <MenuItem value="Female">Female</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
+              <MenuItem value="Male">{t('forms.common.male')}</MenuItem>
+              <MenuItem value="Female">{t('forms.common.female')}</MenuItem>
+              <MenuItem value="Other">{t('forms.common.other')}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -133,7 +135,7 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Father's Name"
+                label={t('forms.vaccinationCertificate.personalDetails.fatherName')}
                 value={formData.fatherName || ''}
                 onChange={(e) => handleChange('fatherName', e.target.value)}
                 error={!!errors.fatherName}
@@ -145,7 +147,7 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Mother's Name"
+                label={t('forms.vaccinationCertificate.personalDetails.motherName')}
                 value={formData.motherName || ''}
                 onChange={(e) => handleChange('motherName', e.target.value)}
                 error={!!errors.motherName}
@@ -161,11 +163,11 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Father's Name *"
+                label={t('forms.vaccinationCertificate.personalDetails.fatherName') + ' *'}
                 value={formData.fatherName || ''}
                 onChange={(e) => handleChange('fatherName', e.target.value)}
                 error={!!errors.fatherName}
-                helperText={errors.fatherName || 'Required for minors'}
+                helperText={errors.fatherName || t('forms.vaccinationCertificate.personalDetails.fatherNameHelper')}
                 inputProps={{ maxLength: 50, pattern: '[A-Za-z\\s\']{2,50}' }}
               />
             </Grid>
@@ -173,11 +175,11 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Mother's Name *"
+                label={t('forms.vaccinationCertificate.personalDetails.motherName') + ' *'}
                 value={formData.motherName || ''}
                 onChange={(e) => handleChange('motherName', e.target.value)}
                 error={!!errors.motherName}
-                helperText={errors.motherName || 'Required for minors'}
+                helperText={errors.motherName || t('forms.vaccinationCertificate.personalDetails.motherNameHelper')}
                 inputProps={{ maxLength: 50, pattern: '[A-Za-z\\s\']{2,50}' }}
               />
             </Grid>
@@ -187,11 +189,11 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Aadhaar Number"
+            label={t('forms.common.aadhaar')}
             value={formData.aadhaar || ''}
             onChange={(e) => handleChange('aadhaar', e.target.value)}
             error={!!errors.aadhaar}
-            helperText={errors.aadhaar || '12-digit Aadhaar number (if available)'}
+            helperText={errors.aadhaar || t('forms.vaccinationCertificate.personalDetails.aadhaarHelper')}
             inputProps={{ maxLength: 12, pattern: '\\d{12}' }}
           />
         </Grid>
@@ -199,11 +201,11 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Mobile Number *"
+            label={t('forms.common.mobile')}
             value={formData.mobile || ''}
             onChange={(e) => handleChange('mobile', e.target.value)}
             error={!!errors.mobile}
-            helperText={errors.mobile || '10-digit mobile number'}
+            helperText={errors.mobile || t('forms.common.mobileHelper')}
             inputProps={{ maxLength: 10, pattern: '[6-9][0-9]{9}' }}
           />
         </Grid>
@@ -211,25 +213,25 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Email Address"
+            label={t('forms.common.email')}
             type="email"
             value={formData.email || ''}
             onChange={(e) => handleChange('email', e.target.value)}
             error={!!errors.email}
-            helperText={errors.email || 'Optional email address'}
+            helperText={errors.email || t('forms.vaccinationCertificate.personalDetails.emailHelper')}
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth>
-            <InputLabel>Nationality</InputLabel>
+            <InputLabel>{t('forms.vaccinationCertificate.personalDetails.nationality')}</InputLabel>
             <Select
               value={formData.nationality || 'Indian'}
               onChange={(e) => handleChange('nationality', e.target.value)}
-              label="Nationality"
+              label={t('forms.vaccinationCertificate.personalDetails.nationality')}
             >
-              <MenuItem value="Indian">Indian</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
+              <MenuItem value="Indian">{t('forms.vaccinationCertificate.personalDetails.indian')}</MenuItem>
+              <MenuItem value="Other">{t('forms.common.other')}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -239,11 +241,11 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={3}
-            label="Address *"
+            label={t('forms.common.permanentAddress')}
             value={formData.address || ''}
             onChange={(e) => handleChange('address', e.target.value)}
             error={!!errors.address}
-            helperText={errors.address || 'Complete residential address'}
+            helperText={errors.address || t('forms.common.permanentAddressHelper')}
             inputProps={{ minLength: 10, maxLength: 200 }}
           />
         </Grid>
@@ -254,6 +256,7 @@ const PersonalInformationStep = ({ formData, updateFormData, errors }) => {
 
 // Vaccination History Step
 const VaccinationHistoryStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
   const [vaccinations, setVaccinations] = React.useState(formData.vaccinations || []);
 
   const addVaccination = () => {
@@ -289,10 +292,10 @@ const VaccinationHistoryStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Vaccination History
+        {t('forms.vaccinationCertificate.vaccinationRecords.title')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Add details of all vaccinations received
+        {t('forms.vaccinationCertificate.vaccinationRecords.subtitle')}
       </Typography>
 
       <Box sx={{ mb: 3 }}>
@@ -302,12 +305,12 @@ const VaccinationHistoryStep = ({ formData, updateFormData, errors }) => {
           onClick={addVaccination}
           sx={{ mb: 2 }}
         >
-          Add Vaccination Record
+          {t('forms.vaccinationCertificate.vaccinationDetails.addVaccination')}
         </Button>
 
         {vaccinations.length === 0 && (
           <Alert severity="info">
-            Please add at least one vaccination record to proceed with certificate application.
+            {t('forms.vaccinationCertificate.vaccinationDetails.addVaccinationInfo')}
           </Alert>
         )}
       </Box>
@@ -316,7 +319,7 @@ const VaccinationHistoryStep = ({ formData, updateFormData, errors }) => {
         <Paper key={vaccination.id} variant="outlined" sx={{ p: 2, mb: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="subtitle1" color="primary">
-              Vaccination {index + 1}
+              {t('forms.vaccinationCertificate.vaccinationDetails.vaccination')} {index + 1}
             </Typography>
             <IconButton
               color="error"
@@ -330,24 +333,24 @@ const VaccinationHistoryStep = ({ formData, updateFormData, errors }) => {
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel>Vaccine Name *</InputLabel>
+                <InputLabel>{t('forms.vaccinationCertificate.vaccinationDetails.vaccineName')}</InputLabel>
                 <Select
                   value={vaccination.vaccineName || ''}
                   onChange={(e) => updateVaccination(vaccination.id, 'vaccineName', e.target.value)}
-                  label="Vaccine Name *"
+                  label={t('forms.vaccinationCertificate.vaccinationDetails.vaccineName')}
                 >
-                  <MenuItem value="COVID-19 (Covishield)">COVID-19 (Covishield)</MenuItem>
-                  <MenuItem value="COVID-19 (Covaxin)">COVID-19 (Covaxin)</MenuItem>
-                  <MenuItem value="COVID-19 (Sputnik V)">COVID-19 (Sputnik V)</MenuItem>
-                  <MenuItem value="Hepatitis B">Hepatitis B</MenuItem>
-                  <MenuItem value="Hepatitis A">Hepatitis A</MenuItem>
-                  <MenuItem value="Typhoid">Typhoid</MenuItem>
-                  <MenuItem value="Japanese Encephalitis">Japanese Encephalitis</MenuItem>
-                  <MenuItem value="Influenza">Influenza (Flu)</MenuItem>
-                  <MenuItem value="Pneumococcal">Pneumococcal</MenuItem>
-                  <MenuItem value="Meningococcal">Meningococcal</MenuItem>
-                  <MenuItem value="HPV">HPV (Human Papillomavirus)</MenuItem>
-                  <MenuItem value="Other">Other</MenuItem>
+                  <MenuItem value="COVID-19 (Covishield)">{t('forms.vaccinationCertificate.vaccines.covidCovishield')}</MenuItem>
+                  <MenuItem value="COVID-19 (Covaxin)">{t('forms.vaccinationCertificate.vaccines.covidCovaxin')}</MenuItem>
+                  <MenuItem value="COVID-19 (Sputnik V)">{t('forms.vaccinationCertificate.vaccines.covidSputnik')}</MenuItem>
+                  <MenuItem value="Hepatitis B">{t('forms.vaccinationCertificate.vaccines.hepatitisB')}</MenuItem>
+                  <MenuItem value="Hepatitis A">{t('forms.vaccinationCertificate.vaccines.hepatitisA')}</MenuItem>
+                  <MenuItem value="Typhoid">{t('forms.vaccinationCertificate.vaccines.typhoid')}</MenuItem>
+                  <MenuItem value="Japanese Encephalitis">{t('forms.vaccinationCertificate.vaccines.japaneseEncephalitis')}</MenuItem>
+                  <MenuItem value="Influenza">{t('forms.vaccinationCertificate.vaccines.influenza')}</MenuItem>
+                  <MenuItem value="Pneumococcal">{t('forms.vaccinationCertificate.vaccines.pneumococcal')}</MenuItem>
+                  <MenuItem value="Meningococcal">{t('forms.vaccinationCertificate.vaccines.meningococcal')}</MenuItem>
+                  <MenuItem value="HPV">{t('forms.vaccinationCertificate.vaccines.hpv')}</MenuItem>
+                  <MenuItem value="Other">{t('forms.common.other')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -355,7 +358,7 @@ const VaccinationHistoryStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Manufacturer"
+                label={t('forms.vaccinationCertificate.vaccinationDetails.manufacturer')}
                 value={vaccination.manufacturer || ''}
                 onChange={(e) => updateVaccination(vaccination.id, 'manufacturer', e.target.value)}
                 inputProps={{ maxLength: 50 }}
@@ -365,7 +368,7 @@ const VaccinationHistoryStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Batch Number"
+                label={t('forms.vaccinationCertificate.vaccinationDetails.batchNumber')}
                 value={vaccination.batchNumber || ''}
                 onChange={(e) => updateVaccination(vaccination.id, 'batchNumber', e.target.value)}
                 inputProps={{ maxLength: 20 }}
@@ -375,7 +378,7 @@ const VaccinationHistoryStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
-                  label="Vaccination Date *"
+                  label={t('forms.vaccinationCertificate.vaccinationDetails.vaccinationDate')}
                   value={vaccination.vaccinationDate || null}
                   onChange={(date) => updateVaccination(vaccination.id, 'vaccinationDate', date)}
                   renderInput={(params) => <TextField {...params} fullWidth />}
@@ -387,7 +390,7 @@ const VaccinationHistoryStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Vaccination Center *"
+                label={t('forms.vaccinationCertificate.vaccinationDetails.vaccinationCenter')}
                 value={vaccination.vaccinationCenter || ''}
                 onChange={(e) => updateVaccination(vaccination.id, 'vaccinationCenter', e.target.value)}
                 inputProps={{ maxLength: 100 }}
@@ -396,17 +399,17 @@ const VaccinationHistoryStep = ({ formData, updateFormData, errors }) => {
 
             <Grid item xs={12} md={6}>
               <FormControl fullWidth>
-                <InputLabel>Dose</InputLabel>
+                <InputLabel>{t('forms.vaccinationCertificate.vaccinationDetails.dose')}</InputLabel>
                 <Select
                   value={vaccination.dose || ''}
                   onChange={(e) => updateVaccination(vaccination.id, 'dose', e.target.value)}
-                  label="Dose"
+                  label={t('forms.vaccinationCertificate.vaccinationDetails.dose')}
                 >
-                  <MenuItem value="1st Dose">1st Dose</MenuItem>
-                  <MenuItem value="2nd Dose">2nd Dose</MenuItem>
-                  <MenuItem value="3rd Dose/Booster">3rd Dose/Booster</MenuItem>
-                  <MenuItem value="Single Dose">Single Dose</MenuItem>
-                  <MenuItem value="Annual">Annual</MenuItem>
+                  <MenuItem value="1st Dose">{t('forms.vaccinationCertificate.doses.firstDose')}</MenuItem>
+                  <MenuItem value="2nd Dose">{t('forms.vaccinationCertificate.doses.secondDose')}</MenuItem>
+                  <MenuItem value="3rd Dose/Booster">{t('forms.vaccinationCertificate.doses.thirdDose')}</MenuItem>
+                  <MenuItem value="Single Dose">{t('forms.vaccinationCertificate.doses.singleDose')}</MenuItem>
+                  <MenuItem value="Annual">{t('forms.vaccinationCertificate.doses.annual')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -414,7 +417,7 @@ const VaccinationHistoryStep = ({ formData, updateFormData, errors }) => {
             <Grid item xs={12} md={6}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
-                  label="Next Due Date"
+                  label={t('forms.vaccinationCertificate.vaccinationDetails.nextDueDate')}
                   value={vaccination.nextDueDate || null}
                   onChange={(date) => updateVaccination(vaccination.id, 'nextDueDate', date)}
                   renderInput={(params) => <TextField {...params} fullWidth />}
@@ -429,16 +432,16 @@ const VaccinationHistoryStep = ({ formData, updateFormData, errors }) => {
       {vaccinations.length > 0 && (
         <Paper variant="outlined" sx={{ p: 2, bgcolor: 'success.50' }}>
           <Typography variant="h6" color="success.main" gutterBottom>
-            Vaccination Summary
+            {t('forms.vaccinationCertificate.vaccinationDetails.summary')}
           </Typography>
           <Typography variant="body1">
-            Total Vaccinations: <strong>{vaccinations.length}</strong>
+            {t('forms.vaccinationCertificate.vaccinationDetails.totalVaccinations')}: <strong>{vaccinations.length}</strong>
           </Typography>
           <Typography variant="body1">
-            Latest Vaccination: <strong>
+            {t('forms.vaccinationCertificate.vaccinationDetails.lastVaccination')}: <strong>
               {vaccinations.length > 0 ? 
                 new Date(Math.max(...vaccinations.map(v => new Date(v.vaccinationDate)))).toLocaleDateString() : 
-                'None'
+                t('forms.vaccinationCertificate.vaccinationDetails.none')
               }
             </strong>
           </Typography>
@@ -450,6 +453,8 @@ const VaccinationHistoryStep = ({ formData, updateFormData, errors }) => {
 
 // Medical Information Step
 const MedicalInformationStep = ({ formData, updateFormData, errors }) => {
+  const { t } = useLanguage();
+  
   const handleChange = (field, value) => {
     updateFormData({ [field]: value });
   };
@@ -457,24 +462,24 @@ const MedicalInformationStep = ({ formData, updateFormData, errors }) => {
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom color="primary">
-        Medical Information
+        {t('forms.vaccinationCertificate.medicalInfo.title')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Provide relevant medical information for vaccination certificate
+        {t('forms.vaccinationCertificate.medicalInfo.subtitle')}
       </Typography>
 
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom color="primary">
-            Do you have any known allergies to vaccines? *
+            {t('forms.vaccinationCertificate.medicalInfo.hasAllergies')}
           </Typography>
           <RadioGroup
             value={formData.hasAllergies || ''}
             onChange={(e) => handleChange('hasAllergies', e.target.value)}
             row
           >
-            <FormControlLabel value="no" control={<Radio />} label="No" />
-            <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+            <FormControlLabel value="no" control={<Radio />} label={t('forms.vaccinationCertificate.medicalInfo.no')} />
+            <FormControlLabel value="yes" control={<Radio />} label={t('forms.vaccinationCertificate.medicalInfo.yes')} />
           </RadioGroup>
         </Grid>
 
@@ -484,11 +489,11 @@ const MedicalInformationStep = ({ formData, updateFormData, errors }) => {
               fullWidth
               multiline
               rows={3}
-              label="Allergy Details *"
+              label={t('forms.vaccinationCertificate.medicalInfo.allergyDetails')}
               value={formData.allergyDetails || ''}
               onChange={(e) => handleChange('allergyDetails', e.target.value)}
               error={!!errors.allergyDetails}
-              helperText={errors.allergyDetails || 'Describe your vaccine allergies'}
+              helperText={errors.allergyDetails || t('forms.vaccinationCertificate.medicalInfo.allergyDetailsHelper')}
               inputProps={{ maxLength: 500 }}
             />
           </Grid>
@@ -496,15 +501,15 @@ const MedicalInformationStep = ({ formData, updateFormData, errors }) => {
 
         <Grid item xs={12}>
           <Typography variant="subtitle1" gutterBottom color="primary">
-            Do you have any chronic medical conditions? *
+            {t('forms.vaccinationCertificate.medicalInfo.hasConditions')}
           </Typography>
           <RadioGroup
             value={formData.hasConditions || ''}
             onChange={(e) => handleChange('hasConditions', e.target.value)}
             row
           >
-            <FormControlLabel value="no" control={<Radio />} label="No" />
-            <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+            <FormControlLabel value="no" control={<Radio />} label={t('forms.vaccinationCertificate.medicalInfo.no')} />
+            <FormControlLabel value="yes" control={<Radio />} label={t('forms.vaccinationCertificate.medicalInfo.yes')} />
           </RadioGroup>
         </Grid>
 
@@ -514,11 +519,11 @@ const MedicalInformationStep = ({ formData, updateFormData, errors }) => {
               fullWidth
               multiline
               rows={3}
-              label="Medical Conditions *"
+              label={t('forms.vaccinationCertificate.medicalInfo.medicalConditions')}
               value={formData.medicalConditions || ''}
               onChange={(e) => handleChange('medicalConditions', e.target.value)}
               error={!!errors.medicalConditions}
-              helperText={errors.medicalConditions || 'List your chronic medical conditions'}
+              helperText={errors.medicalConditions || t('forms.vaccinationCertificate.medicalInfo.medicalConditionsHelper')}
               inputProps={{ maxLength: 500 }}
             />
           </Grid>
@@ -527,10 +532,10 @@ const MedicalInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Blood Group"
+            label={t('forms.vaccinationCertificate.medicalInfo.bloodGroup')}
             value={formData.bloodGroup || ''}
             onChange={(e) => handleChange('bloodGroup', e.target.value)}
-            helperText="Optional blood group information"
+            helperText={t('forms.vaccinationCertificate.medicalInfo.bloodGroupHelper')}
             inputProps={{ maxLength: 10 }}
           />
         </Grid>
@@ -538,27 +543,27 @@ const MedicalInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Emergency Contact Number"
+            label={t('forms.vaccinationCertificate.medicalInfo.emergencyContact')}
             value={formData.emergencyContact || ''}
             onChange={(e) => handleChange('emergencyContact', e.target.value)}
-            helperText="Emergency contact mobile number"
+            helperText={t('forms.vaccinationCertificate.medicalInfo.emergencyContactHelper')}
             inputProps={{ maxLength: 10, pattern: '[6-9][0-9]{9}' }}
           />
         </Grid>
 
         <Grid item xs={12}>
           <FormControl fullWidth error={!!errors.certificateType}>
-            <InputLabel>Certificate Type *</InputLabel>
+            <InputLabel>{t('forms.vaccinationCertificate.medicalInfo.certificateType')}</InputLabel>
             <Select
               value={formData.certificateType || ''}
               onChange={(e) => handleChange('certificateType', e.target.value)}
-              label="Certificate Type *"
+              label={t('forms.vaccinationCertificate.medicalInfo.certificateType')}
             >
-              <MenuItem value="Complete Vaccination Certificate">Complete Vaccination Certificate</MenuItem>
-              <MenuItem value="COVID-19 Vaccination Certificate">COVID-19 Vaccination Certificate</MenuItem>
-              <MenuItem value="Travel Vaccination Certificate">Travel Vaccination Certificate</MenuItem>
-              <MenuItem value="School/College Vaccination Certificate">School/College Vaccination Certificate</MenuItem>
-              <MenuItem value="Employment Vaccination Certificate">Employment Vaccination Certificate</MenuItem>
+              <MenuItem value="Complete Vaccination Certificate">{t('forms.vaccinationCertificate.certificateTypes.complete')}</MenuItem>
+              <MenuItem value="COVID-19 Vaccination Certificate">{t('forms.vaccinationCertificate.certificateTypes.covid19')}</MenuItem>
+              <MenuItem value="Travel Vaccination Certificate">{t('forms.vaccinationCertificate.certificateTypes.travel')}</MenuItem>
+              <MenuItem value="School/College Vaccination Certificate">{t('forms.vaccinationCertificate.certificateTypes.school')}</MenuItem>
+              <MenuItem value="Employment Vaccination Certificate">{t('forms.vaccinationCertificate.certificateTypes.employment')}</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -568,11 +573,11 @@ const MedicalInformationStep = ({ formData, updateFormData, errors }) => {
             fullWidth
             multiline
             rows={2}
-            label="Purpose of Certificate *"
+            label={t('forms.vaccinationCertificate.medicalInfo.certificatePurpose')}
             value={formData.certificatePurpose || ''}
             onChange={(e) => handleChange('certificatePurpose', e.target.value)}
             error={!!errors.certificatePurpose}
-            helperText={errors.certificatePurpose || 'Specify why you need this certificate'}
+            helperText={errors.certificatePurpose || t('forms.vaccinationCertificate.medicalInfo.certificatePurposeHelper')}
             inputProps={{ maxLength: 200 }}
           />
         </Grid>
@@ -580,9 +585,7 @@ const MedicalInformationStep = ({ formData, updateFormData, errors }) => {
         <Grid item xs={12}>
           <Alert severity="info">
             <Typography variant="body2">
-              <strong>Note:</strong> This vaccination certificate will be issued based on the vaccination records 
-              provided and verified through official health databases. Please ensure all information is accurate 
-              and complete.
+              <strong>{t('forms.vaccinationCertificate.medicalInfo.noteTitle')}:</strong> {t('forms.vaccinationCertificate.medicalInfo.noteText')}
             </Typography>
           </Alert>
         </Grid>
@@ -593,27 +596,29 @@ const MedicalInformationStep = ({ formData, updateFormData, errors }) => {
 
 // Documents Step
 const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
+  const { t } = useLanguage();
+  
   const requiredDocuments = [
-    'Identity proof (Aadhaar/Passport/Driving License)',
-    'Address proof',
-    'Vaccination cards/certificates',
-    'Medical records (if applicable)',
-    'Passport size photographs',
-    'Previous vaccination certificates',
-    'Doctor prescription (if applicable)',
-    'Travel documents (for travel certificate)',
-    'School/College admission letter (if applicable)',
-    'Employment letter (if applicable)'
+    t('forms.vaccinationCertificate.documents.identityProof'),
+    t('forms.vaccinationCertificate.documents.addressProof'),
+    t('forms.vaccinationCertificate.documents.vaccinationCards'),
+    t('forms.vaccinationCertificate.documents.medicalRecords'),
+    t('forms.vaccinationCertificate.documents.passportPhotos'),
+    t('forms.vaccinationCertificate.documents.previousCertificates'),
+    t('forms.vaccinationCertificate.documents.doctorPrescription'),
+    t('forms.vaccinationCertificate.documents.travelDocuments'),
+    t('forms.vaccinationCertificate.documents.admissionLetter'),
+    t('forms.vaccinationCertificate.documents.employmentLetter')
   ];
 
 
   return (
     <Box>
       <Typography variant="h6" gutterBottom color="primary">
-        Document Upload
+        {t('forms.vaccinationCertificate.documents.title')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Please upload supporting documents for vaccination certificate
+        {t('forms.vaccinationCertificate.documents.subtitle')}
       </Typography>
 
       <DocumentUpload
@@ -627,7 +632,7 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
       
       <Box sx={{ mt: 3 }}>
         <Typography variant="subtitle2" gutterBottom>
-          Required Documents:
+          {t('forms.common.requiredDocuments')}:
         </Typography>
         <ul style={{ margin: 0, paddingLeft: 20 }}>
           {requiredDocuments.map((doc, index) => (
@@ -641,11 +646,13 @@ const DocumentsStep = ({ formData, updateFormData, tempApplicationId }) => {
 
 // Main Form Component
 const VaccinationCertificateForm = () => {
+  const { t } = useLanguage();
+  
   const steps = [
-    { id: 'personal', title: 'Personal Information', icon: 'Person' },
-    { id: 'vaccination', title: 'Vaccination History', icon: 'Vaccines' },
-    { id: 'medical', title: 'Medical Information', icon: 'MedicalServices' },
-    { id: 'documents', title: 'Documents', icon: 'Description' }
+    { id: 'personal', title: t('forms.vaccinationCertificate.step1'), icon: 'Person' },
+    { id: 'vaccination', title: t('forms.vaccinationCertificate.step2'), icon: 'Vaccines' },
+    { id: 'medical', title: t('forms.vaccinationCertificate.step3'), icon: 'MedicalServices' },
+    { id: 'documents', title: t('forms.vaccinationCertificate.step4'), icon: 'Description' }
   ];
 
   const validationRules = {
@@ -666,7 +673,7 @@ const VaccinationCertificateForm = () => {
 
   return (
     <MultiStepForm
-      serviceName="Vaccination Certificate Application"
+      serviceName={t('forms.vaccinationCertificate.title')}
       serviceType="vaccination_certificate"
       steps={steps}
       validationRules={validationRules}

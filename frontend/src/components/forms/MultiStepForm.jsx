@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Paper,
@@ -15,6 +15,12 @@ import {
   DialogActions,
   Chip
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import Snackbar from '@mui/material/Snackbar';
+import Fab from '@mui/material/Fab';
+import Tooltip from '@mui/material/Tooltip';
+import Zoom from '@mui/material/Zoom';
 import {
   Save as SaveIcon,
   NavigateNext as NextIcon,
@@ -29,6 +35,7 @@ import { submitApplication } from '../../services/realWorldApplicationService';
 import { useFormDraft } from '../../hooks/useFormDraft';
 import ChakraSpinner from '../common/ChakraSpinner';
 import toast from 'react-hot-toast';
+import { useLanguage } from '../../i18n/LanguageProvider';
 
 const MultiStepForm = ({
   serviceType,
@@ -39,7 +46,11 @@ const MultiStepForm = ({
   onSubmit,
   initialData = {}
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [stepSnackOpen, setStepSnackOpen] = useState(false);
   const { currentUser } = useAuth();
+  const { t } = useLanguage();
   const [activeStep, setActiveStep] = useState(0);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -107,14 +118,24 @@ const MultiStepForm = ({
 
   const handleNext = () => {
     if (validateCurrentStep()) {
-      setActiveStep(prev => prev + 1);
+      setActiveStep(prev => {
+        const newStep = prev + 1;
+        console.log(`📱 Step navigation: ${prev} → ${newStep}`);
+        return newStep;
+      });
+      setStepSnackOpen(true);
     } else {
       toast.error('Please fill all required fields correctly');
     }
   };
 
   const handleBack = () => {
-    setActiveStep(prev => prev - 1);
+    setActiveStep(prev => {
+      const newStep = prev - 1;
+      console.log(`📱 Step navigation: ${prev} → ${newStep}`);
+      return newStep;
+    });
+    setStepSnackOpen(true);
   };
 
   const handleSubmit = async () => {
@@ -190,23 +211,25 @@ const MultiStepForm = ({
   const progress = ((activeStep + 1) / steps.length) * 100;
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 1200, mx: 'auto', p: 3 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
+    <Box
+      sx={{ width: '100%', maxWidth: 1200, mx: 'auto', p: { xs: 1.5, sm: 3 } }}
+    >
+      <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 } }}>
         {/* Header */}
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" gutterBottom color="primary">
+          <Typography variant={isMobile ? 'h5' : 'h4'} gutterBottom color="primary">
             {serviceName}
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            Please fill all the required information accurately. Fields marked with * are mandatory.
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2, display: { xs: 'none', sm: 'block' } }}>
+            {t("multiStepForm.fillAllRequired")}
           </Typography>
-          
+
           {/* Draft Status Indicators */}
           {lastSaved && (
             <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Chip
                 icon={<SaveIcon />}
-                label={`Auto-saved ${new Date(lastSaved).toLocaleTimeString()}`}
+                label={t("multiStepForm.autoSaved", { time: new Date(lastSaved).toLocaleTimeString() })}
                 color="success"
                 size="small"
                 variant="outlined"
@@ -218,16 +241,16 @@ const MultiStepForm = ({
                 color="error"
                 variant="text"
               >
-                Clear Draft
+                {t("multiStepForm.clearDraft")}
               </Button>
             </Box>
           )}
-          
+
           {isSaving && (
             <Box sx={{ mb: 2 }}>
               <Chip
                 icon={<ChakraSpinner size="16px" />}
-                label="Saving draft..."
+                label={t("multiStepForm.savingDraft")}
                 color="info"
                 size="small"
                 variant="outlined"
@@ -239,26 +262,58 @@ const MultiStepForm = ({
           <Box sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
               <Typography variant="body2" color="text.secondary">
-                Step {activeStep + 1} of {steps.length}
+                {t("multiStepForm.stepOf", { current: activeStep + 1, total: steps.length })}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {Math.round(progress)}% Complete
+              <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                {t("multiStepForm.percentComplete", { percent: Math.round(progress) })}
               </Typography>
             </Box>
             <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 4 }} />
           </Box>
         </Box>
 
-        {/* Stepper */}
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-          {steps.map((step, index) => (
-            <Step key={step.id}>
-              <StepLabel>
-                <Typography variant="body2">{step.title}</Typography>
-              </StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+        {/* Stepper - responsive */}
+        {isMobile ? (
+          <Box sx={{ mb: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 0.5 }}>
+              {steps.map((_, idx) => (
+                <Box
+                  key={idx}
+                  sx={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: '50%',
+                    bgcolor: idx < activeStep ? 'success.main' : (idx === activeStep ? 'primary.main' : 'grey.400'),
+                    color: 'common.white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.75rem',
+                    transform: idx === activeStep ? 'scale(1.1)' : 'scale(1.0)',
+                    transition: 'transform 0.2s ease, background-color 0.2s ease, opacity 0.2s ease',
+                    opacity: idx === activeStep ? 1 : 0.85
+                  }}
+                  aria-label={`Step ${idx + 1} of ${steps.length}`}
+                >
+                  {idx + 1}
+                </Box>
+              ))}
+            </Box>
+            <Typography variant="subtitle2" sx={{ mt: 1, textAlign: 'center' }}>
+              {steps[activeStep]?.title}
+            </Typography>
+          </Box>
+        ) : (
+          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+            {steps.map((step) => (
+              <Step key={step.id}>
+                <StepLabel>
+                  <Typography variant="body2">{step.title}</Typography>
+                </StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+        )}
 
         {/* Form Content */}
         <Box sx={{ minHeight: 400, mb: 4 }}>
@@ -277,25 +332,42 @@ const MultiStepForm = ({
         </Box>
 
         {/* Navigation Buttons */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          position: { xs: 'sticky', sm: 'static' },
+          bottom: { xs: 0, sm: 'auto' },
+          bgcolor: { xs: 'background.paper', sm: 'transparent' },
+          py: { xs: 0.5, sm: 0 },
+          px: { xs: 1, sm: 0 },
+          zIndex: 1,
+          borderTop: { xs: '1px solid', sm: 'none' },
+          borderColor: { xs: 'divider', sm: 'transparent' }
+        }}>
           <Button
             disabled={activeStep === 0}
             onClick={handleBack}
             startIcon={<BackIcon />}
             variant="outlined"
+            size="small"
+            sx={{ minWidth: { xs: 72, sm: 100 }, py: { xs: 0.5, sm: 1 } }}
           >
-            Back
+            {t("multiStepForm.back")}
           </Button>
 
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button
-              onClick={saveDraftManual}
-              startIcon={<SaveIcon />}
-              variant="outlined"
-              color="secondary"
-            >
-              Save Draft
-            </Button>
+          <Box sx={{ display: 'flex', gap: { xs: 1, sm: 2 } }}>
+            {!isMobile && (
+              <Button
+                onClick={saveDraftManual}
+                startIcon={<SaveIcon />}
+                variant="outlined"
+                color="secondary"
+                size="small"
+              >
+                {t("multiStepForm.saveDraft")}
+              </Button>
+            )}
 
             {isLastStep ? (
               <Button
@@ -304,8 +376,10 @@ const MultiStepForm = ({
                 variant="contained"
                 color="primary"
                 disabled={loading}
+                size="small"
+                sx={{ minWidth: { xs: 92, sm: 120 }, py: { xs: 0.75, sm: 1 } }}
               >
-                {loading ? 'Submitting...' : 'Submit Application'}
+                {loading ? t("multiStepForm.submitting") : t("multiStepForm.submit")}
               </Button>
             ) : (
               <Button
@@ -313,8 +387,10 @@ const MultiStepForm = ({
                 endIcon={<NextIcon />}
                 variant="contained"
                 color="primary"
+                size="small"
+                sx={{ minWidth: { xs: 92, sm: 120 }, py: { xs: 0.75, sm: 1.25 } }}
               >
-                Next
+                {t("multiStepForm.next")}
               </Button>
             )}
           </Box>
@@ -324,7 +400,7 @@ const MultiStepForm = ({
         {Object.keys(errors).length > 0 && (
           <Alert severity="error" sx={{ mt: 2 }}>
             <Typography variant="body2" gutterBottom>
-              Please correct the following errors:
+              {t("multiStepForm.correctErrors")}
             </Typography>
             <ul style={{ margin: 0, paddingLeft: 20 }}>
               {Object.entries(errors).map(([field, error]) => (
@@ -337,23 +413,37 @@ const MultiStepForm = ({
         )}
       </Paper>
 
+      {/* Floating Save Draft on mobile */}
+      {isMobile && (
+        <Tooltip title={t("multiStepForm.saveDraft")} placement="left" TransitionComponent={Zoom}>
+          <Fab
+            color="secondary"
+            aria-label="save-draft"
+            onClick={saveDraftManual}
+            sx={{ position: 'fixed', bottom: 88, right: 16, zIndex: 1400 }}
+          >
+            <SaveIcon />
+          </Fab>
+        </Tooltip>
+      )}
+
       {/* Success Dialog */}
       <Dialog open={submitDialog} onClose={() => setSubmitDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ textAlign: 'center', pt: 3 }}>
           <SuccessIcon color="success" sx={{ fontSize: 60, mb: 2 }} />
           <Typography variant="h5" color="success.main">
-            Application Submitted Successfully!
+            {t("multiStepForm.successTitle")}
           </Typography>
         </DialogTitle>
         <DialogContent sx={{ textAlign: 'center', pb: 2 }}>
           <Typography variant="body1" gutterBottom>
-            Your application has been submitted successfully.
+            {t("multiStepForm.successMessage")}
           </Typography>
           <Typography variant="h6" color="primary" sx={{ mt: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
-            Application ID: {applicationId}
+            {t("multiStepForm.applicationId", { id: applicationId })}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-            Please save this Application ID for future reference. You will receive SMS and email confirmations shortly.
+            {t("multiStepForm.saveIdMessage")}
           </Typography>
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
@@ -366,10 +456,19 @@ const MultiStepForm = ({
             variant="contained"
             color="primary"
           >
-            Go to Dashboard
+            {t("multiStepForm.goToDashboard")}
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Step change snackbar */}
+      <Snackbar
+        open={stepSnackOpen}
+        onClose={() => setStepSnackOpen(false)}
+        autoHideDuration={1200}
+        message={t("multiStepForm.stepOf", { current: activeStep + 1, total: steps.length })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </Box>
   );
 };
